@@ -22,12 +22,6 @@ jobs:
           curl --fail --location --retry 3 --connect-timeout 15 --max-time 120 \
             --output "$RUNNER_TEMP/neon-source.zip" \
             'https://michael-wave-ori-break-the-matrix.microneesia79.chatgpt.site/game-source.zip'
-      - name: Preserve downloaded snapshot for source-diff review
-        uses: actions/upload-artifact@v4
-        with:
-          name: btm-public-source-diff
-          path: ${{ runner.temp }}/neon-source.zip
-          retention-days: 2
       - name: Match every source file to the user's v0.4.1 snapshot
         env:
           SOURCE_ARCHIVE: ${{ runner.temp }}/neon-source.zip
@@ -36,7 +30,10 @@ jobs:
           import hashlib, os, pathlib, zipfile
           archive=pathlib.Path(os.environ['SOURCE_ARCHIVE'])
           root='MichaelWave-Ori-BreakTheMatrix/'
-          expected='178b7174d6900bc21c8dfd33f0de2bd4da042a07f1104dd4bc7ba5335b3ca0d6'
+          expected='df03cf0429424125125e884be8ac6ddda1531f5c2bba2c15aeae46055873c6d5'
+          archive_sha=hashlib.sha256(archive.read_bytes()).hexdigest()
+          if archive_sha!='a4f4c75f46c060c5e002375d985cd0c68d2d6c28ef12d269b9c5615f0cfd1b5b':
+              raise SystemExit('Published game source archive differs from uploaded v0.4.1 snapshot')
           with zipfile.ZipFile(archive) as z:
               infos=z.infolist()
               if len(infos)>500 or len({i.filename for i in infos})!=len(infos):
