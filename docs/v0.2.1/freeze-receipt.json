@@ -1,0 +1,36 @@
+{
+  "project": "Michael Wave & Ori: Break the Matrix",
+  "candidate_version": "0.2.1",
+  "controlling_specification": "User supplied Pasted text.txt",
+  "sha256": "3d353a9e8aaf4aa59a5b789864ed4055db0a4294a21012f2628f40933bbced3f",
+  "authority": [
+    "Current explicit user instruction",
+    "Supplied build brief",
+    "Documented preferred-stack implementation choice",
+    "Milestone register"
+  ],
+  "scope": "Xbox browser controller input and menus; preserve six sectors, saves, prior tests, offline behavior and existing public audience",
+  "assumptions": [
+    "Science-fantasy fiction",
+    "Code-native original assets",
+    "Single-player desktop-first",
+    "Default private hosted candidate; portable static build"
+  ],
+  "deviations": [
+    {
+      "id": "DEV-01",
+      "class": "Local implementation",
+      "original": "Preferred TypeScript, Vite",
+      "actual": "Native JavaScript ES modules and dependency-free Node build",
+      "basis": "Preferred-stack wording permits implementation choice; custom raycasting, modularity and static paths preserved",
+      "rollback": "Introduce TypeScript/Vite around unchanged engine modules if requested"
+    }
+  ],
+  "release_authority": "Michael Mikey Hughes",
+  "verification": "93 Node tests; 27 Chrome simulated controller/DOM checks; six-sector traversal; physical hardware unverified",
+  "baseline_commit": "2f9f6cbc7de306b036158550a1280bab0b68c18e",
+  "accepted_amendment": "docs/v0.2.1/authority.md",
+  "amendment_sha256": "799e515dd27e97f16623e9dece7fbd7740b1c7570a2ced942ec48e1ee996b405",
+  "prior_receipt": "docs/v0.1.0/freeze-receipt.json",
+  "prior_gameplay_baseline_commit": "a73abd140e14b24a6c715437de67ce872d485131"
+}

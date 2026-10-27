@@ -1,0 +1,88 @@
+{
+  "passed": false,
+  "total": 19,
+  "results": [
+    {
+      "name": "1920×1080: local typefaces load and title navigation is usable",
+      "pass": true
+    },
+    {
+      "name": "1920×1080: settings preserve all controls and return to title",
+      "pass": true
+    },
+    {
+      "name": "1920×1080: real gameplay HUD fits with six functional weapon slots",
+      "pass": true
+    },
+    {
+      "name": "1920×1080: map, pause, manual and resume still work",
+      "pass": false,
+      "error": "Map did not close"
+    },
+    {
+      "name": "1280×720: local typefaces load and title navigation is usable",
+      "pass": true
+    },
+    {
+      "name": "1280×720: settings preserve all controls and return to title",
+      "pass": true
+    },
+    {
+      "name": "1280×720: real gameplay HUD fits with six functional weapon slots",
+      "pass": true
+    },
+    {
+      "name": "1280×720: map, pause, manual and resume still work",
+      "pass": false,
+      "error": "Map did not close"
+    },
+    {
+      "name": "960×640: local typefaces load and title navigation is usable",
+      "pass": true
+    },
+    {
+      "name": "960×640: settings preserve all controls and return to title",
+      "pass": true
+    },
+    {
+      "name": "960×640: real gameplay HUD fits with six functional weapon slots",
+      "pass": true
+    },
+    {
+      "name": "960×640: map, pause, manual and resume still work",
+      "pass": false,
+      "error": "Map did not close"
+    },
+    {
+      "name": "390×844: local typefaces load and title navigation is usable",
+      "pass": false,
+      "error": "howto-btn target missing or too small"
+    },
+    {
+      "name": "390×844: settings preserve all controls and return to title",
+      "pass": true
+    },
+    {
+      "name": "390×844: real gameplay HUD fits with six functional weapon slots",
+      "pass": true
+    },
+    {
+      "name": "390×844: map, pause, manual and resume still work",
+      "pass": false,
+      "error": "Map did not close"
+    },
+    {
+      "name": "All canvas UI art renders using original vector paths",
+      "pass": true
+    },
+    {
+      "name": "VR Arcade menu and utility controls retain live hit targets",
+      "pass": true
+    },
+    {
+      "name": "Immersive wrist weapons, utilities, map and captions retain hit targets",
+      "pass": true
+    }
+  ],
+  "method": "Production HTML/CSS in real iframe viewports; native Canvas painting and synthetic UI events. No physical XR or controller hardware."
+}

@@ -1,0 +1,37 @@
+{
+  "project": "Michael Wave & Ori: Break the Matrix",
+  "candidate_version": "0.3.0",
+  "controlling_specification": "User supplied Pasted text.txt",
+  "sha256": "3d353a9e8aaf4aa59a5b789864ed4055db0a4294a21012f2628f40933bbced3f",
+  "authority": [
+    "Current explicit user instruction",
+    "Supplied build brief",
+    "Documented preferred-stack implementation choice",
+    "Milestone register"
+  ],
+  "scope": "Six new difficult sectors and native WebXR virtual arcade layer; preserve original game and existing public audience",
+  "assumptions": [
+    "Science-fantasy fiction",
+    "Original procedural assets",
+    "Single player; desktop/Xbox plus Quest Touch VR arcade",
+    "VR layer is an anchored virtual screen, not room-scale world conversion",
+    "No external runtime library or service"
+  ],
+  "deviations": [
+    {
+      "id": "DEV-01",
+      "class": "Local implementation",
+      "original": "Preferred TypeScript, Vite",
+      "actual": "Native JavaScript ES modules and dependency-free Node build",
+      "basis": "Preferred-stack wording permits implementation choice; custom raycasting, modularity and static paths preserved",
+      "rollback": "Introduce TypeScript/Vite around unchanged engine modules if requested"
+    }
+  ],
+  "release_authority": "Michael Mikey Hughes",
+  "verification": "128 tests, 12-sector Node/Chrome traversal, simulated XR, software GLES; real headset/browser presentation unverified",
+  "baseline_commit": "0f7fb1f9793d77b8ae97462bd22f76b27efa42c2",
+  "accepted_amendment": "docs/v0.3.0/authority.md",
+  "amendment_sha256": "45a93524bddf994f93b8bd0ed989c1652473aada2d2c62cdf639825c69bfebda",
+  "prior_receipt": "docs/v0.2.1/freeze-receipt.json",
+  "prior_gameplay_baseline_commit": "a73abd140e14b24a6c715437de67ce872d485131"
+}

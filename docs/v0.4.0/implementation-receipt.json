@@ -1,0 +1,54 @@
+{
+  "candidate": "0.4.0",
+  "classification": "Reconstructed development candidate; author-run evidence, not independent certification",
+  "utc": "2026-10-27T16:54:40.121992+00:00",
+  "baseline": "914ff27305fbecab782d531be7992c91b79e14a6",
+  "source_branch": "candidate/v0.4.0-reconstructed",
+  "environment": {
+    "node": "v24.22.1",
+    "python": "3.12.14",
+    "software_renderer": "llvmpipe (LLVM 20.1.2, 256 bits)"
+  },
+  "runtime_dependencies_added": [],
+  "results": {
+    "node_pass": 162,
+    "node_fail": 0,
+    "prior_cases_preserved": 128,
+    "prior_files_unchanged": 10,
+    "new_tests": 34,
+    "chrome_immersive_canvas": 36,
+    "chrome_xbox": 27,
+    "chrome_original_smoke": 10,
+    "chrome_arcade_logic": 20,
+    "classic_sectors_node_and_chrome": 12,
+    "tracked_sectors_node_and_chrome": 12,
+    "classic_and_tracked_death_retry": true,
+    "software_stereo_sectors": 12,
+    "offline_resources": 28,
+    "subpath_references": 82
+  },
+  "unverified": [
+    "actual browser WebGL API in this cloud browser",
+    "physical Quest 3 / Touch / Bluetooth / haptics / spatial listening",
+    "human comfort, readability and balance",
+    "72 FPS and sustained GPU/compositor/thermal behavior",
+    "actual browser airplane-mode reopen on HTTPS"
+  ],
+  "publication": {
+    "public_deploy": false,
+    "main_merge": false,
+    "github_pr": "not opened; matching game repo not identified",
+    "candidate_source_backup": "non-main branch; verified initial checkpoint; final readback in delivery receipt"
+  },
+  "commands": [
+    "npm run check",
+    "npm test",
+    "npm run playtest",
+    "npm run playtest:immersive",
+    "npm run build",
+    "node scripts/verify-build.mjs",
+    "node scripts/verify-offline.mjs",
+    "python3 scripts/verify-vr-gles.py",
+    "python3 scripts/verify-world-gles.py <browser-exported-fixture.json>"
+  ]
+}

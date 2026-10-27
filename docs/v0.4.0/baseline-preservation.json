@@ -1,0 +1,59 @@
+{
+  "passed": true,
+  "baseline": "914ff27305fbecab782d531be7992c91b79e14a6",
+  "priorTestFiles": 10,
+  "files": [
+    {
+      "file": "tests/browser-smoke.js",
+      "unchanged": true,
+      "sha256": "a71acb493d8b6943d3a4bcee21bb107e5d447aeddfb9c86d3baa9dc25299b8ae"
+    },
+    {
+      "file": "tests/controller-checks.js",
+      "unchanged": true,
+      "sha256": "e14eec2ab05b0bd5bdd1f8bb7d667861ae06f22a77fa715629b79c64dec3d26d"
+    },
+    {
+      "file": "tests/core.test.mjs",
+      "unchanged": true,
+      "sha256": "f107bd7104d3410b59bbb7c59a275862ff0fce24c2e354b14f5667698f4aaccf"
+    },
+    {
+      "file": "tests/fixtures/v0.1-checkpoint.json",
+      "unchanged": true,
+      "sha256": "a5770427873cb4b9d1b898fd2e59f11a7c41edd333f55be3bcf0ccfe13c4aaa6"
+    },
+    {
+      "file": "tests/gamepad.test.mjs",
+      "unchanged": true,
+      "sha256": "c2a2d2d56ea5104049fd9de7042572fcbc4f906ba0e83330e729ba751c506410"
+    },
+    {
+      "file": "tests/nightmare.test.mjs",
+      "unchanged": true,
+      "sha256": "02641f2cc07e419418fa0c13791e30cbff0ca01a53412553b9419041c0d3bf5c"
+    },
+    {
+      "file": "tests/playthrough.js",
+      "unchanged": true,
+      "sha256": "f159f7a1dda1d6f89134dae48557e9c9f1afcacde0a12ed3bc994cdb27640666"
+    },
+    {
+      "file": "tests/upgrade.test.mjs",
+      "unchanged": true,
+      "sha256": "d50bd5da3fb960c63ec068539d82761a5a819541352f5f959d9123d6fc1c4664"
+    },
+    {
+      "file": "tests/vr-checks.js",
+      "unchanged": true,
+      "sha256": "1c57818dfc6cfc44b1e1705fd79b7f9c5705a3fc90f913797861e576698a5c7a"
+    },
+    {
+      "file": "tests/vr.test.mjs",
+      "unchanged": true,
+      "sha256": "8590c3cd938531584139fc707f6eb2a63369ec749ffaf742dd8bb06137228b30"
+    }
+  ],
+  "mapsUnchanged": true,
+  "weaponsUnchanged": true
+}

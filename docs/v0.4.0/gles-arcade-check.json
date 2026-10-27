@@ -1,0 +1,37 @@
+{
+  "passed": true,
+  "renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+  "version": "OpenGL ES 3.2 Mesa 25.2.8-0ubuntu0.24.04.2",
+  "exactSourceShaderCompilation": true,
+  "exactSourceVertexBuffer": true,
+  "textureOrientation": true,
+  "twoViewports": true,
+  "samples": {
+    "leftTop": [
+      240,
+      20,
+      10,
+      255
+    ],
+    "leftBottom": [
+      10,
+      220,
+      30,
+      255
+    ],
+    "rightTop": [
+      240,
+      20,
+      10,
+      255
+    ],
+    "rightBottom": [
+      10,
+      220,
+      30,
+      255
+    ]
+  },
+  "sourceSha256": "5ea2b53cc3edf98fec4be883200994c7686a53be3f1680c3408d0dcd65302880",
+  "method": "Surfaceless Mesa EGL/GLES software rendering of the exact shipped shader strings and vertex buffer. Not a browser WebGL or headset/session/hardware validation."
+}

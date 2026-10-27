@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "offlineAssets": 13,
+  "expansionCached": true,
+  "controlsCached": true,
+  "gamepadCached": true,
+  "navigationFallback": true,
+  "postRequestsIgnored": true,
+  "unrelatedCachePreserved": true,
+  "oldVersionCacheRemoved": true,
+  "method": "Generated service worker executed in a Node VM with local asset bytes and a disconnected fetch. This is a cache-logic test, not a browser airplane-mode test."
+}

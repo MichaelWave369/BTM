@@ -1,0 +1,2 @@
+import {readdir} from 'node:fs/promises';import {spawnSync} from 'node:child_process';
+let count=0;for(const dir of ['src','scripts','tests'])for(const file of await readdir(dir)){if(!/\.m?js$/.test(file))continue;const check=spawnSync(process.execPath,['--check',dir+'/'+file],{encoding:'utf8'});if(check.status){process.stderr.write(check.stderr);process.exit(check.status);}count++;}console.log(count+' JavaScript modules passed syntax checks.');

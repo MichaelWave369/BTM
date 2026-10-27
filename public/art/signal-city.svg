@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" fill="none">
+<defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#0c0a2d"/><stop offset=".52" stop-color="#35205f"/><stop offset="1" stop-color="#0b142d"/></linearGradient>
+ <radialGradient id="haze"><stop stop-color="#ec3384" stop-opacity=".6"/><stop offset="1" stop-color="#9c2eff" stop-opacity="0"/></radialGradient>
+ <linearGradient id="sun" x2="0" y2="1"><stop stop-color="#ffd18a"/><stop offset=".35" stop-color="#ff916a"/><stop offset=".7" stop-color="#ff4587"/><stop offset="1" stop-color="#ba2599"/></linearGradient>
+ <linearGradient id="tower" x1="0" x2="1"><stop stop-color="#111b3d"/><stop offset=".65" stop-color="#17172e"/><stop offset="1" stop-color="#4c245b"/></linearGradient>
+ <linearGradient id="jacket" x1="0" x2="1"><stop stop-color="#101b37"/><stop offset=".55" stop-color="#253353"/><stop offset=".8" stop-color="#11182f"/><stop offset="1" stop-color="#782d67"/></linearGradient>
+ <linearGradient id="metal" x2="1" y2="1"><stop stop-color="#e7c7f7"/><stop offset=".3" stop-color="#6397d5"/><stop offset=".6" stop-color="#223460"/><stop offset="1" stop-color="#e665b5"/></linearGradient>
+ <radialGradient id="moon"><stop stop-color="#294b8b"/><stop offset=".7" stop-color="#141b43"/><stop offset="1" stop-color="#6f69b3"/></radialGradient>
+ <pattern id="stars" width="197" height="173" patternUnits="userSpaceOnUse"><path d="M13 25h2M81 111h2M163 61h1M114 17h1M34 159h1M188 145h2" stroke="#d9cbff" stroke-opacity=".55"/><path d="M126 128h3m-1.5-1.5v3" stroke="#55d5ff" stroke-opacity=".6"/></pattern>
+ <pattern id="windows" width="20" height="25" patternUnits="userSpaceOnUse"><path d="M5 4h3v6H5zM14 17h2v3h-2z" fill="#4483b0" fill-opacity=".65"/></pattern>
+ <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="6"/></filter>
+ <mask id="sunLines"><circle cx="875" cy="375" r="256" fill="white"/><path d="M610 375h530v9H610zm0 28h530v13H610zm0 35h530v18H610zm0 44h530v25H610zm0 56h530v32H610zm0 64h530v35H610z" fill="black"/></mask>
+</defs>
+<path fill="url(#sky)" d="M0 0h1600v1000H0z"/><path fill="url(#stars)" d="M0 0h1600v1000H0z"/>
+<ellipse cx="910" cy="510" rx="650" ry="470" fill="url(#haze)"/>
+<circle cx="1225" cy="154" r="78" fill="url(#moon)" stroke="#6a8fdf" stroke-opacity=".5"/>
+<path d="M1193 90l25 21-20 13 17 21-26 19 8 32-24 9m60-123 9 30 33 19-15 26 9 27-20 26" stroke="#31417a" stroke-width="14" opacity=".8"/>
+<circle cx="875" cy="375" r="256" fill="url(#sun)" mask="url(#sunLines)"/>
+<path d="M730 345l-16 36 14 18-13 33 9 22-20 36m343-299-10 40 15 16-19 49 11 21-16 23" stroke="#ff92d7" opacity=".55"/>
+<!-- The sleeping city: original cut silhouettes and small window lights. -->
+<path d="M360 650v-92h32v-33h17v-79h13v-22h9v102h36v54h25v-98h33v-52h15v-86h9v-35h7v122h26v-43h22v-26h17v-57h9v-37h6v104h21v43h27v49h30v-32h26v-40h17v-108h14v-27h8v-69h6v-56h4v-75h4v115h12v123h20v48h18v-92h12v-108h8v-55h5v-112h4v-66h5v180h17v114h13v58h32v78h27v-28h21v-41h24v-75h11v-37h7v112h26v50h21v39h24v-81h14v-30h29v-19h22v66h28v-96h21v-41h10v-33h5v111h32v67h36v-63h29v-30h30v-42h12v-17h7v90h36v73h53v-46h35v-32h48v71h37v-21h33v190H360z" fill="#131a3a"/>
+<path d="M360 650v-92h32v-33h17v-79h13v-22h9v102h36v54h25v-98h33v-52h15v-86h9v-35h7v122h26v-43h22v-26h17v-57h9v-37h6v104h21v43h27v49h30v-32h26v-40h17v-108h14v-27h8v-69h6v-56h4v-75h4v115h12v123h20v48h18v-92h12v-108h8v-55h5v-112h4v-66h5v180h17v114h13v58h32v78h27v-28h21v-41h24v-75h11v-37h7v112h26v50h21v39h24v-81h14v-30h29v-19h22v66h28v-96h21v-41h10v-33h5v111h32v67h36v-63h29v-30h30v-42h12v-17h7v90h36v73h53v-46h35v-32h48v71h37v-21h33v190H360z" fill="url(#windows)"/>
+<path d="M805 80v455m-24-218v218m69-382v340m-98-74v125m266-89v79" stroke="#ff3ed6" stroke-width="4" opacity=".48"/>
+<path d="M822 0v533" stroke="#b85aff" stroke-width="16" filter="url(#glow)"/><path d="M822 0v533" stroke="#ffa6f4" stroke-width="2"/>
+<path d="M0 691l240-39 199 18 170-38 148 24 186-32 146 49 237-42 274 55v314H0z" fill="#080d25"/>
+<path d="M0 1000l826-360 774 360M0 855l826-215 774 215M0 753l826-113 774 113M200 1000l626-360 591 360M480 1000l346-360 325 360M705 1000l121-360 115 360M0 947h1600M0 841h1600M0 766h1600M0 716h1600M0 679h1600" stroke="#7f3bae" stroke-opacity=".33"/>
+<path d="M615 838l210-172 200 172m-92-81 96 241" stroke="#dd389d" stroke-width="3" opacity=".4"/>
+<!-- Foreground machinery and broken rock ledge. -->
+<path d="M0 0h121l-21 134 44 72-40 112 38 138-29 99 46 87-4 173L0 882z" fill="#0a0b20"/><path d="M23 0l48 115-25 52 28 69-31 75 50 97-28 81 26 118-25 98" stroke="#ca4b7c" stroke-width="3" opacity=".5"/>
+<path d="M1433 447l57-54 110-15v622h-208l-19-117 42-93-25-86 36-104z" fill="#0b0c25"/><path d="M1490 393v201l-53 47 7 198m83-329v170l-32 57 8 177" stroke="#e33b9d" stroke-width="3" opacity=".55"/>
+<path d="M0 903l156-45 103 30 151-42 105 54 149-38 120 34 127-66 107 25 95-15 98 42 155-31 234 67v82H0z" fill="#0c0c23" stroke="#56345f" stroke-width="2"/>
+<!-- Michael: flight jacket, shoulder plates, boots, bass cannon. -->
+<g transform="translate(890 386)">
+ <path d="M5 161l10-80 23-26 30-12 49 6 40 35 20 94-25 15-18-58-9 113-113-1z" fill="url(#jacket)" stroke="#6b5790" stroke-width="2"/>
+ <path d="M31 71l-4 64-7 83m110-146 11 64 3 93M21 96l18-23 21 8m62 5 17-6 19 25" stroke="#62bbdd" stroke-width="3" opacity=".7"/>
+ <path d="M54 58l-2-21 4-28 28-12 26 14 1 27-10 23-3 17-30-4z" fill="#b78177" stroke="#29233c" stroke-width="3"/>
+ <path d="M52 32l-8-11 8-12-3-9 19 3 9-11 10 8 14-5 1 10 16 10-5 25-10 12-2-21-17-2-16 7-10 4z" fill="#161b31" stroke="#d479aa" stroke-width="2"/>
+ <path d="M61 58l6-14 25 3 9 16-12 13-20-3z" fill="#141c33"/>
+ <path d="M63 92l9-9 19 4 16 19-10 91-36-6z" fill="#283353"/><path d="M49 122l-3 66 75 7 4-68" stroke="#395379" stroke-width="3"/>
+ <path d="M79 107v62m-13-31c0-24 28-22 28 1 0 23-28 24-28-1z" stroke="#41e4ff" stroke-width="5"/>
+ <path d="M14 238l3 84-15 97 34 6 25-94 18-47 7 63 12 83 37-3-7-105 2-78z" fill="#141a32" stroke="#666087" stroke-width="2"/>
+ <path d="M21 257l30 9-4 59m52-63 18 8-2 57M9 358l32 7m52-5 35-5" stroke="#385076" stroke-width="3"/>
+ <path d="M1 412l-15 30 14 10 39-4 2-27m53-2 2 28 49 2 6-10-19-23" fill="#14172d" stroke="#846691" stroke-width="2"/>
+ <path d="M-9 447h45m64-2h43" stroke="#fb51b1" stroke-width="3"/>
+ <path d="M8 173l-12 24 6 16 17-8 6-22m129-10 4 17 13 9 12-13-9-24" fill="#be8c86" stroke="#302847" stroke-width="3"/>
+ <g transform="translate(-12 177) rotate(28)"><path d="M-12 0h26l5 117-7 21h-26l-8-23z" fill="#151d37" stroke="#b2a6c7" stroke-width="2"/><path d="M-7 11h14v66H-7z" fill="#3b315e"/><path d="M-11 30h20m-19 18h20m-19 18h20" stroke="#f04bb3" stroke-width="3"/><ellipse cx="0" cy="118" rx="20" ry="13" fill="#101831" stroke="#54e5ff" stroke-width="3"/><ellipse cx="0" cy="118" rx="10" ry="6" stroke="#df4dbb" stroke-width="2"/></g>
+</g>
+<!-- Ori is an original small chrome companion, built from vector parts. -->
+<g transform="translate(1125 587) rotate(6)">
+ <path d="M-13 73l-10 40 12-10 6-29m49-1 7 40 12-9-11-34" fill="#70d9ff" opacity=".55"/>
+ <path d="M-10 71l-7 26 9-8 4-19m50 0 5 27 9-9-8-21" fill="#c5fcff"/>
+ <path d="M-5 49l3 21 46 2 7-18-11-15-34 1z" fill="url(#metal)" stroke="#60dfff" stroke-width="2"/>
+ <path d="M-20 0l13-12 57 1 16 17-1 40-15 15-55-3-15-15z" fill="url(#metal)" stroke="#89d9ff" stroke-width="2"/>
+ <path d="M-11 6l12-9 44 1 12 12-2 27-11 9-45-2-12-11z" fill="#090e2e" stroke="#70769e" stroke-width="2"/>
+ <ellipse cx="9" cy="22" rx="5" ry="9" fill="#44e5ff"/><ellipse cx="37" cy="22" rx="5" ry="9" fill="#44e5ff"/>
+ <path d="M15 37q10 5 17-1" stroke="#44e5ff" stroke-width="2"/><path d="M-18 36l-13 4-4 17m99-21 13 3 2 16" stroke="#bbc9e5" stroke-width="6"/>
+ <path d="M17 58h10v5H17z" fill="#ffbc7a"/>
+</g>
+<path d="M469 945l86-18 51 16 122-21 85 16m257-22 69 16 66-7 88 20" stroke="#d4489d" stroke-width="2" opacity=".5"/>
+</svg>

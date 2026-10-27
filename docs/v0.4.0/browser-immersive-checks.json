@@ -1,0 +1,151 @@
+{
+  "passed": true,
+  "total": 36,
+  "results": [
+    {
+      "name": "Rigid world and inverse compose through nonzero yaw and translation",
+      "pass": true
+    },
+    {
+      "name": "Left/right eye separation survives the world transform",
+      "pass": true
+    },
+    {
+      "name": "Frustum culling rejects behind-camera chunks but retains crossing chunks",
+      "pass": true
+    },
+    {
+      "name": "All twelve maps generate finite batched floors, ceilings, walls and export IR",
+      "pass": true
+    },
+    {
+      "name": "Door meshes use the shared open animation and passage threshold",
+      "pass": true
+    },
+    {
+      "name": "Atlas materials have unique bounded UV slots with insets",
+      "pass": true
+    },
+    {
+      "name": "Physical wall leaning cannot enter solid geometry or move the eye through it",
+      "pass": true
+    },
+    {
+      "name": "Physical motion cannot cross a locked door but can cross an opened door",
+      "pass": true
+    },
+    {
+      "name": "Head turn and crouch change view without changing body angle or hand aim",
+      "pass": true
+    },
+    {
+      "name": "Menus freeze movement/fire and discard physical head travel on resume",
+      "pass": true
+    },
+    {
+      "name": "Tracking discontinuity rebases safely and cancels simulation input",
+      "pass": true
+    },
+    {
+      "name": "Snap turn triggers once until neutral and smooth turn stays optional",
+      "pass": true
+    },
+    {
+      "name": "Head-relative and controller-relative movement use different references",
+      "pass": true
+    },
+    {
+      "name": "Unsafe muzzle extension is clamped at walls and at maximum reach",
+      "pass": true
+    },
+    {
+      "name": "Floor and ceiling intersections stop vertical tracked shots",
+      "pass": true
+    },
+    {
+      "name": "Walls occlude tracked targets independently of the gameplay body bearing",
+      "pass": true
+    },
+    {
+      "name": "All six weapons retain costs/cooldowns and use independent tracked aim",
+      "pass": true
+    },
+    {
+      "name": "Tracked pulse projectiles hit bodies at height and terminate at the floor",
+      "pass": true
+    },
+    {
+      "name": "Charged tracked fire uses the existing damage/energy multipliers",
+      "pass": true
+    },
+    {
+      "name": "The immersive adapter updates once with post-movement muzzle coordinates",
+      "pass": true
+    },
+    {
+      "name": "Wrist pointer actions suppress primary and alternate fire together",
+      "pass": true
+    },
+    {
+      "name": "Tracked dodge follows aim without snapping the gameplay body",
+      "pass": true
+    },
+    {
+      "name": "Old XR callbacks cannot advance a new distinct session after reentry",
+      "pass": true
+    },
+    {
+      "name": "Version-one saves resume in Classic without persisting XR pose state",
+      "pass": true
+    },
+    {
+      "name": "Comfort settings sanitize invalid values and preserve snap defaults",
+      "pass": true
+    },
+    {
+      "name": "Dynamic geometry and effects have bounded buffers and explicit overflow behavior",
+      "pass": true
+    },
+    {
+      "name": "Immersive session selects the world presenter and advances one shared frame",
+      "pass": true
+    },
+    {
+      "name": "Missing tracked right hand pauses immersive play without firing",
+      "pass": true
+    },
+    {
+      "name": "Controller removal and context loss pause or exit without stale input",
+      "pass": true
+    },
+    {
+      "name": "Failed GL compatibility disposes the partial session and allows retry",
+      "pass": true
+    },
+    {
+      "name": "Unavailable immersive entry keeps Classic usable and Arcade retry possible",
+      "pass": true
+    },
+    {
+      "name": "Deferred tracked shooting still drives Michael firing portrait feedback",
+      "pass": true
+    },
+    {
+      "name": "Canvas wrist HUD ray selection aligns with unlocked weapon buttons",
+      "pass": true
+    },
+    {
+      "name": "Wrist/map/subtitle canvases stay selective, anchored and actionable",
+      "pass": true
+    },
+    {
+      "name": "Every owned atlas material paints nonempty art in browser Canvas",
+      "pass": true
+    },
+    {
+      "name": "Twelve full dynamic world batches stay finite and below capacity",
+      "pass": true
+    }
+  ],
+  "method": "Current reconstructed production math, collision, combat, rig and single-clock adapter; synthetic WebXR lifecycle. No physical headset/controller validation. Four actual browser Canvas/atlas/UI/batch checks."
+}

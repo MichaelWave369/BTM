@@ -1,0 +1,132 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> michael-wave-ori-break-the-matrix@0.2.1 test
+> node --test tests/*.test.mjs
+
+✔ sector 1: spawn, enemies, pickups, key, relays and exit occupy reachable space (9.422745ms)
+✔ sector 1: mandatory objectives are reachable without a secret wall (1.518037ms)
+✔ sector 2: spawn, enemies, pickups, key, relays and exit occupy reachable space (0.700551ms)
+✔ sector 2: mandatory objectives are reachable without a secret wall (0.822243ms)
+✔ sector 3: spawn, enemies, pickups, key, relays and exit occupy reachable space (1.398503ms)
+✔ sector 3: mandatory objectives are reachable without a secret wall (2.667642ms)
+✔ raycasting is finite on cardinal axes and respects closed walls (0.544868ms)
+✔ collision substeps prevent tunnelling through walls and preserve sliding (2.843506ms)
+✔ doors block sight and collision until fully opening (0.592413ms)
+✔ E opens faced ordinary door and golden doors require a key (2.009424ms)
+✔ opening a secret counts once and does not consume key (1.15972ms)
+✔ movement speed is normalized diagonally and frame deltas are bounded (7.886316ms)
+✔ shots hit a visible host; liberated hosts count exactly once (2.091848ms)
+✔ walls block player weapons and enemy line of sight (0.902695ms)
+✔ slap is free and only works in melee range (1.665418ms)
+✔ blaster respects cooldown and capacitor costs (0.827151ms)
+✔ bass cone hits multiple hosts, stuns and knocks back without wall tunnelling (0.865308ms)
+✔ pulse rifle emits a travelling projectile that damages a target (1.965769ms)
+✔ disruptor destabilizes multiple targets and unplugger pierces (1.818368ms)
+✔ charged alternate fire has a larger cost and damage (1.136344ms)
+✔ all six weapons have unique names, fire rates, and energy costs (0.11346ms)
+✔ captive rescue requires proximity, restores autonomy, cannot double-count (0.623335ms)
+✔ enemies telegraph and damage the player (1.911127ms)
+✔ ranged enemies launch readable projectiles (0.914752ms)
+✔ Ori follows, auto attacks, and Q stuns with an energy cost (2.217126ms)
+✔ Ori Q tags objectives without a nearby hostile (0.641863ms)
+✔ resonance vision drains and then recharges (2.069455ms)
+✔ R vent restores energy after a delay and respects cooldown (2.318889ms)
+✔ bass drop charges from liberation, affects nearby enemies, then empties (0.807161ms)
+✔ dodge has a cooldown and brief damage immunity (0.607251ms)
+✔ death stops the simulation; retry restores a playable checkpoint (1.043836ms)
+✔ checkpoints round trip mutations, doors, player and liberation (4.724938ms)
+✖ unsupported or malformed checkpoints are rejected (7.307683ms)
+✔ progression requires both relays and a key and unlocks later weapons (3.044256ms)
+✔ Warden has three phases and blocks the final ending until defeated (1.22008ms)
+✔ key and health pickups update the HUD model and persist progress (0.981873ms)
+✔ upgrades from two Φ artifacts increase weapon damage (1.058678ms)
+✔ deterministic initial simulation has matching states for matching inputs (15.448565ms)
+✔ crawler phases through a thin wall into a valid landing cell (1.064677ms)
+✔ browser smoke scenario passes in the same production simulation (41.013085ms)
+✔ a dead player cannot replace a valid retry checkpoint (1.145649ms)
+✔ Dead zone prevents resting-stick drift (1.491607ms)
+✔ Radial stick preserves diagonals and caps full speed (0.168522ms)
+✔ Controller settings sanitize old and invalid saves (0.111247ms)
+✔ Analog movement keeps partial speed and legacy keyboard speed (0.138748ms)
+✔ Diagonal analog movement cannot exceed full-stick speed (0.167671ms)
+✔ Left and right sticks reach real movement and horizontal aiming (1.103846ms)
+✔ Small movements still collide with map walls (0.122614ms)
+✔ Keyboard and gamepad input coexist without extra speed (0.101502ms)
+✔ RT fires a real weapon and holding continues automatic fire (0.201723ms)
+✔ RT buffers a press near cooldown expiry (0.22ms)
+✔ LT charges and releases exactly one alternate shot (0.155984ms)
+✔ A opens a real door and interacts only once per press (0.07306ms)
+✔ A extracts through the real completion event before the next simulation tick (0.05994ms)
+✔ All Xbox actions use the documented standard button layout (0.277717ms)
+✔ Y, X, B, vision, weapon cycling and map reach real game actions (0.072929ms)
+✔ Holding L3 sprints and D-pad down spends a full bass charge (0.076966ms)
+✔ D-pad menu movement repeats; A confirm never repeats while held (0.063194ms)
+✔ Pause or focus loss cancels held fire and charge until controls release (0.078198ms)
+✔ Disconnect clears all held input; reconnect waits for neutral (0.096515ms)
+✔ Multiple and sparse gamepads retain the active standard device (0.100881ms)
+✔ Unmapped and blocked controllers fail safely without guessing buttons (0.065919ms)
+✔ Optional rumble is limited, can be disabled, and resets on pause (2.15325ms)
+✔ v0.1.0 tests remain byte-for-byte unchanged (13.363578ms)
+✔ v0.2 sector 1: content reachable and key obtainable before locked doors (6.384988ms)
+✔ v0.2 sector 2: content reachable and key obtainable before locked doors (5.674062ms)
+✔ v0.2 sector 3: content reachable and key obtainable before locked doors (6.717467ms)
+✔ v0.2 sector 4: content reachable and key obtainable before locked doors (2.172249ms)
+✔ v0.2 sector 5: content reachable and key obtainable before locked doors (2.176034ms)
+✔ v0.2 sector 6: content reachable and key obtainable before locked doors (1.189564ms)
+✔ v0.2 sector 7: content reachable and key obtainable before locked doors (1.892469ms)
+✔ v0.2 sector 8: content reachable and key obtainable before locked doors (3.310195ms)
+✔ v0.2 sector 9: content reachable and key obtainable before locked doors (1.810176ms)
+✔ v0.2 sector 10: content reachable and key obtainable before locked doors (3.701393ms)
+✔ v0.2 sector 11: content reachable and key obtainable before locked doors (2.081312ms)
+✔ v0.2 sector 12: content reachable and key obtainable before locked doors (2.563936ms)
+✔ Act II increases encounter count and individual enemy strength (1.700721ms)
+✔ original Warden ending offers Act II while final ending cannot advance (2.329665ms)
+✔ an actual v0.1.0 checkpoint migrates and retains state (8.87842ms)
+✔ a click just before cooldown expiry buffers exactly one shot (1.807321ms)
+✔ expired click buffers never fire later (3.148623ms)
+✔ wall impacts and hit reactions are emitted without gore (0.982784ms)
+✔ Ori assistance has its own visible effect and source attribution (1.59348ms)
+✔ danger warnings interrupt banter and remain rate limited (10.342966ms)
+✔ Michael and Ori exchange lines in deterministic order (10.963858ms)
+✔ movement against a wall produces no footsteps or walking bob (4.09258ms)
+✔ navigation route respects golden access gates until a key is held (2.327692ms)
+✔ archive signs can be read by facing and interacting (0.98039ms)
+✔ fallback keyboard codes work when browser code is absent (0.324337ms)
+✔ pointer capture rejects overlapping attempts (0.509474ms)
+✔ denied capture switches to fallback without pausing play (0.268643ms)
+✔ a capture timeout enables an explicit retry (0.168633ms)
+✔ Escape from a real lock pauses; intentional release does not (0.178998ms)
+✔ all six sectors clear through traversal, combat and interactions (754.361852ms)
+✔ live enemy attacks cause death, and retry permits a complete traversal (157.657635ms)
+✔ render-only door rays can see behind an opening panel without changing collision (0.28018ms)
+✔ Warden health phases update even while Ori holds a stun (0.742654ms)
+✔ default pointer timer adapters clean up a denied request (0.390495ms)
+✔ Ori stun prevents crawler phasing until the stun expires (0.841843ms)
+ℹ tests 99
+ℹ suites 0
+ℹ pass 98
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1143.246832
+
+✖ failing tests:
+
+test at tests/core.test.mjs:36:1
+✖ unsupported or malformed checkpoints are rejected (7.307683ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///workspace/sites/break-the-matrix/tests/core.test.mjs:36:215)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'throws',
+    diff: 'simple'
+  }

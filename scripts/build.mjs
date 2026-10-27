@@ -1,0 +1,20 @@
+import {mkdir,cp,readFile,writeFile,rm,readdir} from 'node:fs/promises';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {packageSource} from './package-source.mjs';
+const root=process.cwd();
+await rm(path.join(root,'dist'),{recursive:true,force:true});await mkdir(path.join(root,'dist'),{recursive:true});
+await cp('index.html','dist/index.html');await cp('src','dist/src',{recursive:true});await cp('public','dist',{recursive:true});
+await mkdir('dist/tests',{recursive:true});for(const file of ['browser-smoke.js','playthrough.js','controller-checks.js','vr-checks.js','immersive-checks.js','immersive-playthrough.js','world-fixture.js','ui-checks.js'])await cp('tests/'+file,'dist/tests/'+file);
+const cacheFiles=['./','./index.html','./icon.svg','./manifest.webmanifest','./src/arcade-ui.js','./fonts/Oxanium.ttf','./fonts/RacingSansOne.ttf','./fonts/Oxanium-OFL.txt','./fonts/RacingSansOne-OFL.txt','./art/signal-city.svg','./src/main.js','./src/core.js','./src/expansion.js','./src/controls.js','./src/gamepad.js','./src/gauntlet.js','./src/vr.js','./src/collision.js','./src/spatial.js','./src/immersive-math.js','./src/immersive-rig.js','./src/immersive-play.js','./src/level-geometry.js','./src/world-atlas.js','./src/world-scene.js','./src/world-ui.js','./src/vr-world-renderer.js','./src/vr-math.js','./src/vr-input.js','./src/vr-renderer.js','./src/renderer.js','./src/assets.js','./src/audio.js','./src/style.css'];
+const pkg=JSON.parse(await readFile('package.json','utf8'));
+const hash=createHash('sha256');for(const file of cacheFiles.slice(1))hash.update(await readFile(path.join('dist',file)));const cacheVersion=hash.digest('hex').slice(0,10);
+const sw=`// Offline shell. Content-hashed cache; same-origin GET requests only.\nconst CACHE='wave-ori-${pkg.version}-${cacheVersion}';\nconst FILES=${JSON.stringify(cacheFiles)};\nself.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));});\nself.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('wave-ori-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});\nself.addEventListener('fetch',e=>{if(e.request.method!=='GET'||new URL(e.request.url).origin!==self.location.origin)return;e.respondWith(caches.match(e.request).then(hit=>hit||fetch(e.request).catch(()=>e.request.mode==='navigate'?caches.match('./index.html'):Response.error())));});\n`;
+await writeFile('dist/sw.js',sw);await writeFile('dist/.nojekyll','');
+const integrity={candidate:pkg.version,algorithm:'sha256',files:{}};
+async function recordFiles(dir){for(const entry of await readdir(path.join(root,dir),{withFileTypes:true})){const relative=path.posix.join(dir,entry.name);if(entry.name==='integrity.json'||entry.name.endsWith('.zip')||entry.name.endsWith('.tar.gz'))continue;if(entry.isDirectory())await recordFiles(relative);else if(entry.isFile())integrity.files[relative]=createHash('sha256').update(await readFile(path.join(root,relative))).digest('hex');}}
+for(const dir of ['src','scripts','tests','public','docs','.github','dist'])await recordFiles(dir);
+for(const file of ['index.html','package.json','README.md','CHANGELOG.md','LICENSE','.gitignore'])integrity.files[file]=createHash('sha256').update(await readFile(file)).digest('hex');
+await writeFile('docs/integrity.json',JSON.stringify(integrity,null,2)+'\n');
+await packageSource(root,path.join(root,'dist/game-source.zip'));
+console.log('Production build complete: dist/ · relative asset paths · no runtime dependencies.');

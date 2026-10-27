@@ -1,0 +1,35 @@
+{
+  "passed": true,
+  "naturalDeath": true,
+  "secondsToDeath": 10.100000000000001,
+  "damageTaken": 107,
+  "retryHealth": 100,
+  "checkpoint": true,
+  "recovery": {
+    "passed": true,
+    "error": null,
+    "steps": 2743,
+    "results": [
+      {
+        "sector": 1,
+        "name": "THE WAKE-UP CALL",
+        "seconds": 68.55,
+        "distance": 175.36,
+        "shots": 24,
+        "defeated": 8,
+        "freed": 9,
+        "pickups": 3,
+        "doors": 5,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": []
+      }
+    ],
+    "method": "Synthetic head/hand poses and thumbsticks through production stepImmersive + ImmersiveRig. Shared twelve sectors, live AI/combat/damage, interactions, pickups, secrets, Wardens and transitions. Fastest exposed VR speed (1.0), exact scripted aim and map knowledge; no player/HP/objective writes. Not human balance, real XR or physical controller validation.",
+    "adapterSteps": 3326
+  },
+  "method": "Production tracked game: walk through first door, idle under live attacks until death, retry checkpoint then traverse/clear sector one."
+}

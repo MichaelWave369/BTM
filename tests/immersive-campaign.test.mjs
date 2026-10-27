@@ -1,0 +1,3 @@
+import test from'node:test';import assert from'node:assert/strict';import {runImmersiveCampaign,runImmersiveFailure}from'./immersive-playthrough.js';
+test('All twelve sectors clear through tracked poses, secrets and shared boss simulation',()=>{const r=runImmersiveCampaign();assert.ok(r.passed,r.error);assert.equal(r.results.length,12);assert.ok(r.results.every(s=>s.distance>40&&s.shots>0&&s.pickups>0&&s.doors>0&&s.secrets===1));assert.ok(r.results.at(-1).bossPhases.includes(3));});
+test('Tracked enemy death retries a checkpoint and completes sector one',()=>{const r=runImmersiveFailure();assert.ok(r.passed,r.error);assert.ok(r.naturalDeath&&r.damageTaken>100&&r.retryHealth>0&&r.recovery.passed);});

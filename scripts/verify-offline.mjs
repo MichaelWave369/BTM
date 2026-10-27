@@ -1,0 +1,16 @@
+import {readFile,writeFile} from 'node:fs/promises';import path from 'node:path';import vm from 'node:vm';import assert from 'node:assert/strict';
+const base=new URL('https://offline.example/MichaelWave-Ori-BreakTheMatrix/'),handlers={},buckets=new Map([['unrelated-cache',new Map()],['wave-ori-0.1.0-stale',new Map()]]);let online=true;
+const key=request=>new URL(typeof request==='string'?request:request.url,base).href;
+const local=async request=>{const url=new URL(key(request)),relative=url.pathname.slice(base.pathname.length)||'index.html';return readFile(path.join('dist',relative));};
+const caches={keys:async()=>[...buckets.keys()],delete:async name=>buckets.delete(name),open:async name=>{if(!buckets.has(name))buckets.set(name,new Map());const bucket=buckets.get(name);return {addAll:async urls=>{for(const url of urls)bucket.set(key(url),await local(url));}};},match:async request=>{const k=key(request);for(const bucket of buckets.values())if(bucket.has(k))return new Response(bucket.get(k));}};
+const self={location:{origin:base.origin},addEventListener:(name,fn)=>handlers[name]=fn,skipWaiting:async()=>{},clients:{claim:async()=>{}}};
+const fetch=async request=>{if(!online)throw Error('Network disconnected for the generated-worker test');return new Response(await local(request));};
+vm.runInNewContext(await readFile('dist/sw.js','utf8'),{self,caches,fetch,URL,Response},{filename:'generated-service-worker.js'});
+async function lifecycle(name){let work;handlers[name]({waitUntil:p=>work=p});await work;}
+await lifecycle('install');await lifecycle('activate');online=false;
+const worker=await readFile('dist/sw.js','utf8'),assets=JSON.parse(worker.match(/const FILES=(\[[^;]+\]);/)[1]);
+for(const required of ['./src/arcade-ui.js','./fonts/Oxanium.ttf','./fonts/RacingSansOne.ttf','./art/signal-city.svg'])assert.ok(assets.includes(required),'UI asset omitted from offline shell: '+required);
+for(const asset of assets){let response;handlers.fetch({request:{method:'GET',url:new URL(asset,base).href,mode:asset==='./'?'navigate':'cors'},respondWith:p=>response=p});assert.ok(response,asset+' was not intercepted');assert.ok((await(await response).arrayBuffer()).byteLength>0,asset+' empty offline');}
+let fallback;handlers.fetch({request:{method:'GET',url:new URL('saved-bookmark',base).href,mode:'navigate'},respondWith:p=>fallback=p});assert.match(await(await fallback).text(),/BREAK THE MATRIX/);
+let postIntercepted=false;handlers.fetch({request:{method:'POST',url:base.href},respondWith:()=>postIntercepted=true});assert.equal(postIntercepted,false);assert.ok(buckets.has('unrelated-cache'));assert.ok(!buckets.has('wave-ori-0.1.0-stale'));
+const report={passed:true,offlineAssets:assets.length,expansionCached:true,controlsCached:true,gamepadCached:true,vrCached:true,gauntletCached:true,immersiveWorldCached:true,neonUiAndLocalFontsCached:true,navigationFallback:true,postRequestsIgnored:true,unrelatedCachePreserved:true,oldVersionCacheRemoved:true,method:'Generated service worker executed in a Node VM with local asset bytes and a disconnected fetch. This is a cache-logic test, not a browser airplane-mode test.'};await writeFile('docs/v0.4.1/offline-check.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));

@@ -1,0 +1,120 @@
+{
+  "passed": true,
+  "sectors": 12,
+  "renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+  "version": "OpenGL ES 3.2 Mesa 25.2.8-0ubuntu0.24.04.2",
+  "worldAndComfortShadersCompiled": true,
+  "results": [
+    {
+      "sector": 1,
+      "passed": true,
+      "vertices": 6864,
+      "colors": 720,
+      "stereoDisparity": true,
+      "image": "sector-01-stereo.png",
+      "sha256": "f669dcd61d36037e8f80c97359ed90956104de609c6a6e9bb9ca08d89349662e"
+    },
+    {
+      "sector": 2,
+      "passed": true,
+      "vertices": 6186,
+      "colors": 382,
+      "stereoDisparity": true,
+      "image": "sector-02-stereo.png",
+      "sha256": "97c7e1146cda857f83b5810e65c9d0c96099a6cd6d00f5b71a4e4b0458a8817c"
+    },
+    {
+      "sector": 3,
+      "passed": true,
+      "vertices": 7122,
+      "colors": 906,
+      "stereoDisparity": true,
+      "image": "sector-03-stereo.png",
+      "sha256": "46d232d0f300320cc943692d9fddfbc168bab4744fe60e1133b1683843d87ffb"
+    },
+    {
+      "sector": 4,
+      "passed": true,
+      "vertices": 6612,
+      "colors": 724,
+      "stereoDisparity": true,
+      "image": "sector-04-stereo.png",
+      "sha256": "07c5b4f1e0c670245aaced19099f15c4d9fcc996dec66dfda400dc18a81246b3"
+    },
+    {
+      "sector": 5,
+      "passed": true,
+      "vertices": 6696,
+      "colors": 850,
+      "stereoDisparity": true,
+      "image": "sector-05-stereo.png",
+      "sha256": "d6efe88aa967d0fc1658aaeddcf4b8977facd87679e200450c399a82cf98c821"
+    },
+    {
+      "sector": 6,
+      "passed": true,
+      "vertices": 7182,
+      "colors": 353,
+      "stereoDisparity": true,
+      "image": "sector-06-stereo.png",
+      "sha256": "23c836e586cbb0060fe4703b575df097ffcf4261ee1e709b20cef7a6e4b52bdd"
+    },
+    {
+      "sector": 7,
+      "passed": true,
+      "vertices": 6540,
+      "colors": 717,
+      "stereoDisparity": true,
+      "image": "sector-07-stereo.png",
+      "sha256": "8eae53b654c8c7899fd9340f4fbae2a93e641e6cc9d49a2bc158cdf760f7c321"
+    },
+    {
+      "sector": 8,
+      "passed": true,
+      "vertices": 6834,
+      "colors": 750,
+      "stereoDisparity": true,
+      "image": "sector-08-stereo.png",
+      "sha256": "fb2e73aa9dfb4b01f79e33b35208923d576b94efb19ab0113e99612e019557ef"
+    },
+    {
+      "sector": 9,
+      "passed": true,
+      "vertices": 7320,
+      "colors": 399,
+      "stereoDisparity": true,
+      "image": "sector-09-stereo.png",
+      "sha256": "ba88415505f1869b03e35d03f0c7fd008968707d4c4c4ad3890a4787200bab73"
+    },
+    {
+      "sector": 10,
+      "passed": true,
+      "vertices": 7548,
+      "colors": 791,
+      "stereoDisparity": true,
+      "image": "sector-10-stereo.png",
+      "sha256": "672e0a600425db207e31ae30a41093476a54f61b45bcd92d3351df6a4cabb8eb"
+    },
+    {
+      "sector": 11,
+      "passed": true,
+      "vertices": 7320,
+      "colors": 522,
+      "stereoDisparity": true,
+      "image": "sector-11-stereo.png",
+      "sha256": "abe28a04992dd13006f745ab26411a0bec9c0cf55d7542527835bedaf39829c5"
+    },
+    {
+      "sector": 12,
+      "passed": true,
+      "vertices": 7290,
+      "colors": 717,
+      "stereoDisparity": true,
+      "image": "sector-12-stereo.png",
+      "sha256": "8eae53b654c8c7899fd9340f4fbae2a93e641e6cc9d49a2bc158cdf760f7c321"
+    }
+  ],
+  "sourceSha256": "972cf23421c5c8fd0dc2a96c00fd87e4313621d34ad15b901407a3e67ae65cd2",
+  "fixtureSha256": "d16474733a3390a60fa31f708901ba67aa55c1a8a4615170d8310a62ed9bc32b",
+  "method": "Exact shipped world/comfort GLSL compiled on surfaceless Mesa EGL/GLES. Actual twelve-map geometry, dynamic batch, Canvas atlas and synthetic per-eye matrices exported from browser QA. Stereo pixels differ in each eye. Not browser WebGL API execution, physical Quest, real XR, haptics, comfort or frame rate validation."
+}

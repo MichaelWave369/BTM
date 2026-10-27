@@ -1,0 +1,45 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "name": "Simulation starts in a valid first-sector spawn",
+      "pass": true
+    },
+    {
+      "name": "WASD input changes the player position",
+      "pass": true
+    },
+    {
+      "name": "Collision stops the player at the first closed door",
+      "pass": true
+    },
+    {
+      "name": "E opens the first door and movement passes through",
+      "pass": true
+    },
+    {
+      "name": "Resonance blaster hits and liberates an approaching host",
+      "pass": true
+    },
+    {
+      "name": "Ori uses a scan or stun and spends companion energy",
+      "pass": true
+    },
+    {
+      "name": "Frequency shift toggles and drains its own energy",
+      "pass": true
+    },
+    {
+      "name": "Checkpoint serializes and restores into a new Game",
+      "pass": true
+    },
+    {
+      "name": "Lethal damage gives death, then retry returns to play",
+      "pass": true
+    },
+    {
+      "name": "Three sectors progress through actual relay, key and boss gates",
+      "pass": true
+    }
+  ]
+}

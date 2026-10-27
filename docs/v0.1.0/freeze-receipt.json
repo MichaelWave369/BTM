@@ -1,0 +1,31 @@
+{
+  "project": "Michael Wave & Ori: Break the Matrix",
+  "candidate_version": "0.1.0",
+  "controlling_specification": "User supplied Pasted text.txt",
+  "sha256": "3d353a9e8aaf4aa59a5b789864ed4055db0a4294a21012f2628f40933bbced3f",
+  "authority": [
+    "Current explicit user instruction",
+    "Supplied build brief",
+    "Documented preferred-stack implementation choice",
+    "Milestone register"
+  ],
+  "scope": "Stages A, B and candidate-level C; no other repositories",
+  "assumptions": [
+    "Science-fantasy fiction",
+    "Code-native original assets",
+    "Single-player desktop-first",
+    "Default private hosted candidate; portable static build"
+  ],
+  "deviations": [
+    {
+      "id": "DEV-01",
+      "class": "Local implementation",
+      "original": "Preferred TypeScript, Vite",
+      "actual": "Native JavaScript ES modules and dependency-free Node build",
+      "basis": "Preferred-stack wording permits implementation choice; custom raycasting, modularity and static paths preserved",
+      "rollback": "Introduce TypeScript/Vite around unchanged engine modules if requested"
+    }
+  ],
+  "release_authority": "Michael Mikey Hughes",
+  "verification": "Author-run; not independent"
+}

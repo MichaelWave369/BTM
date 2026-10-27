@@ -1,0 +1,11 @@
+# Preserved failures and repairs
+
+1. **Full traversal driver stalled in sector four** at (6.27, 12.50) while pursuing relay A. The driver repeatedly changed between a nearby captive and relay at a distance threshold, re-centering in the same tile. Captive goals now remain selected until rescue. This was a test-driver navigation failure; map connectivity did not change. The six-sector traversal then passed.
+2. **Sign-placement regression:** the first new-content tests found only three valid wall signs in sector three and two in sector five. Several specified signs were over floor cells and correctly filtered out. Their coordinates were moved to actual walls; the four-sign assertions now pass in all six sectors.
+3. **Archive interaction queued behind banter:** reading an environmental log set its read flag but did not immediately emit archive dialogue. Intentional interactions now take priority over routine banter; the regression verifies an immediate ARCHIVE line.
+4. **Warden phases stalled during stun:** the full secret/artifact run reported only phase one while the boss was repeatedly stunned. Phase changes were calculated after an early stun return. Health-based phase changes now occur before that return. The full runs observe phases one, two and three at both Warden encounters.
+5. **Browser-only pointer timer invocation:** Chrome reported `TypeError: Illegal invocation at PointerCapture.capture (src/controls.js:11:143)` on starting the game. A browser timer copied onto a class instance was invoked with the class as its receiver. Default timer adapters now call browser timers through wrapper functions. This is followed by a fresh normal-game capture/fallback browser test, rather than treating the injected unit-timer tests as proof of browser behavior.
+
+Original v0.1.0 tests remain unchanged. New failures were repaired in implementation or the new driver, never by dropping existing assertions. Reproduction procedures and final observed results are recorded in verification.md and playthrough.json.
+
+6. A follow-up review of the phase-order repair found that stunned crawlers could reach their phasing branch before the stun return. Health phase evaluation now precedes the stun gate, and crawler movement/phasing follows it. A focused regression holds a crawler still during Ori stun and permits its normal phase only after stun expiry.

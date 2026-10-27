@@ -1,0 +1,159 @@
+{
+  "baseline": "9baa3d8d3a15de98d474860b4c927b05a55f0868",
+  "gameplay": [
+    {
+      "file": "src/core.js",
+      "byte_identical": true,
+      "sha256": "21b1fdc4f1cee516410db0508547b3432200936ad08399f2fc2378a9927da14e"
+    },
+    {
+      "file": "src/expansion.js",
+      "byte_identical": true,
+      "sha256": "d643c71286c59412c3720a4e2b0887cbb1f1d9e6a3222440fffdced2d899b6b9"
+    },
+    {
+      "file": "src/gauntlet.js",
+      "byte_identical": true,
+      "sha256": "a788efa666b0b28ba11cc2903ce01c808a57dcd89f62585746045349114fb78a"
+    },
+    {
+      "file": "src/collision.js",
+      "byte_identical": true,
+      "sha256": "51e8ad14910e1f13d55941d86e2fa6c9036fccf62547e15013d231acee057253"
+    },
+    {
+      "file": "src/controls.js",
+      "byte_identical": true,
+      "sha256": "091ac98bb66c77b24a7776a77aef6d5c0f90f9aa9e16114d31c5747c5f9e5816"
+    },
+    {
+      "file": "src/gamepad.js",
+      "byte_identical": true,
+      "sha256": "f550f864d01a8786a8074c8e58aea4ef68946a0ceb7d8a3ee2e46dd54606959d"
+    },
+    {
+      "file": "src/audio.js",
+      "byte_identical": true,
+      "sha256": "485048242ba32074cb9105d018d1f5ff2b05e05c116be6bd0268de13ed40b794"
+    },
+    {
+      "file": "src/vr.js",
+      "byte_identical": true,
+      "sha256": "d2a92cadd238ada2727c6d07e859fba3a25de3fe125c8237add431c214741356"
+    },
+    {
+      "file": "src/vr-input.js",
+      "byte_identical": true,
+      "sha256": "9383a16438d4e30ef6a72e8b5772c77a51db3fdd56fa35e0056e2c4a6a0b4cc3"
+    },
+    {
+      "file": "src/vr-math.js",
+      "byte_identical": true,
+      "sha256": "4040c9b89f7803702418d470ff7298329118e0fa50b83fd3994efa3f782a83f6"
+    },
+    {
+      "file": "src/vr-world-renderer.js",
+      "byte_identical": true,
+      "sha256": "972cf23421c5c8fd0dc2a96c00fd87e4313621d34ad15b901407a3e67ae65cd2"
+    },
+    {
+      "file": "src/immersive-rig.js",
+      "byte_identical": true,
+      "sha256": "a83c4e19302829ca28f224d764532691ba76a3744a14ccaee2827d9c1de3cd4a"
+    },
+    {
+      "file": "src/immersive-play.js",
+      "byte_identical": true,
+      "sha256": "7ee2856f83a183c23e8f96f5f09c232d9744fedd2ed8f15c5e40adc6bbd95d44"
+    },
+    {
+      "file": "src/immersive-math.js",
+      "byte_identical": true,
+      "sha256": "5d5042df1917153f684c23f5c49db8dab10ee837c4e2bbfa5a311a0e9dc0a424"
+    },
+    {
+      "file": "src/spatial.js",
+      "byte_identical": true,
+      "sha256": "2dee7332e33ac9fb19a0e4449f5e8f71dadd57c0aa53610f1e6f22e67fd218b6"
+    },
+    {
+      "file": "src/level-geometry.js",
+      "byte_identical": true,
+      "sha256": "802808db5a875e045bf2d057b8df4ca0ede08211aa1a8049125137c022057dcf"
+    },
+    {
+      "file": "src/world-atlas.js",
+      "byte_identical": true,
+      "sha256": "8fe8b403dd73bd9add665a068ab72850ff680620b4a93f14c1d8ee432c49d8a2"
+    },
+    {
+      "file": "src/world-scene.js",
+      "byte_identical": true,
+      "sha256": "90a93ffcd10d0be4bf547e08e71ca6eb683865169fbc20eaad522ca69c6bd8af"
+    }
+  ],
+  "baseline_tests": [
+    {
+      "file": "tests/browser-smoke.js",
+      "byte_identical": true
+    },
+    {
+      "file": "tests/controller-checks.js",
+      "byte_identical": true
+    },
+    {
+      "file": "tests/core.test.mjs",
+      "byte_identical": true
+    },
+    {
+      "file": "tests/fixtures/v0.1-checkpoint.json",
+      "byte_identical": true
+    },
+    {
+      "file": "tests/gamepad.test.mjs",
+      "byte_identical": true
+    },
+    {
+      "file": "tests/immersive-campaign.test.mjs",
+      "byte_identical": true
+    },
+    {
+      "file": "tests/immersive-checks.js",
+      "byte_identical": true
+    },
+    {
+      "file": "tests/immersive-playthrough.js",
+      "byte_identical": true
+    },
+    {
+      "file": "tests/immersive.test.mjs",
+      "byte_identical": true
+    },
+    {
+      "file": "tests/nightmare.test.mjs",
+      "byte_identical": true
+    },
+    {
+      "file": "tests/playthrough.js",
+      "byte_identical": true
+    },
+    {
+      "file": "tests/upgrade.test.mjs",
+      "byte_identical": true
+    },
+    {
+      "file": "tests/vr-checks.js",
+      "byte_identical": true
+    },
+    {
+      "file": "tests/vr.test.mjs",
+      "byte_identical": true
+    },
+    {
+      "file": "tests/world-fixture.js",
+      "byte_identical": true
+    }
+  ],
+  "world_asset_factories_unchanged": true,
+  "save_keys_unchanged": true
+}

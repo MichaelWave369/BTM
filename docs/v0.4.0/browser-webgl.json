@@ -1,0 +1,6 @@
+{
+  "passed": null,
+  "status": "UNAVAILABLE",
+  "error": "WebGL is unavailable.",
+  "method": "Actual browser capability check; no headset/software substitute."
+}

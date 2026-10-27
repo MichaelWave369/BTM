@@ -1,0 +1,101 @@
+{
+  "passed": false,
+  "total": 22,
+  "results": [
+    {
+      "name": "Matrix composition preserves an identity transform",
+      "pass": true
+    },
+    {
+      "name": "A screen is placed in front of the initial head pose",
+      "pass": true
+    },
+    {
+      "name": "Recenter ignores pitch and keeps the arcade screen upright",
+      "pass": true
+    },
+    {
+      "name": "Controller rays hit the panel in texture coordinates",
+      "pass": true
+    },
+    {
+      "name": "Rays behind, parallel to, or pointing away from a panel do not select",
+      "pass": true
+    },
+    {
+      "name": "Quest Touch thumbsticks map separately from Xbox navigator pads",
+      "pass": true
+    },
+    {
+      "name": "Quest triggers fire and charge; grip controls interact and Ori",
+      "pass": true
+    },
+    {
+      "name": "Quest face buttons and stick clicks expose the documented actions",
+      "pass": true
+    },
+    {
+      "name": "Generic xr-standard input keeps trigger/grip controls without guessing faces",
+      "pass": true
+    },
+    {
+      "name": "Losing a Touch controller cancels held fire until neutral",
+      "pass": true
+    },
+    {
+      "name": "Unavailable WebXR reports a fallback without requesting a session",
+      "pass": true
+    },
+    {
+      "name": "Session initialization makes GL compatible before allocating GPU objects",
+      "pass": true
+    },
+    {
+      "name": "Local-floor rejection falls back to local reference space",
+      "pass": true
+    },
+    {
+      "name": "Permission denial leaves VR inactive and permits another attempt",
+      "pass": true
+    },
+    {
+      "name": "Overlapping VR entry attempts request only one session",
+      "pass": true
+    },
+    {
+      "name": "Each XR frame advances once and renders both eye views",
+      "pass": true
+    },
+    {
+      "name": "Tracking loss and hidden headset visibility pause without simulation",
+      "pass": true
+    },
+    {
+      "name": "Recenter changes the anchored screen only on explicit request",
+      "pass": true
+    },
+    {
+      "name": "Pointed UI actions suppress a simultaneous game shot",
+      "pass": true
+    },
+    {
+      "name": "Exit and stale XR callbacks cannot restart or advance the game",
+      "pass": true
+    },
+    {
+      "name": "Real browser WebGL shader, canvas texture and arcade scene",
+      "pass": null,
+      "status": "unavailable",
+      "error": "WebGL is unavailable."
+    },
+    {
+      "name": "Two independent eye viewports rendered without a GL error",
+      "pass": null,
+      "status": "unavailable",
+      "error": "WebGL is unavailable."
+    }
+  ],
+  "method": "Pure matrix/input tests and a simulated WebXR session lifecycle. No headset, real XR session, Bluetooth pairing, Quest frame rate or comfort validation.",
+  "unavailable": 2,
+  "status": "partially_verified"
+}

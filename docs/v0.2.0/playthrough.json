@@ -1,0 +1,154 @@
+{
+  "campaign": {
+    "passed": true,
+    "error": null,
+    "steps": 13990,
+    "results": [
+      {
+        "sector": 1,
+        "name": "THE WAKE-UP CALL",
+        "seconds": 68.25,
+        "distance": 174.57,
+        "shots": 24,
+        "defeated": 8,
+        "freed": 9,
+        "pickups": 3,
+        "doors": 5,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": []
+      },
+      {
+        "sector": 2,
+        "name": "CATHEDRAL OF STATIC",
+        "seconds": 56,
+        "distance": 141.92,
+        "shots": 34,
+        "defeated": 9,
+        "freed": 6,
+        "pickups": 2,
+        "doors": 6,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": []
+      },
+      {
+        "sector": 3,
+        "name": "THE DEMIURGE CORE",
+        "seconds": 63.65,
+        "distance": 161.42,
+        "shots": 21,
+        "defeated": 9,
+        "freed": 4,
+        "pickups": 3,
+        "doors": 6,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "sector": 4,
+        "name": "THE MEMORY FOUNDRY",
+        "seconds": 40.35,
+        "distance": 99.37,
+        "shots": 23,
+        "defeated": 12,
+        "freed": 7,
+        "pickups": 2,
+        "doors": 6,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": []
+      },
+      {
+        "sector": 5,
+        "name": "THE BLACKOUT STACK",
+        "seconds": 59.67,
+        "distance": 149.27,
+        "shots": 33,
+        "defeated": 15,
+        "freed": 8,
+        "pickups": 2,
+        "doors": 7,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": []
+      },
+      {
+        "sector": 6,
+        "name": "THE NULL CROWN",
+        "seconds": 61.67,
+        "distance": 155.07,
+        "shots": 41,
+        "defeated": 18,
+        "freed": 8,
+        "pickups": 3,
+        "doors": 8,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 18.64,
+        "health": 100,
+        "bossPhases": [
+          1,
+          2,
+          3
+        ]
+      }
+    ],
+    "method": "Production movement, aim, fire, reload, Ori, dodge, E interactions and exit proximity. No teleportation, direct objective/HP assignment, or calls to complete/damageEnemy."
+  },
+  "failureRecovery": {
+    "passed": true,
+    "naturalDeath": true,
+    "secondsToDeath": 10.1,
+    "damageTaken": 107,
+    "retryHealth": 100,
+    "retryAtCheckpoint": true,
+    "recovery": {
+      "passed": true,
+      "error": null,
+      "steps": 2349,
+      "results": [
+        {
+          "sector": 1,
+          "name": "THE WAKE-UP CALL",
+          "seconds": 58.7,
+          "distance": 150.52,
+          "shots": 24,
+          "defeated": 8,
+          "freed": 9,
+          "pickups": 2,
+          "doors": 4,
+          "secrets": 0,
+          "artifacts": 0,
+          "deaths": 0,
+          "damageTaken": 0,
+          "health": 100,
+          "bossPhases": []
+        }
+      ],
+      "method": "Production movement, aim, fire, reload, Ori, dodge, E interactions and exit proximity. No teleportation, direct objective/HP assignment, or calls to complete/damageEnemy."
+    },
+    "method": "Walk through the first door, stop firing, take live enemy attacks until death, retry the stored checkpoint, then traverse and clear sector one."
+  }
+}

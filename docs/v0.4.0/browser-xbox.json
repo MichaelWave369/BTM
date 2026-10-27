@@ -1,0 +1,115 @@
+{
+  "passed": true,
+  "total": 27,
+  "results": [
+    {
+      "name": "Dead zone prevents resting-stick drift",
+      "pass": true
+    },
+    {
+      "name": "Radial stick preserves diagonals and caps full speed",
+      "pass": true
+    },
+    {
+      "name": "Controller settings sanitize old and invalid saves",
+      "pass": true
+    },
+    {
+      "name": "Analog movement keeps partial speed and legacy keyboard speed",
+      "pass": true
+    },
+    {
+      "name": "Diagonal analog movement cannot exceed full-stick speed",
+      "pass": true
+    },
+    {
+      "name": "Left and right sticks reach real movement and horizontal aiming",
+      "pass": true
+    },
+    {
+      "name": "Small movements still collide with map walls",
+      "pass": true
+    },
+    {
+      "name": "Keyboard and gamepad input coexist without extra speed",
+      "pass": true
+    },
+    {
+      "name": "RT fires a real weapon and holding continues automatic fire",
+      "pass": true
+    },
+    {
+      "name": "RT buffers a press near cooldown expiry",
+      "pass": true
+    },
+    {
+      "name": "LT charges and releases exactly one alternate shot",
+      "pass": true
+    },
+    {
+      "name": "A opens a real door and interacts only once per press",
+      "pass": true
+    },
+    {
+      "name": "A extracts through the real completion event before the next simulation tick",
+      "pass": true
+    },
+    {
+      "name": "All Xbox actions use the documented standard button layout",
+      "pass": true
+    },
+    {
+      "name": "Y, X, B, vision, weapon cycling and map reach real game actions",
+      "pass": true
+    },
+    {
+      "name": "Holding L3 sprints and D-pad down spends a full bass charge",
+      "pass": true
+    },
+    {
+      "name": "D-pad menu movement repeats; A confirm never repeats while held",
+      "pass": true
+    },
+    {
+      "name": "Pause or focus loss cancels held fire and charge until controls release",
+      "pass": true
+    },
+    {
+      "name": "Disconnect clears all held input; reconnect waits for neutral",
+      "pass": true
+    },
+    {
+      "name": "Multiple and sparse gamepads retain the active standard device",
+      "pass": true
+    },
+    {
+      "name": "Unmapped and blocked controllers fail safely without guessing buttons",
+      "pass": true
+    },
+    {
+      "name": "DOM menu skips disabled and hidden controls",
+      "pass": true
+    },
+    {
+      "name": "A activates a real focused button",
+      "pass": true
+    },
+    {
+      "name": "D-pad moves focus and left/right adjusts a real range",
+      "pass": true
+    },
+    {
+      "name": "Controller adjusts selects and toggles checkboxes",
+      "pass": true
+    },
+    {
+      "name": "B returns and Menu resumes through dedicated callbacks",
+      "pass": true
+    },
+    {
+      "name": "Optional vibration handles rejection and missing hardware",
+      "pass": true
+    }
+  ],
+  "method": "Synthetic standard Xbox snapshots through the production input adapter and real game simulation; no physical controller or Bluetooth stack exercised."
+}

@@ -1,0 +1,11 @@
+{
+  "candidate": "0.4.0 reconstructed",
+  "baseline": "914ff27305fbecab782d531be7992c91b79e14a6",
+  "authority": "authority.md",
+  "controlling_scope": "controlling-brief.md",
+  "scope_sha256": "cd38ffedf87d8ca662147c3435070a891f3d4b9e61ccd049719a8311b2b5233b",
+  "scope_provenance": "Reconstructed from the conversation; not a byte-identical missing attachment",
+  "runtime_dependencies_added": [],
+  "public_release": "v0.3.0 unchanged",
+  "hardware": "pending"
+}

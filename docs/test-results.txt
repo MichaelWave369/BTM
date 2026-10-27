@@ -1,0 +1,53 @@
+
+> michael-wave-ori-break-the-matrix@0.1.0 test
+> node --test tests/*.test.mjs
+
+✔ sector 1: spawn, enemies, pickups, key, relays and exit occupy reachable space (6.597592ms)
+✔ sector 1: mandatory objectives are reachable without a secret wall (2.472807ms)
+✔ sector 2: spawn, enemies, pickups, key, relays and exit occupy reachable space (0.679396ms)
+✔ sector 2: mandatory objectives are reachable without a secret wall (0.643212ms)
+✔ sector 3: spawn, enemies, pickups, key, relays and exit occupy reachable space (2.410744ms)
+✔ sector 3: mandatory objectives are reachable without a secret wall (0.635811ms)
+✔ raycasting is finite on cardinal axes and respects closed walls (0.360595ms)
+✔ collision substeps prevent tunnelling through walls and preserve sliding (1.415049ms)
+✔ doors block sight and collision until fully opening (0.522179ms)
+✔ E opens faced ordinary door and golden doors require a key (1.327286ms)
+✔ opening a secret counts once and does not consume key (0.653939ms)
+✔ movement speed is normalized diagonally and frame deltas are bounded (6.976825ms)
+✔ shots hit a visible host; liberated hosts count exactly once (1.230519ms)
+✔ walls block player weapons and enemy line of sight (0.540126ms)
+✔ slap is free and only works in melee range (0.340134ms)
+✔ blaster respects cooldown and capacitor costs (0.349558ms)
+✔ bass cone hits multiple hosts, stuns and knocks back without wall tunnelling (0.519915ms)
+✔ pulse rifle emits a travelling projectile that damages a target (1.102477ms)
+✔ disruptor destabilizes multiple targets and unplugger pierces (0.989405ms)
+✔ charged alternate fire has a larger cost and damage (0.970126ms)
+✔ all six weapons have unique names, fire rates, and energy costs (0.196838ms)
+✔ captive rescue requires proximity, restores autonomy, cannot double-count (0.74753ms)
+✔ enemies telegraph and damage the player (2.608653ms)
+✔ ranged enemies launch readable projectiles (3.171193ms)
+✔ Ori follows, auto attacks, and Q stuns with an energy cost (1.435099ms)
+✔ Ori Q tags objectives without a nearby hostile (0.417531ms)
+✔ resonance vision drains and then recharges (1.578566ms)
+✔ R vent restores energy after a delay and respects cooldown (0.715331ms)
+✔ bass drop charges from liberation, affects nearby enemies, then empties (0.590593ms)
+✔ dodge has a cooldown and brief damage immunity (0.365954ms)
+✔ death stops the simulation; retry restores a playable checkpoint (1.046882ms)
+✔ checkpoints round trip mutations, doors, player and liberation (0.857446ms)
+✔ unsupported or malformed checkpoints are rejected (0.691776ms)
+✔ progression requires both relays and a key and unlocks later weapons (1.327817ms)
+✔ Warden has three phases and blocks the final ending until defeated (0.707619ms)
+✔ key and health pickups update the HUD model and persist progress (0.441707ms)
+✔ upgrades from two Φ artifacts increase weapon damage (0.702572ms)
+✔ deterministic initial simulation has matching states for matching inputs (10.580142ms)
+✔ crawler phases through a thin wall into a valid landing cell (0.491663ms)
+✔ browser smoke scenario passes in the same production simulation (25.509678ms)
+✔ a dead player cannot replace a valid retry checkpoint (0.482169ms)
+ℹ tests 41
+ℹ suites 0
+ℹ pass 41
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 233.007964

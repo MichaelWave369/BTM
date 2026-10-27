@@ -1,0 +1,2 @@
+import {runImmersiveCampaign,runImmersiveFailure}from'../tests/immersive-playthrough.js';import{writeFile,mkdir}from'node:fs/promises';
+const report={campaign:runImmersiveCampaign(),failureRecovery:runImmersiveFailure()};await mkdir('docs/v0.4.0',{recursive:true});await writeFile('docs/v0.4.0/immersive-playthrough.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));if(!report.campaign.passed||!report.failureRecovery.passed)process.exitCode=1;
