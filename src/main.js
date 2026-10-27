@@ -1,6 +1,7 @@
 import {Game,SECTORS,WEAPONS,CAMPAIGN_HOSTS,clamp,angleDiff} from './core.js';
 import {Renderer} from './renderer.js';
 import {enterPhiWadMission,leavePhiWadMission} from './phi-content/runtime.js';
+import {loadHostedMission} from './phi-content/hosted-missions.js';
 import {UI,WEAPON_UI,drawOri,drawWeaponIcon} from './arcade-ui.js';
 import {AudioEngine} from './audio.js';
 import {drawPortrait} from './assets.js';
@@ -155,6 +156,26 @@ function updateHUD(){
 }
 for(let i=0;i<6;i++){const b=document.createElement('button');b.dataset.weapon=i;b.setAttribute('aria-label','Equip '+WEAPONS[i].name);b.setAttribute('aria-pressed',String(i===game.weapon));const art=document.createElement('canvas');art.width=80;art.height=44;art.setAttribute('aria-hidden','true');const number=document.createElement('span');number.className='weapon-number';number.textContent=i+1;const locked=document.createElement('span');locked.className='weapon-lock';locked.textContent='LOCK';b.append(art,number,locked);b.addEventListener('click',()=>{if(game.mode==='playing'||game.mode==='paused'){game.selectWeapon(i);processEvents();updateHUD();}});$('weapon-slots').append(b);}
 for(let i=0;i<47;i++){const bar=document.createElement('i');bar.style.height=(3+((i*17+i*i*7)%17))+'px';$('title-screen').querySelector('.waveform').append(bar);}
+$('codebrown-btn').addEventListener('click',async()=>{
+  const button=$('codebrown-btn');
+  if(button.disabled)return;
+  button.disabled=true;
+  const caption=button.querySelector('small');
+  const previous=caption?.textContent;
+  if(caption)caption.textContent='LOADING COMMUNITY SIGNAL…';
+  try{
+    const bytes=await loadHostedMission();
+    const mission=enterPhiWadMission(game,bytes);
+    mapOpen=false;
+    play(false);
+    showToast('CUSTOM MISSION / '+mission.title);
+  }catch(error){
+    showToast('CODE BROWN UNAVAILABLE / '+error.message);
+  }finally{
+    button.disabled=false;
+    if(caption)caption.textContent=previous;
+  }
+});
 $('phiwad-btn').addEventListener('click',()=>$('phiwad-input').click());
 $('phiwad-input').addEventListener('change',async event=>{
   const input=event.currentTarget,file=input.files?.[0];
