@@ -1,9 +1,9 @@
 {
   "name": "michael-wave-ori-break-the-matrix",
-  "version": "0.4.1",
+  "version": "0.4.2-rc.1",
   "private": true,
   "type": "module",
-  "description": "Neon Signal Edition: a code-native arcade interface for the twelve-sector immersive campaign.",
+  "description": "Neon Signal with opt-in ΦWAD custom missions in the shared Classic and immersive VR simulation.",
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "build": "node scripts/build.mjs",
