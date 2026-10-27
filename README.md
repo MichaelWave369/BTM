@@ -6,6 +6,14 @@
 
 An original offline-capable 1990s Canvas raycasting shooter: twelve sectors, six weapons, Michael/Ori banter and assistance, secrets, local checkpoints, Xbox controls and native WebXR Arcade / immersive world modes. A new 1980s arcade interface wraps the preserved raycasting engine. No package install, paid service or external runtime library is required. The two bundled font families include their SIL Open Font Licenses.
 
+## Play CODE BROWN directly on GitHub Pages
+
+Open **https://michaelwave369.github.io/BTM/** and select **PLAY CODE BROWN** on the Neon Signal title screen. The game downloads only the small first-party level JSON behind the scenes and loads it as a verified ΦWAD mission automatically. No game ZIP, local install, manual .phiwad download, or file chooser is required.
+
+This is the original authored CODE BROWN: Signal Breakout level: 29×25 grid, nine enemies including the Warden, two relays, five pickups and two captives. Custom runs use session-only checkpoints and do **not** modify your original campaign's saved progress. After the first successful site load, the mission is included in the service worker offline cache.
+
+**LOAD ΦWAD MISSION** remains available for other creators' local packs. The hosted mission is static, versioned data, not remotely executed scripts. See [the hosted mission contract](docs/HOSTED_MISSIONS.md).
+
 ## Play or run locally
 
 Extract the complete source/build ZIP. The same twelve-sector game now has a chrome wordmark, original vector sunset city, magenta/cyan instruments, illustrated weapon slots, a discovered-room radar, new Ori displays and redesigned menus, wrist HUD and captions. With the prebuilt `dist/`, no dependency install is needed. With **Node.js 20+**:
