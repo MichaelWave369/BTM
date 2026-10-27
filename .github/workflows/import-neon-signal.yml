@@ -52,7 +52,7 @@ jobs:
                       raise SystemExit('Oversized source file: '+name)
                   files[rel]=z.read(info)
           fingerprint=hashlib.sha256(''.join(
-              f'{name}\\0{hashlib.sha256(data).hexdigest()}\\n'
+              f'{name}\0{hashlib.sha256(data).hexdigest()}\n'
               for name,data in sorted(files.items())
           ).encode()).hexdigest()
           print('Source files:',len(files),'Snapshot fingerprint:',fingerprint)
