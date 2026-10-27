@@ -22,6 +22,12 @@ jobs:
           curl --fail --location --retry 3 --connect-timeout 15 --max-time 120 \
             --output "$RUNNER_TEMP/neon-source.zip" \
             'https://michael-wave-ori-break-the-matrix.microneesia79.chatgpt.site/game-source.zip'
+      - name: Preserve downloaded snapshot for source-diff review
+        uses: actions/upload-artifact@v4
+        with:
+          name: btm-public-source-diff
+          path: ${{ runner.temp }}/neon-source.zip
+          retention-days: 2
       - name: Match every source file to the user's v0.4.1 snapshot
         env:
           SOURCE_ARCHIVE: ${{ runner.temp }}/neon-source.zip
