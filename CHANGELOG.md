@@ -1,3 +1,13 @@
+# Immersive Next — 0.5.0-rc.1 candidate
+
+- Add original sector-specific immersive materials, budgeted neon wall lights/animated terminals, responsive signal accents and distance culling.
+- Add two tracked gloved hands, dark weapon bodies/signal rails, aligned safe muzzle effects, capped projectile trails and Warden/threat rings.
+- Add Ori holographic rings, smoothed presentation, scan/assist/attention cues and nonobstructive weapon-lane placement.
+- Improve wrist vitals/map/hover/laser feedback; capture the entire panel before stick movement/turning and cancel buffered combat until neutral.
+- Add saved smooth-turn speed and vignette strength without changing snap defaults or v1 saves.
+- Add regressions, real Chromium stereo/Canvas/offline/resource checks, captures, performance report and a pending physical Quest checklist.
+- Preserve original simulation, campaign, six weapon rules, dialogue/audio, Classic/Xbox/Arcade, CODE BROWN and ΦWAD. Staging/teleport/direct touch and full hardware acceptance are deferred. No automatic merge or release.
+
 # Changelog
 
 ## 0.4.1 — Neon Signal Edition

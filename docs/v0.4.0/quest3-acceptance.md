@@ -1,5 +1,7 @@
 # Quest 3 acceptance checklist — pending
 
+Immersive Next adds a [successor checklist](../immersive-next/quest3-acceptance.md); the original checks below remain required.
+
 No physical Quest/session/controller acceptance has occurred. Charge both Touch controllers and serve this candidate's `dist/` on a secure HTTPS test origin. Keep public v0.3.0 unchanged. Record date, browser/OS versions, posture and quality for each run.
 
 | Check | Acceptance | Status |

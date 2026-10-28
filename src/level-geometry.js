@@ -1,6 +1,6 @@
 import {WORLD_SCALE,WALL_HEIGHT} from './spatial.js';
 export const LEVEL_SCHEMA='mwori.level/1.0';
-export const MATERIALS=[...Array.from({length:6},(_,i)=>'wall'+(i+1)),'floor','ceiling','white',...['plugged','repeater','enforcer','crawler','warden'].flatMap(type=>['enemy','pain'].flatMap(kind=>Array.from({length:4},(_,i)=>kind+':'+type+':'+i))),...['health','energy','armor','artifact','key'].map(t=>'item:'+t),'relay:off','relay:on','captive','ori',...['pod','console','speaker','lamp'].map(t=>'prop:'+t),...Array.from({length:4},(_,i)=>'sign:'+i),'portal','marker'];
+export const MATERIALS=[...Array.from({length:6},(_,i)=>'wall'+(i+1)),'floor','ceiling','white',...['plugged','repeater','enforcer','crawler','warden'].flatMap(type=>['enemy','pain'].flatMap(kind=>Array.from({length:4},(_,i)=>kind+':'+type+':'+i))),...['health','energy','armor','artifact','key'].map(t=>'item:'+t),'relay:off','relay:on','captive','ori',...['pod','console','speaker','lamp'].map(t=>'prop:'+t),...Array.from({length:4},(_,i)=>'sign:'+i),'portal','marker','signal:screen'];
 const slots=new Map(MATERIALS.map((name,i)=>[name,i]));
 export const materialUV=name=>{const i=slots.get(name)??slots.get('white'),x=i%16*64,y=Math.floor(i/16)*64;return [(x+2)/1024,(y+2)/1024,(x+62)/1024,(y+62)/1024];};
 export function pushQuad(vertices,points,material='white',color=[1,1,1,1]){const uv=materialUV(material),coords=[[uv[0],uv[3]],[uv[2],uv[3]],[uv[2],uv[1]],[uv[0],uv[1]]];for(const i of [0,1,2,0,2,3])vertices.push(...points[i],...coords[i],...color);}

@@ -1,0 +1,69 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neon Signal / Immersive Next QA</title>
+<style>body{margin:24px;background:#080e21;color:#e8f6ff;font:16px monospace}h1,a{color:#55eaff}button,select{padding:12px;margin:4px;background:#172543;color:#edfaff;border:1px solid #e77aff;font:inherit}canvas{display:block;max-width:100%;border:1px solid #557da9;margin:16px 0}pre{white-space:pre-wrap}label{display:inline-block}</style>
+<h1>NEON SIGNAL / IMMERSIVE NEXT</h1><p>Actual production renderer with synthetic stereo poses. This is a developer viewer, not a headset acceptance result. No saved games are read or written.</p>
+<nav><button id="checks">CHECK LOGIC + CANVAS</button><button id="graphics">CHECK WEBGL + CLEANUP</button><a href="./immersive-qa.html">Campaign QA</a> · <a href="./">Game</a></nav>
+<label>Sector <select id="sector"></select></label><label>Quality <select id="quality"><option>balanced</option><option>performance</option><option>high</option></select></label><label>Weapon <select id="weapon"></select></label><button id="preview">RENDER STEREO PREVIEW</button>
+<p id="status" role="status">Ready.</p><canvas id="world" width="1280" height="720"></canvas><canvas id="wrist" width="512" height="512"></canvas><pre id="raw"></pre>
+<script type="module">
+import {loadHostedMission} from './src/phi-content/hosted-missions.js';
+import {enterPhiWadMission,leavePhiWadMission} from './src/phi-content/runtime.js';
+import {browserSignalChecks} from './tests/signal-checks.js';
+import {VRWorldRenderer} from './src/vr-world-renderer.js';
+import {Game, SECTORS, WEAPONS} from './src/core.js';
+import {ImmersiveRig} from './src/immersive-rig.js';
+import {matIdentity} from './src/immersive-math.js';
+import {perspective} from './src/vr-math.js';
+const $ = id => document.getElementById(id);
+SECTORS.forEach((s, i) => $('sector').add(new Option((i + 1) + ' / ' + s.name, i)));
+WEAPONS.forEach((w, i) => $('weapon').add(new Option(w.name, i))); $('weapon').value = 1;
+const report = data => { $('raw').textContent = JSON.stringify(data, null, 2); $('status').textContent = (data.passed === true ? 'PASS' : data.status || 'FAIL') + ' / ' + (data.total || '') + ' ' + (data.method || data.error || ''); };
+function frame(renderer, index, quality, weapon = 1, customGame = null) {
+ const game = customGame || new Game(); if(!customGame)game.loadLevel(index, false); game.weapon = weapon;
+ const rig = new ImmersiveRig(), head = matIdentity(), right = matIdentity(), left = matIdentity();
+ head[13] = 1.65; right[12] = .22; right[13] = 1.35; right[14] = -.25;
+ left[12] = -.32; left[13] = 1.18; left[14] = -.28;
+ rig.prepare(game, {head, rightRay: right, rightGrip: right, leftGrip: left}, null, {}, .014);
+ // Let the real entry fade settle before measuring visible stereo pixels.
+ for(let i=0;i<16;i++){rig.prepare(game, {head, rightRay: right, rightGrip: right, leftGrip: left}, null, {}, .014);game.update(.014,{deferFire:true});}
+ const views = [-.032, .032].map((x, i) => {
+  const inverse = matIdentity(); inverse[12] = -x; inverse[13] = -1.65;
+  return {viewport: {x: i * 640, y: 0, width: 640, height: 720}, projectionMatrix: perspective(Math.PI / 2, 640 / 720), transform: {inverse: {matrix: inverse}}};
+ });
+ const settings = {vrQuality: quality, reducedMotion: true, vrAimLine: true};
+ const stats = renderer.renderWorld(views, game, rig, .014, {game, settings, screen: '', activate: () => {}, dialogue: 'ORI: Signal is clear, Michael. Let’s break the loop.'});
+ $('wrist').getContext('2d').drawImage(renderer.ui.canvas, 0, 0);
+ const gl = renderer.gl, pixels = new Uint8Array(1280 * 720 * 4); gl.readPixels(0, 0, 1280, 720, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+ let leftHash = 0, rightHash = 0, lit = 0;
+ for (let y = 0; y < 720; y += 3) for (let x = 0; x < 640; x += 3) {
+  const a = (y * 1280 + x) * 4, b = a + 640 * 4;
+  leftHash = (Math.imul(leftHash, 31) + pixels[a] + pixels[a + 1] * 7 + pixels[a + 2] * 13) | 0;
+  rightHash = (Math.imul(rightHash, 31) + pixels[b] + pixels[b + 1] * 7 + pixels[b + 2] * 13) | 0;
+  if (pixels[a] + pixels[a + 1] + pixels[a + 2] > 35) lit++;
+ }
+ return {sector: index + 1, quality, ...structuredClone(stats), leftHash, rightHash, lit,
+  pass: gl.getError() === gl.NO_ERROR && leftHash !== rightHash && lit > 100 && stats.entities.dropped === 0};
+}
+$('checks').onclick = async () => report(await browserSignalChecks());
+$('preview').onclick = () => { let renderer; try { renderer = new VRWorldRenderer($('world')); report({...frame(renderer, Number($('sector').value), $('quality').value, Number($('weapon').value)), status: 'PREVIEW', method: 'Production WebGL stereo render / synthetic poses.'}); } catch (e) { report({status: e.message === 'WebGL is unavailable.' ? 'UNAVAILABLE' : 'FAIL', error: e.message}); } finally { renderer?.dispose(); } };
+$('graphics').onclick = async () => {
+ let renderer; const results = [], live = new Set();
+ try {
+  renderer = new VRWorldRenderer($('world'), {defer: true}); const gl = renderer.gl;
+  // Instrument actual driver allocations, including all shared UI renderers.
+  for (const type of ['Buffer', 'Texture', 'Program', 'Shader']) {
+   const create = gl['create' + type].bind(gl), remove = gl['delete' + type].bind(gl);
+   gl['create' + type] = (...args) => { const object = create(...args); if (object) live.add(object); return object; };
+   gl['delete' + type] = object => { live.delete(object); return remove(object); };
+  }
+  renderer.initialize();
+  for (let i = 0; i < 12; i++) for (const q of ['performance', 'balanced', 'high']) results.push(frame(renderer, i, q));
+  const custom=new Game();enterPhiWadMission(custom,await loadHostedMission());
+  try{for(const q of ['performance','balanced','high'])results.push({...frame(renderer,12,q,1,custom),mission:'CODE BROWN'});}finally{leavePhiWadMission(custom);}
+  renderer.dispose(); renderer = null;
+  report({passed: results.every(r => r.pass) && live.size === 0, total: results.length + 1, results,
+   liveResourcesAfterDispose: live.size, method: 'Actual browser WebGL, all 12 sectors plus CODE BROWN and 3 presets, distinct stereo pixel hashes and tracked driver resource cleanup. No headset or compositor timing.'});
+ } catch (e) { report({status: e.message === 'WebGL is unavailable.' ? 'UNAVAILABLE' : 'FAIL', error: e.stack || e.message}); }
+ finally { renderer?.dispose(); }
+};
+</script></html>
