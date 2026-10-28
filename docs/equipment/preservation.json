@@ -1,0 +1,247 @@
+{
+  "baseline": "43a6be45c1b6cba8081ba94beac7b8edb4d679ab",
+  "candidate": "0.6.0-rc.1",
+  "passed": true,
+  "unchangedFiles": 44,
+  "controllingBriefSha256": "2fa97eda93070473ff206f5013ce434b949d3f0230491ec28f84582e8b5eb756",
+  "originalAttachmentSha256": "360f57bc8d5ad13560d34529b55e80023f0de44eeb9af6d42b65e55472b4f15e",
+  "files": [
+    {
+      "path": "public/missions/code-brown-signal-breakout.json",
+      "unchanged": true,
+      "sha256": "5645de196a36449d40b138522d5b42c898ea1b724243417dabe3ed4fab29d847"
+    },
+    {
+      "path": "src/arcade-ui.js",
+      "unchanged": true,
+      "sha256": "4e57f0f5a382bcb77d544df0e856f99c8b8d2780f9892c67de1bf9b402b1fae3"
+    },
+    {
+      "path": "src/assets.js",
+      "unchanged": true,
+      "sha256": "24bddb7db4497a09d8390f11bebfb95795840236dfadc72d12a9a02397c47036"
+    },
+    {
+      "path": "src/audio.js",
+      "unchanged": true,
+      "sha256": "485048242ba32074cb9105d018d1f5ff2b05e05c116be6bd0268de13ed40b794"
+    },
+    {
+      "path": "src/collision.js",
+      "unchanged": true,
+      "sha256": "51e8ad14910e1f13d55941d86e2fa6c9036fccf62547e15013d231acee057253"
+    },
+    {
+      "path": "src/controls.js",
+      "unchanged": true,
+      "sha256": "091ac98bb66c77b24a7776a77aef6d5c0f90f9aa9e16114d31c5747c5f9e5816"
+    },
+    {
+      "path": "src/core.js",
+      "unchanged": true,
+      "sha256": "21b1fdc4f1cee516410db0508547b3432200936ad08399f2fc2378a9927da14e"
+    },
+    {
+      "path": "src/expansion.js",
+      "unchanged": true,
+      "sha256": "d643c71286c59412c3720a4e2b0887cbb1f1d9e6a3222440fffdced2d899b6b9"
+    },
+    {
+      "path": "src/gamepad.js",
+      "unchanged": true,
+      "sha256": "f550f864d01a8786a8074c8e58aea4ef68946a0ceb7d8a3ee2e46dd54606959d"
+    },
+    {
+      "path": "src/gauntlet.js",
+      "unchanged": true,
+      "sha256": "a788efa666b0b28ba11cc2903ce01c808a57dcd89f62585746045349114fb78a"
+    },
+    {
+      "path": "src/immersive-math.js",
+      "unchanged": true,
+      "sha256": "5d5042df1917153f684c23f5c49db8dab10ee837c4e2bbfa5a311a0e9dc0a424"
+    },
+    {
+      "path": "src/immersive-play.js",
+      "unchanged": true,
+      "sha256": "efa3b7fcb11f8ad0a54695b6c13513273d16e3cbb5ebe9a41e1d936c0a80cd41"
+    },
+    {
+      "path": "src/level-geometry.js",
+      "unchanged": true,
+      "sha256": "9766be2951b1056777323f87a0084caee3580450c44659afccf477533fbaa09e"
+    },
+    {
+      "path": "src/neon-signal.js",
+      "unchanged": true,
+      "sha256": "1012438e5bfd4d332cc4afdb829c909b1074adc4b9133edb3f66be5bd293e0f8"
+    },
+    {
+      "path": "src/phi-content/hosted-missions.js",
+      "unchanged": true,
+      "sha256": "054ea39f0f8bd870495c9b37d364e52d3b5858faa07b79cf5a90cd7dce6e8a9a"
+    },
+    {
+      "path": "src/phi-content/phipack/core.js",
+      "unchanged": true,
+      "sha256": "d77ac733f605d8f36f3a3675826a1786cdfe47d14846b16b956c13c06b2f98d1"
+    },
+    {
+      "path": "src/phi-content/phiwad/level.js",
+      "unchanged": true,
+      "sha256": "c189e57a5e355e950601e3b37049441e75f45175de026db55acd70b6c3bb79bd"
+    },
+    {
+      "path": "src/phi-content/phiwad/mission.js",
+      "unchanged": true,
+      "sha256": "d9ff1611bf4c3be24cd9327f689fa0ffc34097421aaff3cd8de9376dfa4072e4"
+    },
+    {
+      "path": "src/phi-content/runtime.js",
+      "unchanged": true,
+      "sha256": "5d20ea498f359dfd92e0c7a3a3e86a1dc4b4a37456b60345b321e8b0e64eb460"
+    },
+    {
+      "path": "src/renderer.js",
+      "unchanged": true,
+      "sha256": "76be64c24c099cbb3e88b39b24e815396c8152b98e40653eb4738fa2f74f27e7"
+    },
+    {
+      "path": "src/spatial.js",
+      "unchanged": true,
+      "sha256": "2dee7332e33ac9fb19a0e4449f5e8f71dadd57c0aa53610f1e6f22e67fd218b6"
+    },
+    {
+      "path": "src/vr-input.js",
+      "unchanged": true,
+      "sha256": "9383a16438d4e30ef6a72e8b5772c77a51db3fdd56fa35e0056e2c4a6a0b4cc3"
+    },
+    {
+      "path": "src/vr-math.js",
+      "unchanged": true,
+      "sha256": "4040c9b89f7803702418d470ff7298329118e0fa50b83fd3994efa3f782a83f6"
+    },
+    {
+      "path": "src/vr-renderer.js",
+      "unchanged": true,
+      "sha256": "9dd208b7c47538f1fb3de890734164489a21bc69cb55925c2e62c5a3fca1a0ce"
+    },
+    {
+      "path": "src/vr.js",
+      "unchanged": true,
+      "sha256": "d2a92cadd238ada2727c6d07e859fba3a25de3fe125c8237add431c214741356"
+    },
+    {
+      "path": "src/world-atlas.js",
+      "unchanged": true,
+      "sha256": "e2257cca5ac64e9fcffc0b56b0be204c1dd172a0e6cbbc986f7e2bc1e3e50692"
+    },
+    {
+      "path": "tests/browser-smoke.js",
+      "unchanged": true,
+      "sha256": "a71acb493d8b6943d3a4bcee21bb107e5d447aeddfb9c86d3baa9dc25299b8ae"
+    },
+    {
+      "path": "tests/controller-checks.js",
+      "unchanged": true,
+      "sha256": "e14eec2ab05b0bd5bdd1f8bb7d667861ae06f22a77fa715629b79c64dec3d26d"
+    },
+    {
+      "path": "tests/core.test.mjs",
+      "unchanged": true,
+      "sha256": "f107bd7104d3410b59bbb7c59a275862ff0fce24c2e354b14f5667698f4aaccf"
+    },
+    {
+      "path": "tests/fixtures/v0.1-checkpoint.json",
+      "unchanged": true,
+      "sha256": "a5770427873cb4b9d1b898fd2e59f11a7c41edd333f55be3bcf0ccfe13c4aaa6"
+    },
+    {
+      "path": "tests/gamepad.test.mjs",
+      "unchanged": true,
+      "sha256": "c2a2d2d56ea5104049fd9de7042572fcbc4f906ba0e83330e729ba751c506410"
+    },
+    {
+      "path": "tests/hosted-missions.test.mjs",
+      "unchanged": true,
+      "sha256": "eef1f699b92c3c8f7ad7c9decbcc3dc6e4be2e33a3e22f79cad3b2a13579282f"
+    },
+    {
+      "path": "tests/immersive-campaign.test.mjs",
+      "unchanged": true,
+      "sha256": "f7573a666457e7c5184c13682fdabb5081fd803676ab6ec793cfa5c7eb5248b8"
+    },
+    {
+      "path": "tests/immersive-playthrough.js",
+      "unchanged": true,
+      "sha256": "d0c0a795a5ed30819c8a7fa1a56c6718f1fefb7cd7683b9e3899490565cbf1e7"
+    },
+    {
+      "path": "tests/immersive.test.mjs",
+      "unchanged": true,
+      "sha256": "b57c9334bb14752fff9e545f1d6cf482895a0c039fd2d49cbb07d696d2743aac"
+    },
+    {
+      "path": "tests/nightmare.test.mjs",
+      "unchanged": true,
+      "sha256": "02641f2cc07e419418fa0c13791e30cbff0ca01a53412553b9419041c0d3bf5c"
+    },
+    {
+      "path": "tests/phiwad.test.mjs",
+      "unchanged": true,
+      "sha256": "d57af95557784399d2807caf31fefac417279a73f0dd8ef46efad0d14e839c30"
+    },
+    {
+      "path": "tests/playthrough.js",
+      "unchanged": true,
+      "sha256": "f159f7a1dda1d6f89134dae48557e9c9f1afcacde0a12ed3bc994cdb27640666"
+    },
+    {
+      "path": "tests/signal.test.mjs",
+      "unchanged": true,
+      "sha256": "22964e0801dcdf0955a7f646d32bb20fd07b7ed41c235699b216752a3a523eee"
+    },
+    {
+      "path": "tests/ui.test.mjs",
+      "unchanged": true,
+      "sha256": "990fc2d364775b2d628f33269818c81e1853928eb9a6ba1b40dcd6c68edc4e5a"
+    },
+    {
+      "path": "tests/upgrade.test.mjs",
+      "unchanged": true,
+      "sha256": "d50bd5da3fb960c63ec068539d82761a5a819541352f5f959d9123d6fc1c4664"
+    },
+    {
+      "path": "tests/vr-checks.js",
+      "unchanged": true,
+      "sha256": "1c57818dfc6cfc44b1e1705fd79b7f9c5705a3fc90f913797861e576698a5c7a"
+    },
+    {
+      "path": "tests/vr.test.mjs",
+      "unchanged": true,
+      "sha256": "8590c3cd938531584139fc707f6eb2a63369ec749ffaf742dd8bb06137228b30"
+    },
+    {
+      "path": "tests/world-fixture.js",
+      "unchanged": true,
+      "sha256": "e588b860b7a8b3881f1112db4e82fab1926acbb2a802c8f3ec5d9261789ec16c"
+    }
+  ],
+  "intentionalChanges": [
+    "package.json",
+    "src/equipment-math.js",
+    "src/equipment-meshes.js",
+    "src/immersive-rig.js",
+    "src/main.js",
+    "src/signal-presentation.js",
+    "src/vr-world-renderer.js",
+    "src/world-scene.js",
+    "src/world-ui.js",
+    "tests/equipment-checks.js",
+    "tests/equipment.test.mjs",
+    "tests/immersive-checks.js",
+    "tests/signal-checks.js",
+    "tests/ui-checks.js"
+  ],
+  "method": "Byte comparison with merged PR #3 for every unchanged runtime JS/test/fixture and hosted CODE BROWN mission. Intentional presentation/rig/settings and wrist fixture changes are explicitly excluded and covered by regression tests. All 194 baseline Node cases remain; 25 equipment cases are added."
+}

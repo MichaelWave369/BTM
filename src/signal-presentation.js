@@ -1,3 +1,4 @@
+import {handMesh,appendEquipment} from './equipment-meshes.js';
 import {lineOfSight} from './collision.js';
 import {WORLD_SCALE, entityHeight, traceEnvironment, rayEntityDistance} from './spatial.js';
 import {signalFixtures, signalPalette} from './neon-signal.js';
@@ -41,16 +42,7 @@ export class SignalPresentation {
    b.line(this.from, this.to, .006, eye, color);
   }
  }
- hand(b, matrix, side, color) {
-  b.box([0, -.015, .015], [.072, .044, .092], 'white', GLOVE, matrix);
-  b.box([0, -.01, .078], [.083, .052, .035], 'white', METAL, matrix);
-  b.box([0, .018, .075], [.055, .004, .018], 'white', color, matrix);
-  for (let i = 0; i < 4; i++) {
-   b.box([-.027 + i * .018, -.012, -.049], [.014, .032, .05 - Math.abs(i - 1) * .006], 'white', GLOVE, matrix);
-   b.box([-.027 + i * .018, .007, -.04], [.01, .004, .012], 'white', METAL, matrix);
-  }
-  b.box([side * .047, -.017, -.002], [.025, .032, .057], 'white', GLOVE, matrix);
- }
+ hand(b,matrix,side,settings,power,pose){appendEquipment(b,handMesh(side,settings.vrHandStyle||'combat',pose,settings.vrQuality==='performance'?6:8),matrix,settings.vrHologramBrightness??.85,power);}
  update(b, game, rig, dt, settings, quality) {
   const l = game.level, eye = rig.eye, s = WORLD_SCALE, still = settings.reducedMotion;
   if (this.level !== l) {
@@ -76,8 +68,8 @@ export class SignalPresentation {
     b.box([f.x - f.dx * .02, 1.32 + offset, f.z - f.dz * .02], [f.dx ? .012 : .42, .006, f.dx ? .42 : .012], 'white', this.color);
    }
   }
-  if (rig.hasLeft) this.hand(b, rig.leftWorld, 1, p.glow);
-  if (rig.hasRightGrip) this.hand(b, rig.rightGripWorld, -1, p.secondary);
+  if (rig.hasLeft) this.hand(b,rig.leftWorld,'left',settings,rig.uiCaptured?.2:0,rig.uiCaptured?'point':'relaxed');
+  if (rig.hasRightGrip) this.hand(b,rig.rightGripWorld,'right',settings,game.charge*.2+game.muzzle*.15,game.weapon===0?'relaxed':'grip');
 
   // Ori's gameplay location, abilities and timing stay in the simulation.
   // The visual core follows smoothly and keeps a clear lane around the weapon ray.

@@ -1,0 +1,47 @@
+✔ Equipment settings sanitize old storage and invalid values (1.479598ms)
+✔ Optional preferences survive a JSON settings round trip (3.551015ms)
+✔ Cybernetic hands are cached, finite, mirrored and human-scale (56.697458ms)
+✔ Index and little fingers mirror correctly around each opposing thumb (2.329699ms)
+✔ Three finishes differ while sharing one atlas layout (12.058656ms)
+✔ Six weapon silhouettes are distinct and bounded (9.528058ms)
+✔ Model append transforms cached vertices and reports overflow explicitly (2.043761ms)
+✔ Flat-color mesh UVs sample the atlas interior to avoid precision holes (1.770181ms)
+✔ Raised wrist requires dwell then opens at compact meter dimensions (1.208892ms)
+✔ Combat hand height leaves only the compact hardware status (0.59756ms)
+✔ Dismissal hysteresis prevents flicker and closes after sustained lowering (2.545521ms)
+✔ Near-face distance and tracking loss remove interactive panels (0.592553ms)
+✔ Manual pin is intentional and visibility preference overrides it (0.646734ms)
+✔ Opening capture guard has a bounded transition interval (0.28294ms)
+✔ Panel basis remains orthonormal for seated and standing heights (1.288717ms)
+✖ Default wrist corners fit both synthetic eye frusta and retain face clearance (0.992654ms)
+✔ Reduced motion suppresses ornamental interpolation (0.302199ms)
+✔ Weapon follows grip translation while retaining independent ray orientation (0.339123ms)
+✔ Calibrated model muzzle equals the collision-safe combat origin (4.233562ms)
+✔ Grip calibration never bypasses the safe head reach limit (1.034701ms)
+✔ Every weapon and preset fits the batch and preserves game snapshots (72.267872ms)
+✔ Equipment capture retains suppression of fire, charge, sticks and abilities (4.035707ms)
+✔ Comfort captions clear sights and an active wrist footprint (0.30737ms)
+✔ Comfort placement clears the actual held-weapon muzzle cone (0.137969ms)
+✔ Equipment tracking and preferences never enter v1 checkpoints (1.213322ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 24
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 392.566653
+
+✖ failing tests:
+
+test at tests/equipment.test.mjs:3:41
+✖ Default wrist corners fit both synthetic eye frusta and retain face clearance (0.992654ms)
+  Error: Assertion failed
+      at expect (file:///workspace/scratch/a419aa0a25fd/BTM/tests/equipment-checks.js:10:59)
+      at TestContext.<anonymous> (file:///workspace/scratch/a419aa0a25fd/BTM/tests/equipment-checks.js:30:388)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)

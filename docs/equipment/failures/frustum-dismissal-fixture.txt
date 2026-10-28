@@ -1,0 +1,47 @@
+✔ Equipment settings sanitize old storage and invalid values (2.551373ms)
+✔ Optional preferences survive a JSON settings round trip (0.356464ms)
+✔ Cybernetic hands are cached, finite, mirrored and human-scale (36.243339ms)
+✔ Index and little fingers mirror correctly around each opposing thumb (2.00539ms)
+✔ Three finishes differ while sharing one atlas layout (3.831589ms)
+✔ Six weapon silhouettes are distinct and bounded (6.589518ms)
+✔ Model append transforms cached vertices and reports overflow explicitly (1.462217ms)
+✔ Flat-color mesh UVs sample the atlas interior to avoid precision holes (1.946352ms)
+✔ Raised wrist requires dwell then opens at compact meter dimensions (1.87738ms)
+✔ Combat hand height leaves only the compact hardware status (0.62185ms)
+✖ Dismissal hysteresis prevents flicker and closes after sustained lowering (4.884607ms)
+✔ Near-face distance and tracking loss remove interactive panels (0.881756ms)
+✔ Manual pin is intentional and visibility preference overrides it (0.785204ms)
+✔ Opening capture guard has a bounded transition interval (0.493938ms)
+✔ Panel basis remains orthonormal for seated and standing heights (1.227157ms)
+✔ Default wrist corners fit both synthetic eye frusta and retain face clearance (1.264335ms)
+✔ Reduced motion suppresses ornamental interpolation (0.291824ms)
+✔ Weapon follows grip translation while retaining independent ray orientation (0.243915ms)
+✔ Calibrated model muzzle equals the collision-safe combat origin (4.438813ms)
+✔ Grip calibration never bypasses the safe head reach limit (1.09572ms)
+✔ Every weapon and preset fits the batch and preserves game snapshots (63.052166ms)
+✔ Equipment capture retains suppression of fire, charge, sticks and abilities (2.958652ms)
+✔ Comfort captions clear sights and an active wrist footprint (0.353987ms)
+✔ Comfort placement clears the actual held-weapon muzzle cone (0.103499ms)
+✔ Equipment tracking and preferences never enter v1 checkpoints (0.982045ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 24
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 337.558303
+
+✖ failing tests:
+
+test at tests/equipment.test.mjs:3:41
+✖ Dismissal hysteresis prevents flicker and closes after sustained lowering (4.884607ms)
+  Error: Assertion failed
+      at expect (file:///workspace/scratch/a419aa0a25fd/BTM/tests/equipment-checks.js:10:59)
+      at TestContext.<anonymous> (file:///workspace/scratch/a419aa0a25fd/BTM/tests/equipment-checks.js:25:181)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)

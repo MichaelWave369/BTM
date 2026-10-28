@@ -7,7 +7,7 @@ import {interactionFocus} from '../src/signal-presentation.js';
 import {VRWorldRenderer} from '../src/vr-world-renderer.js';
 import {matIdentity} from '../src/immersive-math.js';
 import {WORLD_SCALE} from '../src/spatial.js';
-import {fixture, room, aimMatrix} from './immersive-checks.js';
+import {fixture, room, aimMatrix, primeWrist} from './immersive-checks.js';
 const expect = (v, message = 'Assertion failed') => { if (!v) throw Error(message); };
 const near = (a, b) => Math.abs(a - b) < 1e-5;
 const idle = pad => Object.assign(pad, {moveForward: 0, moveStrafe: 0, turn: 0, fire: false,
@@ -165,17 +165,17 @@ export async function browserSignalChecks() {
  const cases = signalCases().concat([
   ['Canvas panels capture blank and locked areas and invalidate missing hands', () => {
    const f = fixture(), ui = new WorldUI();
-   ui.paint({game: f.g, settings: {}, activate: () => {}}, f.rig, 100);
+   primeWrist(ui,{game: f.g, settings: {}, activate: () => {}},f.rig);
    const p = ui.wristPanel, ray = matIdentity();
    const point = p.center.map((n, i) => n + p.up[i] * .1);
    aimMatrix(ray, f.rig.eye, point.map((n, i) => n - f.rig.eye[i]));
    // interfaceTarget transforms a reference-space ray, so use identity root here.
    const rig = {...f.rig, root: matIdentity()};
    const presenter = {ui, rayWorld: matIdentity()};
-   const target = VRWorldRenderer.prototype.interfaceTarget.call(presenter, {rightRay: ray}, rig, f.g);
+   const target = VRWorldRenderer.prototype.interfaceTarget.call(presenter, {rightRay: ray}, rig, f.g,650);
    expect(target === ui.blocker && ui.cursor && rig.uiPointer && Math.hypot(...rig.uiPointer.to.map((n,i)=>n-rig.uiPointer.from[i])) > .1);
    rig.hasLeft = false;
-   expect(!VRWorldRenderer.prototype.interfaceTarget.call(presenter, {rightRay: ray}, rig, f.g));
+   expect(!VRWorldRenderer.prototype.interfaceTarget.call(presenter, {rightRay: ray}, rig, f.g,650));
   }],
   ['World-only atlas art preserves Classic textures and differs by sector', () => {
    const assets = makeAssets(), before = assets.textures[1].toDataURL();
