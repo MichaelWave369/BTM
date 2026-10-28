@@ -5,3 +5,6 @@ dist/
 *.zip
 !public/*.zip
 .DS_Store
+
+# Reproducible browser artifacts; selected captures/reports are curated in docs/equipment.
+docs/equipment/ci/

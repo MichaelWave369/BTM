@@ -1,0 +1,49 @@
+name: Verify VR equipment and capture production views
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: equipment-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  equipment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm run check
+      - run: npm test
+      - run: npm run playtest
+      - run: npm run playtest:immersive
+      - run: npm run build
+      - run: node scripts/verify-build.mjs
+      - run: node scripts/verify-offline.mjs
+      - name: Install isolated browser test tooling
+        run: |
+          npm install --prefix "$RUNNER_TEMP/btm-browser" --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          node "$RUNNER_TEMP/btm-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Production stereo equipment checks and comparisons
+        env:
+          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
+          BTM_SOFTWARE_WEBGL: '1'
+        run: node scripts/verify-equipment-browser.mjs
+      - name: Existing browser, Arcade, Xbox and offline regressions
+        env:
+          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
+          BTM_SOFTWARE_WEBGL: '1'
+          BTM_BROWSER_OUTPUT: docs/equipment/ci/legacy
+        run: node scripts/verify-immersive-browser.mjs
+      - name: Preserve reports and full-resolution captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vr-equipment-evidence
+          path: docs/equipment/ci
+          if-no-files-found: ignore

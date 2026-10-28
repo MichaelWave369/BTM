@@ -1,3 +1,4 @@
+import {weaponMesh,appendEquipment} from './equipment-meshes.js';
 import {SignalPresentation} from './signal-presentation.js';
 import {SIGNAL_QUALITY} from './neon-signal.js';
 import {WEAPONS,findRoute} from './core.js';import {materialUV,doorGeometry} from './level-geometry.js';import {WORLD_SCALE,entityHeight,traceEnvironment} from './spatial.js';import {transformPoint} from './immersive-math.js';
@@ -13,15 +14,6 @@ export class VertexBatch {
  line(from,to,width,eye,color){const dx=to[0]-from[0],dy=to[1]-from[1],dz=to[2]-from[2],vx=eye[0]-from[0],vy=eye[1]-from[1],vz=eye[2]-from[2];let x=dy*vz-dz*vy,y=dz*vx-dx*vz,z=dx*vy-dy*vx;const n=Math.hypot(x,y,z)||1;x=x/n*width;y=y/n*width;z=z/n*width;const q=this.quadPoints;q[0]=from[0]-x;q[1]=from[1]-y;q[2]=from[2]-z;q[3]=from[0]+x;q[4]=from[1]+y;q[5]=from[2]+z;q[6]=to[0]+x;q[7]=to[1]+y;q[8]=to[2]+z;q[9]=to[0]-x;q[10]=to[1]-y;q[11]=to[2]-z;this.quad(this.quadPoints,'white',color);}
 }
 export const QUALITY=SIGNAL_QUALITY;
-const METAL=[.26,.34,.32,1],STEEL=[.6,.7,.66,1],SKIN=[.8,.53,.34,1];
-const WEAPON_MESHES=[
- [[[0,-.025,-.22],[.12,.1,.16],SKIN],[[0,-.085,-.1],[.09,.1,.12],METAL]],
- [[[0,-.045,-.13],[.085,.09,.23]],[[0,-.11,-.025],[.06,.15,.06],METAL],[[0,-.025,-.26],[.035,.035,.17],STEEL]],
- [[[0,-.045,-.15],[.18,.15,.29]],[[0,-.05,-.31],[.15,.13,.04],METAL],[[0,-.05,-.334],[.09,.09,.008],STEEL],[[0,-.14,-.02],[.075,.14,.07],METAL]],
- [[[0,-.04,-.14],[.075,.09,.34],METAL],[[0,-.035,-.24],[.11,.12,.04]],[[0,-.035,-.16],[.11,.12,.04]],[[0,-.035,-.08],[.11,.12,.04]],[[0,-.14,-.04],[.065,.12,.065],METAL]],
- [[[0,-.04,-.12],[.13,.08,.22],METAL],[[-.065,-.025,-.26],[.025,.05,.17]],[[.065,-.025,-.26],[.025,.05,.17]],[[0,-.11,-.025],[.07,.12,.06],METAL]],
- [[[0,-.045,-.15],[.16,.12,.34],METAL],[[-.085,-.015,-.21],[.025,.055,.23]],[[.085,-.015,-.21],[.025,.055,.23]],[[0,.035,-.14],[.06,.045,.18]],[[0,-.13,-.025],[.07,.12,.08],METAL]]
-];
 export class WorldScene {
  constructor(){this.presentation=new SignalPresentation();this.batch=new VertexBatch();this.effects=[];this.beams=[];this.route=[];this.level=null;this.doors=[];this.from=new Float32Array(3);this.to=new Float32Array(3);this.weaponWorld=new Float32Array(16);this.counts={enemies:0,objects:0,particles:0,projectiles:0,vertices:0,dropped:0};this.clock=0;}
  ensureLevel(level){if(this.level===level)return;this.level=level;this.doors=Object.values(level.doors).map(door=>({door,shape:doorGeometry(level,door)}));this.effects.length=this.beams.length=0;this.route=[];}
@@ -42,9 +34,10 @@ export class WorldScene {
   for(const projectile of game.projectiles){if(this.counts.projectiles>=128||!visible(projectile.x,projectile.y))continue;b.billboard(projectile.x*s,(projectile.height??.75)*s,projectile.y*s,.12,.12,'marker',eye,colorRGB(projectile.color));this.counts.projectiles++;if(this.counts.trails<q.particles/4){this.from.set([projectile.x*s,(projectile.height??.75)*s,projectile.y*s]);this.to.set([this.from[0]-Math.cos(projectile.a)*.18,this.from[1]-(projectile.vh||0)/Math.max(.01,projectile.speed)*.18,this.from[2]-Math.sin(projectile.a)*.18]);b.line(this.from,this.to,.01,eye,colorRGB(projectile.color));this.counts.trails++;}}
   const visualDt=game.mode==='playing'?dt:0;for(let i=this.effects.length-1;i>=0;i--){const e=this.effects[i];e.life-=visualDt;if(e.life<=0){this.effects.splice(i,1);continue;}e.x+=e.vx*visualDt;e.y+=e.vy*visualDt;e.z+=e.vz*visualDt;e.vy-=visualDt*1.5;if(this.counts.particles<q.particles){b.billboard(e.x,e.y,e.z,.035,.035,'white',eye,e.color);this.counts.particles++;}}
   for(let i=this.beams.length-1;i>=0;i--){const beam=this.beams[i];beam.life-=visualDt;if(beam.life<=0){this.beams.splice(i,1);continue;}b.line(beam.ori?this.presentation.ori:beam.from,beam.to,.012,eye,beam.color);}
+  if(game.mode==='playing'&&rig.equipmentLink){b.line(rig.equipmentLink.from,rig.equipmentLink.left,.0015,eye,CYAN);if(settings.vrQuality!=='performance')b.line(rig.equipmentLink.from,rig.equipmentLink.right,.0015,eye,CYAN);}
   if(game.mode==='playing'&&rig.uiPointer){b.line(rig.uiPointer.from,rig.uiPointer.to,.003,eye,CYAN);b.billboard(...rig.uiPointer.to,.015,.015,'marker',eye,CYAN);}
-  if(rig.aim){const color=colorRGB(WEAPONS[game.weapon].color),hand=this.weaponWorld;hand.set(rig.rightWorld);const recoil=game.shotAnim*.024,drop=game.equipAnim*.13+(game.vent>0?.035:0);for(let i=0;i<3;i++)hand[12+i]+=hand[8+i]*recoil-hand[4+i]*drop;for(const [center,size,tint]of WEAPON_MESHES[game.weapon])b.box(center,size,'white',tint||METAL,hand);if(game.weapon>0){b.box([0,0,-.32],[.035,.035,.04],'white',color,hand);for(const side of [-1,1])b.box([side*.045,.006,-.17],[.012,.012,.16],'white',color,hand);}
-   const o=rig.aim.origin;this.from.set([o.x*s,o.height*s,o.y*s]);if(game.muzzle>.05)b.billboard(this.from[0],this.from[1],this.from[2],.12+game.weapon*.035,.14+game.weapon*.035,'marker',eye,color);if(game.charge>.1)b.billboard(this.from[0],this.from[1],this.from[2],.08+game.charge*.15,.08+game.charge*.15,'ori',eye,color);
+  if(rig.aim){const color=colorRGB(WEAPONS[game.weapon].color),hand=this.weaponWorld;hand.set(rig.weaponWorld||rig.rightWorld);const recoil=game.shotAnim*.008;for(let i=0;i<3;i++)hand[12+i]+=hand[8+i]*recoil;appendEquipment(b,weaponMesh(game.weapon,settings.vrQuality==='performance'?6:8),hand,settings.vrHologramBrightness??.85,game.charge*.3+game.muzzle*.2);
+   const o=rig.aim.origin;this.from.set([o.x*s,o.height*s,o.y*s]);if(game.muzzle>.05)b.billboard(this.from[0],this.from[1],this.from[2],[.09,.055,.13,.055,.085,.11][game.weapon],[.09,.055,.13,.055,.085,.11][game.weapon],'marker',eye,color);if(game.charge>.1)b.billboard(this.from[0],this.from[1],this.from[2],.08+game.charge*.15,.08+game.charge*.15,'ori',eye,color);
    if(settings.vrAimLine&&!rig.uiCaptured){const hit=traceEnvironment(l,o,rig.aim.direction,1.7/s),d=hit.distance*s;this.to.set([this.from[0]+rig.aim.direction.x*d,this.from[1]+rig.aim.direction.z*d,this.from[2]+rig.aim.direction.y*d]);b.line(this.from,this.to,.0035,eye,CYAN);}
   }
 

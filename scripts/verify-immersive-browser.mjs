@@ -5,7 +5,7 @@ import {spawn} from 'node:child_process';
 import {mkdir, writeFile} from 'node:fs/promises';
 const require = createRequire(import.meta.url);
 const {chromium} = require(process.env.BTM_PLAYWRIGHT_MODULE || 'playwright');
-const output = 'docs/immersive-next', results = {}, errors = [];
+const output = process.env.BTM_BROWSER_OUTPUT || 'docs/immersive-next', results = {}, errors = [];
 await mkdir(output + '/screenshots', {recursive: true});
 const server = spawn(process.execPath, ['scripts/serve.mjs', '--port', '5174'], {stdio: ['ignore', 'pipe', 'inherit']});
 await new Promise((resolve, reject) => {server.stdout.once('data', resolve); server.once('error', reject); server.once('exit', code => reject(Error('Server exited: ' + code)));});

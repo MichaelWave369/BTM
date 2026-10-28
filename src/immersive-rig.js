@@ -1,19 +1,20 @@
+import {EQUIPMENT_DEFAULTS,equipmentSettings,attachWeapon} from './equipment-math.js';
 import {moveBody} from './collision.js';
 import {WORLD_SCALE,WALL_HEIGHT,clamp,safeTrackedAim} from './spatial.js';
 import {matIdentity,matMultiply,rigidY,inverseRigidY,transformPoint,directionAngle} from './immersive-math.js';
-export const IMMERSIVE_DEFAULTS={vrTurnMode:'snap',vrSnapAngle:30,vrMoveReference:'head',vrMoveSpeed:.6,vrTurnSpeed:1,vrVignetteStrength:.7,vrEyeHeight:1.65,vrPosture:'seated',vrVignette:true,vrQuality:'balanced',vrAimLine:true,vrDiagnostics:false};
+export const IMMERSIVE_DEFAULTS={...EQUIPMENT_DEFAULTS,vrTurnMode:'snap',vrSnapAngle:30,vrMoveReference:'head',vrMoveSpeed:.6,vrTurnSpeed:1,vrVignetteStrength:.7,vrEyeHeight:1.65,vrPosture:'seated',vrVignette:true,vrQuality:'balanced',vrAimLine:true,vrDiagnostics:false};
 export function immersiveSettings(s={}){
  const v={...IMMERSIVE_DEFAULTS};for(const [key,options]of Object.entries({vrTurnMode:['snap','smooth'],vrMoveReference:['head','controller'],vrPosture:['seated','standing'],vrQuality:['performance','balanced','high']}))if(options.includes(s[key]))v[key]=s[key];
  for(const [key,min,max]of [['vrMoveSpeed',.25,1],['vrTurnSpeed',.4,2],['vrVignetteStrength',.2,1],['vrEyeHeight',1.1,1.95]])if(Number.isFinite(s[key]))v[key]=clamp(s[key],min,max);
- if([15,30,45].includes(s.vrSnapAngle))v.vrSnapAngle=s.vrSnapAngle;for(const k of ['vrVignette','vrAimLine','vrDiagnostics'])if(typeof s[k]==='boolean')v[k]=s[k];return v;
+ if([15,30,45].includes(s.vrSnapAngle))v.vrSnapAngle=s.vrSnapAngle;for(const k of ['vrVignette','vrAimLine','vrDiagnostics'])if(typeof s[k]==='boolean')v[k]=s[k];Object.assign(v,equipmentSettings(s));v.reducedMotion=!!s.reducedMotion;return v;
 }
 export class ImmersiveRig {
  constructor(){
-  this.root=matIdentity();this.inverse=matIdentity();this.rightWorld=matIdentity();this.rightGripWorld=matIdentity();this.leftWorld=matIdentity();this.headWorld=matIdentity();this.level=null;this.calibrated=false;this.snapReady=true;this.fade=0;this.blocked=false;this.eye=[0,0,0];this.menuPosition={x:0,y:0};
+  this.root=matIdentity();this.inverse=matIdentity();this.rightWorld=matIdentity();this.weaponWorld=matIdentity();this.equipmentEpoch=0;this.rightGripWorld=matIdentity();this.leftWorld=matIdentity();this.headWorld=matIdentity();this.level=null;this.calibrated=false;this.snapReady=true;this.fade=0;this.blocked=false;this.eye=[0,0,0];this.menuPosition={x:0,y:0};
   this.input={moveForward:0,moveStrafe:0,sprint:false,fire:false,deferFire:true,afterMovement:()=>this.finish(this.game,this.pose,this.game.mode==='playing')};
  }
- recenter(){this.uiCaptured=false;this.calibrated=false;this.snapReady=false;this.fade=.18;}
- calibrate(game,pose){this.yaw=directionAngle(pose.head)-game.player.a;this.headBase=pose.head[13];this.lastX=pose.head[12];this.lastZ=pose.head[14];this.calibrated=true;this.level=game.level;this.menuActive=false;this.menuPosition={x:game.player.x,y:game.player.y};this.fade=.18;}
+ recenter(){this.equipmentEpoch++;this.uiCaptured=false;this.calibrated=false;this.snapReady=false;this.fade=.18;}
+ calibrate(game,pose){this.equipmentEpoch++;this.yaw=directionAngle(pose.head)-game.player.a;this.headBase=pose.head[13];this.lastX=pose.head[12];this.lastZ=pose.head[14];this.calibrated=true;this.level=game.level;this.menuActive=false;this.menuPosition={x:game.player.x,y:game.player.y};this.fade=.18;}
  prepare(game,pose,pad,settings={},dt=.014,playing=true,beforeInput=null){
   this.game=game;this.pose=pose;this.settings=immersiveSettings(settings);settings=this.settings;this.fade=Math.max(0,this.fade-dt);this.trackingJump=false;
   if(!this.calibrated||this.level!==game.level)this.calibrate(game,pose);
@@ -35,16 +36,24 @@ export class ImmersiveRig {
   this.finish(game,pose,playing);return this.input;
  }
  zeroInput(){this.input.moveForward=this.input.moveStrafe=0;this.input.sprint=this.input.fire=false;return this.input;}
+ clipGrip(game,m){
+  const safe=safeTrackedAim(game.level,this.head,{origin:{x:m[12]/WORLD_SCALE,y:m[14]/WORLD_SCALE,height:m[13]/WORLD_SCALE},direction:{x:0,y:1,z:0}});
+  if(safe){m[12]=safe.origin.x*WORLD_SCALE;m[13]=safe.origin.height*WORLD_SCALE;m[14]=safe.origin.y*WORLD_SCALE;}
+ }
  finish(game,pose,playing=true){
   if(!playing&&!this.menuActive){this.menuActive=true;this.menuPosition={x:game.player.x,y:game.player.y};}
   const settings=this.settings||IMMERSIVE_DEFAULTS,head=pose.head,body=playing?game.player:this.menuPosition,height=clamp(settings.vrEyeHeight+head[13]-this.headBase,.5,WALL_HEIGHT*WORLD_SCALE-.15),c=Math.cos(this.yaw),s=Math.sin(this.yaw);
   const x=body.x*WORLD_SCALE-(c*head[12]+s*head[14]),z=body.y*WORLD_SCALE-(-s*head[12]+c*head[14]),y=height-head[13];
   rigidY(this.root,this.yaw,x,y,z);inverseRigidY(this.inverse,this.yaw,x,y,z);transformPoint(this.eye,this.root,head[12],head[13],head[14]);matMultiply(this.headWorld,this.root,head);
   this.headAngle=directionAngle(head,this.yaw);this.head={x:body.x,y:body.y,height:height/WORLD_SCALE,angle:this.headAngle};this.aim=null;this.hasLeft=!!pose.leftGrip;this.hasRightGrip=!!(pose.rightGrip||pose.rightRay);
-  if(pose.rightRay)matMultiply(this.rightWorld,this.root,pose.rightRay);if(pose.leftGrip)matMultiply(this.leftWorld,this.root,pose.leftGrip);
-  if(pose.rightRay){const m=this.rightWorld,direction={x:-m[8],y:-m[10],z:-m[9]},origin={x:(m[12]-m[8]*.34)/WORLD_SCALE,y:(m[14]-m[10]*.34)/WORLD_SCALE,height:(m[13]-m[9]*.34)/WORLD_SCALE};this.aim=safeTrackedAim(game.level,this.head,{origin,direction});if(this.aim){m[12]+=(this.aim.origin.x-origin.x)*WORLD_SCALE;m[13]+=(this.aim.origin.height-origin.height)*WORLD_SCALE;m[14]+=(this.aim.origin.y-origin.y)*WORLD_SCALE;}}
-  if(pose.leftGrip){const m=this.leftWorld,safe=safeTrackedAim(game.level,this.head,{origin:{x:m[12]/WORLD_SCALE,y:m[14]/WORLD_SCALE,height:m[13]/WORLD_SCALE},direction:{x:0,y:1,z:0}});if(safe){m[12]=safe.origin.x*WORLD_SCALE;m[13]=safe.origin.height*WORLD_SCALE;m[14]=safe.origin.y*WORLD_SCALE;}}
-  if(this.hasRightGrip){matMultiply(this.rightGripWorld,this.root,pose.rightGrip||pose.rightRay);const m=this.rightGripWorld,safe=safeTrackedAim(game.level,this.head,{origin:{x:m[12]/WORLD_SCALE,y:m[14]/WORLD_SCALE,height:m[13]/WORLD_SCALE},direction:{x:0,y:1,z:0}});if(safe){m[12]=safe.origin.x*WORLD_SCALE;m[13]=safe.origin.height*WORLD_SCALE;m[14]=safe.origin.y*WORLD_SCALE;}}
+  if(pose.leftGrip){matMultiply(this.leftWorld,this.root,pose.leftGrip);this.clipGrip(game,this.leftWorld);}
+  if(this.hasRightGrip){matMultiply(this.rightGripWorld,this.root,pose.rightGrip||pose.rightRay);this.clipGrip(game,this.rightGripWorld);}
+  if(pose.rightRay){
+   matMultiply(this.rightWorld,this.root,pose.rightRay);
+   // The handle follows the tracked grip; aim retains the preferred pointing ray.
+   const m=attachWeapon(this.weaponWorld,this.rightWorld,pose.rightGrip?this.rightGripWorld:null,settings),direction={x:-m[8],y:-m[10],z:-m[9]},origin={x:(m[12]-m[8]*.34)/WORLD_SCALE,y:(m[14]-m[10]*.34)/WORLD_SCALE,height:(m[13]-m[9]*.34)/WORLD_SCALE};
+   this.aim=safeTrackedAim(game.level,this.head,{origin,direction});if(this.aim){m[12]+=(this.aim.origin.x-origin.x)*WORLD_SCALE;m[13]+=(this.aim.origin.height-origin.height)*WORLD_SCALE;m[14]+=(this.aim.origin.y-origin.y)*WORLD_SCALE;}
+  }
   if(playing&&this.aim)game.setCombatPose({head:this.head,aim:this.aim});else game.clearCombatPose();
  }
 }

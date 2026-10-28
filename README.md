@@ -1,12 +1,12 @@
 # Michael Wave & Ori: Break the Matrix
 
-## Immersive Next — v0.5.0-rc.1 candidate
+## Cybernetic equipment — v0.6.0-rc.1 candidate
 
-This upgrade extends the existing immersive world with twelve Neon Signal palettes, original panel/floor/ceiling materials, animated wall lights and terminals, two tracked gloved hands, clearer six-weapon presentation, Ori holographic rings and warning cues, combat trails and interaction highlights. The 0.48m wrist instrument adds vital meters, pointer feedback and discovered objective markers. Pointing anywhere on it captures stick/combat/ability input until controls return to neutral. Smooth-turn speed and vignette strength are saved in Settings.
+Immersive VR now has original segmented cybernetic gloves in three finishes, six distinct weapon models with grip calibration, a compact forearm computer that opens on deliberate attention, and speaker-labelled Ori communication. The full wrist display defaults to 320mm wide, with pin/unpin, saved size/offset/activation settings and the existing input capture/neutral rearm. Comfort HUD captions are the default; optional Ori Spatial falls back when Ori is behind, distant or occluded.
 
-All original campaign rules, twelve sectors, six weapon mechanics, dialogue, v1 saves, CODE BROWN/ΦWAD, Classic, Xbox and VR Arcade remain. Quality presets budget the new geometry/effects. **Physical Quest 3, 72 FPS, Touch/haptics and human comfort acceptance remain pending.** Staging, teleport, direct touch, volumetric enemy replacements and deeper audio/menu redesign are follow-up phases.
+All original twelve-sector campaign rules, six weapon mechanics, dialogue, v1 saves, CODE BROWN/ΦWAD, Classic, Xbox and VR Arcade remain. Native Canvas/WebGL, existing quality presets and offline assets remain the architecture. **Physical Quest 3, 72 FPS, Touch/haptics and human comfort acceptance remain pending.**
 
-See the [implemented scope](docs/immersive-next/implementation.md), [current verification/performance report](docs/immersive-next/verification.md), [Quest controls](docs/QUEST_CONTROLS.md) and [manual Quest 3 checklist](docs/immersive-next/quest3-acceptance.md). `/immersive-next-qa.html` renders the actual production world with synthetic stereo poses; it is a developer viewer, not the game entry flow.
+See the [implemented requirements](docs/equipment/implementation.md), [verification/performance report](docs/equipment/verification.md), [actual before/after captures](docs/equipment/verification.md#captures), [Quest controls](docs/QUEST_CONTROLS.md) and [manual Quest checklist](docs/equipment/quest3-acceptance.md). `/equipment-qa.html` renders the actual production world with synthetic stereo poses; it is a developer viewer. [PR #3 evidence](docs/immersive-next/verification.md) remains available.
 
 ## Neon Signal Edition
 
@@ -107,7 +107,7 @@ Screen width and distance are saved in Settings. Recenter anchors it in front of
 
 The actual twelve maps surround you in native WebGL, with independent per-eye pose/projection, floors, ceilings, walls, animated doors, pillars, owned pixel sprites, world Ori, projectiles and combat effects. **One tile is 1.6m; ceilings are 2.72m.** The original maps, AI, objectives, resources and weapon definitions remain authoritative.
 
-Look, lean, pitch and crouch naturally; head movement does not snap the body or weapon. Aim the **right hand**: right trigger fires, left trigger holds/releases charge, right grip/A interacts along the weapon ray within reach. Left stick moves, right stick snaps 30° by default. Left grip calls Ori; B dodges, X vents and Y reveals secrets. Raise the **left wrist** for vitals, objective, six weapons, discovered map, bass and utilities; point/trigger to select. Right stick click pauses. Point at menu buttons or navigate/adjust with the left stick. Checkpoint, settings, retry, recenter and exit remain available in the headset.
+Look, lean, pitch and crouch naturally; head movement does not snap the body or weapon. Aim the **right hand**: right trigger fires, left trigger holds/releases charge, right grip/A interacts along the weapon ray within reach. Left stick moves, right stick snaps 30° by default. Left grip calls Ori; B dodges, X vents and Y reveals secrets. Intentionally raise the **left wrist** toward your gaze for vitals, objective, six weapons, discovered map, bass and utilities; point/trigger to select or pin it. Lower it to return to compact hardware. Release controls after pointing away to rearm gameplay. Right stick click pauses. Point at menu buttons or navigate/adjust with the left stick. Checkpoint, settings, retry, recenter and exit remain available in the headset.
 
 Settings offer adjustable smooth-turn speed, vignette strength, snap/smooth turn, 15/30/45° snap, head/left-controller movement, speed .25–1 (default .60), seated/standing eye-height presets and custom height, vignette, aim guide, diagnostics and three quality presets. Detail changes immediately; framebuffer scale applies next session. Diagnostics show world draw calls and CPU submission milliseconds, not GPU/compositor FPS. VR has no camera shake.
 
@@ -115,7 +115,7 @@ Physical head motion is swept through the same wall/door collision. Muzzle reach
 
 Ori follows in the world, signals danger/assistance, draws assist beams and scanned routes/objectives/secrets, and retains Michael/Ori banter. Practical enemy/Ori/door positional sounds and optional controller pulses augment the original effects. Classic/Arcade retain their existing audio behavior.
 
-**Physical acceptance remains pending.** No real Quest headset/session or controller validation occurred. Synthetic poses drive gameplay tests; genuine local Chromium with software WebGL now checks the production renderer, shared geometry/atlases, stereo pixels and resource cleanup. Quest presentation, haptics/audio, comfort, long-session stability and the **72 FPS target** require the [manual checklist](docs/v0.4.0/quest3-acceptance.md). The fastest scripted VR speed is not a human balance-tested preset.
+**Physical acceptance remains pending.** No real Quest headset/session or controller validation occurred. Synthetic poses drive gameplay tests; genuine local Chromium with software WebGL now checks the production renderer, shared geometry/atlases, stereo pixels and resource cleanup. Quest presentation, haptics/audio, comfort, long-session stability and the **72 FPS target** require the [manual checklist](docs/equipment/quest3-acceptance.md). The fastest scripted VR speed is not a human balance-tested preset.
 
 ## Saves, offline and ownership
 
@@ -145,7 +145,7 @@ Historical v0.4.1 Chrome checks passed **19 UI checks** at 1920×1080, 1280×720
 
 `/ui-qa.html` exercises the actual production document at four viewports and paints both VR interfaces. `/qa.html` and `/immersive-qa.html` retain the original harnesses. The game uses the same v1 save keys and formats. UI colors are independent of gameplay weapon definitions. Reduced-motion settings suppress menu transitions and UI portrait motion; all important text uses high-contrast dark instrument backgrounds. The new desktop radar zooms the same discovered data; Tab keeps the full map. No new location knowledge or gameplay rule is introduced.
 
-See [current verification](docs/v0.4.1/verification.md), [baseline preservation](docs/v0.4.1/preservation.json) and screenshots in `docs/v0.4.1/screenshots/`. Historical v0.4.0 evidence and its physical Quest checklist remain intact. The original concept image guided the art direction; the UI is live HTML/CSS/SVG/Canvas, never a flattened screenshot.
+See [historical v0.4.1 verification](docs/v0.4.1/verification.md), [baseline preservation](docs/v0.4.1/preservation.json) and screenshots in `docs/v0.4.1/screenshots/`. Historical v0.4.0 evidence and its physical Quest checklist remain intact. The original concept image guided the art direction; the UI is live HTML/CSS/SVG/Canvas, never a flattened screenshot.
 
 ## Architecture / deployment
 
@@ -161,6 +161,7 @@ See [current verification](docs/v0.4.1/verification.md), [baseline preservation]
 | `src/vr-input.js`, `vr-math.js`, `vr-renderer.js` | Touch mapping, anchored-screen geometry, ray UI, Canvas HUD and WebGL eye views |
 | `src/immersive-rig.js`, `immersive-play.js`, `immersive-math.js` | Safe tracked transforms and one simulation adapter |
 | `src/level-geometry.js`, `world-atlas.js`, `world-scene.js`, `world-ui.js`, `vr-world-renderer.js` | Derived geometry/IR, owned atlas, world batches, wrist/captions, WebGL stereo |
+| `src/equipment-math.js`, `equipment-meshes.js` | Meter-based wrist/caption layout, sanitized equipment settings and cached original glove/weapon models |
 | `src/neon-signal.js`, `signal-presentation.js` | Immersive palettes, budgets, materials, fixtures, hands, Ori ornament and interaction focus |
 | `tests/`, `scripts/`, `docs/` | Regressions, traversal, build, portable package and verification receipts |
 

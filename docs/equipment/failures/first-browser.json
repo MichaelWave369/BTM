@@ -1,0 +1,919 @@
+{
+  "baseline": "43a6be45c1b6cba8081ba94beac7b8edb4d679ab",
+  "method": "Actual production Canvas/WebGL from baseline and candidate, identical synthetic poses. No physical Quest/Touch, comfort or frame rate proof.",
+  "captures": [
+    {
+      "build": "before",
+      "name": "hands",
+      "pose": "hands",
+      "weapon": 0,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 4864,
+        "frameMs": 2.099999999627471,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 3600,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": 2118926642,
+      "rightHash": -1757348504,
+      "lit": 27828,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "before",
+      "name": "weapon-1",
+      "pose": "hands",
+      "weapon": 1,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 4960,
+        "frameMs": 0.6000000005587935,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 3744,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": 69838119,
+      "rightHash": 762284958,
+      "lit": 27828,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "before",
+      "name": "weapon-2",
+      "pose": "hands",
+      "weapon": 2,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 4984,
+        "frameMs": 1.199999999254942,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 3780,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": -1700745416,
+      "rightHash": 197113669,
+      "lit": 27828,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "before",
+      "name": "weapon-3",
+      "pose": "hands",
+      "weapon": 3,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 5008,
+        "frameMs": 2.5,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 3816,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": -1434832639,
+      "rightHash": 69994723,
+      "lit": 27828,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "before",
+      "name": "weapon-4",
+      "pose": "hands",
+      "weapon": 4,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 4984,
+        "frameMs": 3,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 3780,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": 1463432724,
+      "rightHash": 179651936,
+      "lit": 27828,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "before",
+      "name": "weapon-5",
+      "pose": "hands",
+      "weapon": 5,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 5008,
+        "frameMs": 0.6999999992549419,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 3816,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": 81015755,
+      "rightHash": -1356579101,
+      "lit": 27828,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "before",
+      "name": "combat",
+      "pose": "combat",
+      "weapon": 1,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 4960,
+        "frameMs": 0.7999999998137355,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 3744,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": -1682746383,
+      "rightHash": -883382572,
+      "lit": 25645,
+      "glError": 0,
+      "wristOpen": true,
+      "wristWidth": 0.48,
+      "wristHeight": 0.48,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "before",
+      "name": "wrist",
+      "pose": "wrist",
+      "weapon": 1,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 4960,
+        "frameMs": 3,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 3744,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": 81517093,
+      "rightHash": -1364234540,
+      "lit": 26235,
+      "glError": 0,
+      "wristOpen": true,
+      "wristWidth": 0.48,
+      "wristHeight": 0.48,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "before",
+      "name": "dialogue",
+      "pose": "dialogue",
+      "weapon": 1,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 4960,
+        "frameMs": 2.099999999627471,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 3744,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": -2093113974,
+      "rightHash": -856192234,
+      "lit": 25646,
+      "glError": 0,
+      "wristOpen": true,
+      "wristWidth": 0.48,
+      "wristHeight": 0.48,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": [
+        7.199999809265137,
+        1.3300000000000003,
+        31.499999237060546
+      ],
+      "pass": true
+    },
+    {
+      "build": "after",
+      "name": "hands",
+      "pose": "hands",
+      "weapon": 0,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 10208,
+        "frameMs": 1.7000000001862645,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 11616,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": -1108809502,
+      "rightHash": -718217900,
+      "lit": 27666,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "after",
+      "name": "weapon-1",
+      "pose": "hands",
+      "weapon": 1,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 10528,
+        "frameMs": 0.7999999998137355,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12096,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": 1952740420,
+      "rightHash": 1012875715,
+      "lit": 27651,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "after",
+      "name": "weapon-2",
+      "pose": "hands",
+      "weapon": 2,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 10592,
+        "frameMs": 1.5,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12192,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": 1999187594,
+      "rightHash": -28783621,
+      "lit": 27651,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "after",
+      "name": "weapon-3",
+      "pose": "hands",
+      "weapon": 3,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 11104,
+        "frameMs": 1.5,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12960,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": 292195064,
+      "rightHash": 695900419,
+      "lit": 27651,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "after",
+      "name": "weapon-4",
+      "pose": "hands",
+      "weapon": 4,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 10592,
+        "frameMs": 0.7000000001862645,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12192,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": -177789232,
+      "rightHash": 1923721630,
+      "lit": 27654,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "after",
+      "name": "weapon-5",
+      "pose": "hands",
+      "weapon": 5,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 11232,
+        "frameMs": 0.599999999627471,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 13152,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": -2137178165,
+      "rightHash": 580302887,
+      "lit": 27615,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "after",
+      "name": "combat",
+      "pose": "combat",
+      "weapon": 1,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 10528,
+        "frameMs": 1,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12096,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": -143204148,
+      "rightHash": 938432471,
+      "lit": 25515,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": true,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "after",
+      "name": "wrist",
+      "pose": "wrist",
+      "weapon": 1,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 10528,
+        "frameMs": 1.900000000372529,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12096,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": -1134953789,
+      "rightHash": 595792345,
+      "lit": 26082,
+      "glError": 0,
+      "wristOpen": true,
+      "wristWidth": 0.32,
+      "wristHeight": 0.21333333333333335,
+      "statusVisible": true,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "after",
+      "name": "dialogue",
+      "pose": "dialogue",
+      "weapon": 1,
+      "style": "combat",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 10528,
+        "frameMs": 1,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12096,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": 1239129510,
+      "rightHash": -1285043370,
+      "lit": 25515,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": true,
+      "subtitleMode": "comfort",
+      "subtitleCenter": [
+        7.199999809265137,
+        1.1900000000000004,
+        31.079999237060548
+      ],
+      "pass": true
+    },
+    {
+      "build": "after",
+      "name": "hands-neon",
+      "pose": "hands",
+      "weapon": 0,
+      "style": "neon",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 10208,
+        "frameMs": 1.1000000005587935,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 11616,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": 1439347109,
+      "rightHash": 1490909360,
+      "lit": 27666,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "after",
+      "name": "hands-tactical",
+      "pose": "hands",
+      "weapon": 0,
+      "style": "tactical",
+      "posture": "seated",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 9696,
+        "frameMs": 0.5,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 10848,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": -1844328657,
+      "rightHash": -829620577,
+      "lit": 27666,
+      "glError": 0,
+      "wristOpen": false,
+      "wristWidth": 0,
+      "wristHeight": 0,
+      "statusVisible": false,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    },
+    {
+      "build": "after",
+      "name": "wrist-standing",
+      "pose": "wrist",
+      "weapon": 1,
+      "style": "combat",
+      "posture": "standing",
+      "frames": 20,
+      "stats": {
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 10528,
+        "frameMs": 1.2999999998137355,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12096,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        }
+      },
+      "leftHash": 104669933,
+      "rightHash": 243219999,
+      "lit": 25928,
+      "glError": 0,
+      "wristOpen": true,
+      "wristWidth": 0.32,
+      "wristHeight": 0.21333333333333335,
+      "statusVisible": true,
+      "subtitleMode": "legacy",
+      "subtitleCenter": null,
+      "pass": true
+    }
+  ],
+  "pageErrors": [],
+  "browser": "153.0.8010.0",
+  "equipment": {
+    "passed": false,
+    "total": 27,
+    "results": [
+      {
+        "name": "Equipment settings sanitize old storage and invalid values",
+        "pass": true
+      },
+      {
+        "name": "Optional preferences survive a JSON settings round trip",
+        "pass": true
+      },
+      {
+        "name": "Cybernetic hands are cached, finite, mirrored and human-scale",
+        "pass": true
+      },
+      {
+        "name": "Three finishes differ while sharing one atlas layout",
+        "pass": true
+      },
+      {
+        "name": "Six weapon silhouettes are distinct and bounded",
+        "pass": true
+      },
+      {
+        "name": "Model append transforms cached vertices and reports overflow explicitly",
+        "pass": true
+      },
+      {
+        "name": "Raised wrist requires dwell then opens at compact meter dimensions",
+        "pass": true
+      },
+      {
+        "name": "Combat hand height leaves only the compact hardware status",
+        "pass": true
+      },
+      {
+        "name": "Dismissal hysteresis prevents flicker and closes after sustained lowering",
+        "pass": true
+      },
+      {
+        "name": "Near-face distance and tracking loss remove interactive panels",
+        "pass": true
+      },
+      {
+        "name": "Manual pin is intentional and visibility preference overrides it",
+        "pass": true
+      },
+      {
+        "name": "Opening capture guard has a bounded transition interval",
+        "pass": true
+      },
+      {
+        "name": "Panel basis remains orthonormal for seated and standing heights",
+        "pass": true
+      },
+      {
+        "name": "Reduced motion suppresses ornamental interpolation",
+        "pass": true
+      },
+      {
+        "name": "Weapon follows grip translation while retaining independent ray orientation",
+        "pass": true
+      },
+      {
+        "name": "Calibrated model muzzle equals the collision-safe combat origin",
+        "pass": true
+      },
+      {
+        "name": "Grip calibration never bypasses the safe head reach limit",
+        "pass": true
+      },
+      {
+        "name": "Every weapon and preset fits the batch and preserves game snapshots",
+        "pass": true
+      },
+      {
+        "name": "Equipment capture retains suppression of fire, charge, sticks and abilities",
+        "pass": true
+      },
+      {
+        "name": "Comfort captions clear sights and an active wrist footprint",
+        "pass": true
+      },
+      {
+        "name": "Equipment tracking and preferences never enter v1 checkpoints",
+        "pass": true
+      },
+      {
+        "name": "Canvas shows compact inactive status and an intentional active panel",
+        "pass": true
+      },
+      {
+        "name": "Pin is a point target without another Touch button mapping",
+        "pass": true
+      },
+      {
+        "name": "Responsive subtitle pages preserve complete dialogue content",
+        "pass": true
+      },
+      {
+        "name": "Ori Spatial reliably falls back for behind or near-face positions",
+        "pass": true
+      },
+      {
+        "name": "Panel whitespace remains a current-pose input-capture target",
+        "pass": false,
+        "error": "TypeError: Cannot read properties of null (reading 'center')\n    at http://127.0.0.1:5176/tests/equipment-checks.js:43:185\n    at browserEquipmentChecks (http://127.0.0.1:5176/tests/equipment-checks.js:45:56)\n    at async $.onclick (http://127.0.0.1:5176/equipment-qa.html:19:282)"
+      },
+      {
+        "name": "Hiding wrist equipment preserves the independent communication channel",
+        "pass": true
+      }
+    ],
+    "method": "Production equipment models, Canvas, timers and synthetic tracked poses; no physical Quest acceptance."
+  },
+  "settings": {
+    "passed": false
+  },
+  "behavior": {
+    "passed": true,
+    "combatPanelVisible": false,
+    "activeWidth": 0.32,
+    "activeHeight": 0.21333333333333335
+  },
+  "passed": false
+}

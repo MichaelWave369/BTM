@@ -1,3 +1,11 @@
+# Cybernetic equipment — 0.6.0-rc.1 candidate
+
+- Replace primitive gloves with connected mirrored cybernetic hands, segmented fingers/knuckles, cuffs and three original finishes. Add six role-specific weapon models, grip-anchored collision-safe muzzle calibration, local recoil and charge emission.
+- Replace the oversized wrist with compact status hardware and an intentional 320mm holographic link, bounded stereo placement, dwell/dismissal, pin/unpin and preserved capture/neutral rearm.
+- Add speaker-labelled communication with readable wrapped pages, portrait/waveform, Comfort HUD default, Ori Spatial fallback and saved size/duration preferences. Preserve actual dialogue content.
+- Add fourteen optional saved equipment controls without changing v1 checkpoints or ordinary Touch mappings. Keep Canvas/WebGL, shared atlas/batching, offline resources and original quality budgets.
+- Pass 219 Node tests, both twelve-sector playthroughs, production equipment/stereo checks and existing browser regressions. Include before/after captures, preservation receipt, failure history and a pending Quest checklist. Physical comfort, controller feel and sustained 72 FPS remain unverified. No automatic merge/release.
+
 # Immersive Next — 0.5.0-rc.1 candidate
 
 - Add original sector-specific immersive materials, budgeted neon wall lights/animated terminals, responsive signal accents and distance culling.

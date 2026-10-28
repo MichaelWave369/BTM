@@ -1,0 +1,91 @@
+✔ Equipment settings sanitize old storage and invalid values (2.533318ms)
+✔ Optional preferences survive a JSON settings round trip (0.575894ms)
+✔ Cybernetic hands are cached, finite, mirrored and human-scale (34.926776ms)
+✔ Three finishes differ while sharing one atlas layout (7.716307ms)
+✖ Six weapon silhouettes are distinct and bounded (8.51081ms)
+✔ Model append transforms cached vertices and reports overflow explicitly (1.416216ms)
+✖ Raised wrist requires dwell then opens at compact meter dimensions (1.462971ms)
+✔ Combat hand height leaves only the compact hardware status (0.669156ms)
+✖ Dismissal hysteresis prevents flicker and closes after sustained lowering (1.070691ms)
+✔ Near-face distance and tracking loss remove interactive panels (0.838785ms)
+✔ Manual pin is intentional and visibility preference overrides it (0.633318ms)
+✖ Opening capture guard has a bounded transition interval (0.415968ms)
+✔ Panel basis remains orthonormal for seated and standing heights (1.854848ms)
+✖ Reduced motion suppresses ornamental interpolation (0.531234ms)
+✔ Weapon follows grip translation while retaining independent ray orientation (0.265756ms)
+✔ Calibrated model muzzle equals the collision-safe combat origin (4.44321ms)
+✔ Grip calibration never bypasses the safe head reach limit (1.395262ms)
+✔ Every weapon and preset fits the batch and preserves game snapshots (103.984074ms)
+✔ Equipment capture retains suppression of fire, charge, sticks and abilities (4.978593ms)
+✔ Comfort captions clear sights and an active wrist footprint (0.474435ms)
+✔ Equipment tracking and preferences never enter v1 checkpoints (1.188091ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 16
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 397.959476
+
+✖ failing tests:
+
+test at tests/equipment.test.mjs:3:41
+✖ Six weapon silhouettes are distinct and bounded (8.51081ms)
+  Error: Assertion failed
+      at expect (file:///workspace/scratch/a419aa0a25fd/BTM/tests/equipment-checks.js:9:59)
+      at TestContext.<anonymous> (file:///workspace/scratch/a419aa0a25fd/BTM/tests/equipment-checks.js:18:140)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at tests/equipment.test.mjs:3:41
+✖ Raised wrist requires dwell then opens at compact meter dimensions (1.462971ms)
+  Error: Assertion failed
+      at expect (file:///workspace/scratch/a419aa0a25fd/BTM/tests/equipment-checks.js:9:59)
+      at TestContext.<anonymous> (file:///workspace/scratch/a419aa0a25fd/BTM/tests/equipment-checks.js:20:184)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at tests/equipment.test.mjs:3:41
+✖ Dismissal hysteresis prevents flicker and closes after sustained lowering (1.070691ms)
+  Error: Assertion failed
+      at expect (file:///workspace/scratch/a419aa0a25fd/BTM/tests/equipment-checks.js:9:59)
+      at TestContext.<anonymous> (file:///workspace/scratch/a419aa0a25fd/BTM/tests/equipment-checks.js:22:181)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at tests/equipment.test.mjs:3:41
+✖ Opening capture guard has a bounded transition interval (0.415968ms)
+  Error: Assertion failed
+      at expect (file:///workspace/scratch/a419aa0a25fd/BTM/tests/equipment-checks.js:9:59)
+      at TestContext.<anonymous> (file:///workspace/scratch/a419aa0a25fd/BTM/tests/equipment-checks.js:25:130)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at tests/equipment.test.mjs:3:41
+✖ Reduced motion suppresses ornamental interpolation (0.531234ms)
+  Error: Assertion failed
+      at expect (file:///workspace/scratch/a419aa0a25fd/BTM/tests/equipment-checks.js:9:59)
+      at TestContext.<anonymous> (file:///workspace/scratch/a419aa0a25fd/BTM/tests/equipment-checks.js:27:60)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)

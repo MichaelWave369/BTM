@@ -1,3 +1,4 @@
+import {EQUIPMENT_DEFAULTS,equipmentSettings} from './equipment-math.js';
 import {Game,SECTORS,WEAPONS,CAMPAIGN_HOSTS,clamp,angleDiff} from './core.js';
 import {Renderer} from './renderer.js';
 import {enterPhiWadMission,leavePhiWadMission} from './phi-content/runtime.js';
@@ -64,7 +65,7 @@ function clearInput(){game.clearCombatPose();keys.clear();fire=false;dragging=fa
 function storeSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch{$('storage-warning').hidden=false;}}
 function saveCheckpoint(){if(game.phiwadCustom)return;if(game.player.health<=0)return;try{const data=game.checkpoint||game.snapshot();localStorage.setItem(SAVE_KEY,JSON.stringify(data));saved=data;$('continue-btn').hidden=false;}catch{$('storage-warning').hidden=false;}}
 function showToast(text){$('toast').textContent=text;$('toast').classList.add('visible');toastTimer=2.7;}
-function showDialogue(text,speaker='ORI',priority=1){if(speaker==='WAVE'&&!game.hurt){game.portraitMood='GRIN';game.portraitTime=1.1;}$('dialogue-text').textContent=text;$('dialogue-name').textContent=speaker;$('dialogue-channel').textContent=speaker==='WAVE'?'MICHAEL WAVE':speaker==='ARCHIVE'?'RECOVERED LOG':'COMPANION LINK';$('dialogue').dataset.speaker=speaker;$('dialogue').classList.toggle('urgent',priority>=3);$('dialogue').hidden=false;dialogueTimer=Math.max(3.6,text.length*.04);}
+function showDialogue(text,speaker='ORI',priority=1){if(speaker==='WAVE'&&!game.hurt){game.portraitMood='GRIN';game.portraitTime=1.1;}$('dialogue-text').textContent=text;$('dialogue-name').textContent=speaker;$('dialogue-channel').textContent=speaker==='WAVE'?'MICHAEL WAVE':speaker==='ARCHIVE'?'RECOVERED LOG':'COMPANION LINK';$('dialogue').dataset.speaker=speaker;$('dialogue').classList.toggle('urgent',priority>=3);$('dialogue').hidden=false;dialogueTimer=Math.max(3.6,text.length*.04)*(vr.immersive?settings.vrSubtitleDuration:1);}
 function showScreen(id){
   controllerMenu.clear();clearInput();
   screen=id;if(id&&vr.active)$(id).append($('vr-session-tools'));$('overlay').hidden=!id;$('overlay').classList.toggle('title-overlay',id==='title-screen');
@@ -81,12 +82,15 @@ function home(){if(game.phiwadCustom)leavePhiWadMission(game);else if(game.mode=
 function openSettings(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('settings-screen');}
 function openHelp(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('help-screen');}
 function applySettings(){
+  for(const [id,value]of Object.entries(EQUIPMENT_DEFAULTS)){const element=$(id);if(typeof value==='boolean')element.checked=settings[id];else element.value=settings[id];}
   if(canvas.width!==settings.resolution)renderer.setResolution(settings.resolution);audio.configure(settings);$('scanlines').hidden=!settings.crt;document.body.classList.toggle('reduced-motion',settings.reducedMotion);
   $('mute-btn').setAttribute('aria-pressed',String(settings.muted));$('mute-btn').setAttribute('aria-label',settings.muted?'Unmute audio':'Mute audio');$('mute-btn').title=settings.muted?'Unmute [M]':'Mute [M]';
   for(const id of ['sensitivity','music','sfx','resolution','controlMode','controllerSensitivity','controllerDeadzone','vrDistance','vrWidth','vrTurnMode','vrSnapAngle','vrMoveReference','vrMoveSpeed','vrTurnSpeed','vrVignetteStrength','vrEyeHeight','vrPosture','vrQuality'])$(id).value=settings[id];$('crt').checked=settings.crt;$('reducedMotion').checked=settings.reducedMotion;$('controllerRumble').checked=settings.controllerRumble;for(const id of ['vrVignette','vrAimLine','vrDiagnostics'])$(id).checked=settings[id];
   $('controllerSensitivity-output').value=settings.controllerSensitivity.toFixed(1);$('controllerDeadzone-output').value=Math.round(settings.controllerDeadzone*100)+'%';
   $('sensitivity-output').value=settings.sensitivity.toFixed(1);$('music-output').value=Math.round(settings.music*100)+'%';$('sfx-output').value=Math.round(settings.sfx*100)+'%';updateCapture();
 }
+for(const [id,value]of Object.entries(EQUIPMENT_DEFAULTS))$(id).addEventListener('input',()=>{settings[id]=typeof value==='boolean'?$(id).checked:typeof value==='number'?Number($(id).value):$(id).value;Object.assign(settings,equipmentSettings(settings));applySettings();storeSettings();});
+
 function toggleMute(){settings.muted=!settings.muted;applySettings();storeSettings();showToast(settings.muted?'AUDIO MUTED':'AUDIO ON');}
 const minutes=n=>Math.floor(n/60).toString().padStart(2,'0')+':'+Math.floor(n%60).toString().padStart(2,'0');
 function result(){

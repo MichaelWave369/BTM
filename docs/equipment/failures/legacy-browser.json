@@ -1,0 +1,1492 @@
+{
+  "signal": {
+    "passed": true,
+    "total": 17,
+    "results": [
+      {
+        "name": "Twelve sector palettes are distinct, bounded and deterministic for custom fallback",
+        "pass": true
+      },
+      {
+        "name": "Decorative fixtures attach only to open cells and avoid doors and archive signs",
+        "pass": true
+      },
+      {
+        "name": "Distance culling retains crossing chunks and rejects distant geometry",
+        "pass": true
+      },
+      {
+        "name": "All sector/preset batches are finite, bounded and preserve game snapshots",
+        "pass": true
+      },
+      {
+        "name": "Sustained event bursts remain bounded even during late-sector telegraphs",
+        "pass": true
+      },
+      {
+        "name": "Projectile trail budgets cap dense volleys without mutating simulation velocities",
+        "pass": true
+      },
+      {
+        "name": "Wrist capture blocks sticks, turning, fire, charge and every gameplay action",
+        "pass": true
+      },
+      {
+        "name": "Leaving a panel while holding controls cannot leak a shot or snap turn",
+        "pass": true
+      },
+      {
+        "name": "Captured wrist controls still permit collision-safe physical head movement",
+        "pass": true
+      },
+      {
+        "name": "Pointer testing receives current pose transforms before stick locomotion",
+        "pass": true
+      },
+      {
+        "name": "Right glove follows grip independently of the tracked aiming ray",
+        "pass": true
+      },
+      {
+        "name": "Each weapon effect stays at the same safe muzzle as the actual tracked shot",
+        "pass": true
+      },
+      {
+        "name": "Interaction focus honors relay reach, ray direction, occlusion and secret visibility",
+        "pass": true
+      },
+      {
+        "name": "New comfort sliders sanitize values and smooth-turn speed does not affect snap angle",
+        "pass": true
+      },
+      {
+        "name": "Reduced motion steadies decorations without mutating ability timers",
+        "pass": true
+      },
+      {
+        "name": "Canvas panels capture blank and locked areas and invalidate missing hands",
+        "pass": true
+      },
+      {
+        "name": "World-only atlas art preserves Classic textures and differs by sector",
+        "pass": true
+      }
+    ],
+    "method": "Production simulation, synthetic tracked input, actual Canvas/UI art. No physical Quest hardware."
+  },
+  "webgl": {
+    "passed": true,
+    "total": 40,
+    "results": [
+      {
+        "sector": 1,
+        "quality": "performance",
+        "drawCalls": 10,
+        "visibleChunks": 8,
+        "triangles": 8484,
+        "frameMs": 135.79999999981374,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 3,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 10032,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 12
+        },
+        "leftHash": -1065301978,
+        "rightHash": 1002789616,
+        "lit": 45849,
+        "pass": true
+      },
+      {
+        "sector": 1,
+        "quality": "balanced",
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 10660,
+        "frameMs": 76.1000000005588,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 6,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12294,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        },
+        "leftHash": 468525804,
+        "rightHash": -1560509287,
+        "lit": 45875,
+        "pass": true
+      },
+      {
+        "sector": 1,
+        "quality": "high",
+        "drawCalls": 16,
+        "visibleChunks": 14,
+        "triangles": 11788,
+        "frameMs": 106.59999999962747,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 8,
+          "objects": 15,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 13452,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 40
+        },
+        "leftHash": -320788144,
+        "rightHash": 1443154451,
+        "lit": 45884,
+        "pass": true
+      },
+      {
+        "sector": 2,
+        "quality": "performance",
+        "drawCalls": 10,
+        "visibleChunks": 8,
+        "triangles": 8316,
+        "frameMs": 60.200000000186265,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 1,
+          "objects": 9,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 9966,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 12
+        },
+        "leftHash": 1450293091,
+        "rightHash": 1187860320,
+        "lit": 44583,
+        "pass": true
+      },
+      {
+        "sector": 2,
+        "quality": "balanced",
+        "drawCalls": 16,
+        "visibleChunks": 14,
+        "triangles": 10780,
+        "frameMs": 33.299999999813735,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 4,
+          "objects": 11,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12024,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        },
+        "leftHash": -67768662,
+        "rightHash": 651994379,
+        "lit": 45762,
+        "pass": true
+      },
+      {
+        "sector": 2,
+        "quality": "high",
+        "drawCalls": 18,
+        "visibleChunks": 16,
+        "triangles": 11636,
+        "frameMs": 33.39999999944121,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 7,
+          "objects": 15,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 13092,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 41
+        },
+        "leftHash": 2056085516,
+        "rightHash": 1637559123,
+        "lit": 45762,
+        "pass": true
+      },
+      {
+        "sector": 3,
+        "quality": "performance",
+        "drawCalls": 10,
+        "visibleChunks": 8,
+        "triangles": 8236,
+        "frameMs": 38.5,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 1,
+          "objects": 9,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 9642,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 12
+        },
+        "leftHash": -1981791506,
+        "rightHash": 946416648,
+        "lit": 44655,
+        "pass": true
+      },
+      {
+        "sector": 3,
+        "quality": "balanced",
+        "drawCalls": 16,
+        "visibleChunks": 14,
+        "triangles": 10988,
+        "frameMs": 20.799999999813735,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 5,
+          "objects": 10,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12204,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        },
+        "leftHash": -1072787190,
+        "rightHash": 1842071366,
+        "lit": 45778,
+        "pass": true
+      },
+      {
+        "sector": 3,
+        "quality": "high",
+        "drawCalls": 18,
+        "visibleChunks": 16,
+        "triangles": 12068,
+        "frameMs": 49.10000000055879,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 8,
+          "objects": 16,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 13248,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 43
+        },
+        "leftHash": -884900685,
+        "rightHash": 963793107,
+        "lit": 45778,
+        "pass": true
+      },
+      {
+        "sector": 4,
+        "quality": "performance",
+        "drawCalls": 10,
+        "visibleChunks": 8,
+        "triangles": 8168,
+        "frameMs": 33.09999999962747,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 4,
+          "objects": 10,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 9882,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 12
+        },
+        "leftHash": 780094764,
+        "rightHash": 985332294,
+        "lit": 45763,
+        "pass": true
+      },
+      {
+        "sector": 4,
+        "quality": "balanced",
+        "drawCalls": 16,
+        "visibleChunks": 14,
+        "triangles": 10712,
+        "frameMs": 56,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 5,
+          "objects": 13,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12174,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 26
+        },
+        "leftHash": 353076751,
+        "rightHash": 1314428493,
+        "lit": 45917,
+        "pass": true
+      },
+      {
+        "sector": 4,
+        "quality": "high",
+        "drawCalls": 18,
+        "visibleChunks": 16,
+        "triangles": 11888,
+        "frameMs": 26.699999999254942,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 11,
+          "objects": 17,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 13308,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 41
+        },
+        "leftHash": -546806426,
+        "rightHash": 1289665732,
+        "lit": 45917,
+        "pass": true
+      },
+      {
+        "sector": 5,
+        "quality": "performance",
+        "drawCalls": 16,
+        "visibleChunks": 14,
+        "triangles": 8480,
+        "frameMs": 30.799999999813735,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 5,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 9936,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 12
+        },
+        "leftHash": -1897166404,
+        "rightHash": -1087423691,
+        "lit": 45751,
+        "pass": true
+      },
+      {
+        "sector": 5,
+        "quality": "balanced",
+        "drawCalls": 20,
+        "visibleChunks": 18,
+        "triangles": 10976,
+        "frameMs": 34.09999999962747,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 8,
+          "objects": 14,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12528,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 27
+        },
+        "leftHash": 1171847722,
+        "rightHash": -1942142295,
+        "lit": 45738,
+        "pass": true
+      },
+      {
+        "sector": 5,
+        "quality": "high",
+        "drawCalls": 24,
+        "visibleChunks": 22,
+        "triangles": 12488,
+        "frameMs": 33.799999999813735,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 12,
+          "objects": 18,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 13674,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 40
+        },
+        "leftHash": 888258802,
+        "rightHash": 218838815,
+        "lit": 45737,
+        "pass": true
+      },
+      {
+        "sector": 6,
+        "quality": "performance",
+        "drawCalls": 10,
+        "visibleChunks": 8,
+        "triangles": 8128,
+        "frameMs": 36.200000000186265,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 5,
+          "objects": 13,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 9690,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 12
+        },
+        "leftHash": -1629604125,
+        "rightHash": -237418935,
+        "lit": 45660,
+        "pass": true
+      },
+      {
+        "sector": 6,
+        "quality": "balanced",
+        "drawCalls": 16,
+        "visibleChunks": 14,
+        "triangles": 10768,
+        "frameMs": 26.299999999813735,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 8,
+          "objects": 15,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12000,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        },
+        "leftHash": -654711171,
+        "rightHash": -1894887517,
+        "lit": 45934,
+        "pass": true
+      },
+      {
+        "sector": 6,
+        "quality": "high",
+        "drawCalls": 18,
+        "visibleChunks": 16,
+        "triangles": 12208,
+        "frameMs": 31.90000000037253,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 15,
+          "objects": 21,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 13566,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 42
+        },
+        "leftHash": 1549124556,
+        "rightHash": -1156360607,
+        "lit": 45934,
+        "pass": true
+      },
+      {
+        "sector": 7,
+        "quality": "performance",
+        "drawCalls": 10,
+        "visibleChunks": 8,
+        "triangles": 8148,
+        "frameMs": 24.59999999962747,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 1,
+          "objects": 10,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 9972,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 12
+        },
+        "leftHash": -76574226,
+        "rightHash": 1045434683,
+        "lit": 45836,
+        "pass": true
+      },
+      {
+        "sector": 7,
+        "quality": "balanced",
+        "drawCalls": 16,
+        "visibleChunks": 14,
+        "triangles": 10416,
+        "frameMs": 19.40000000037253,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 8,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 11802,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 22
+        },
+        "leftHash": 153422347,
+        "rightHash": 1355940429,
+        "lit": 45935,
+        "pass": true
+      },
+      {
+        "sector": 7,
+        "quality": "high",
+        "drawCalls": 18,
+        "visibleChunks": 16,
+        "triangles": 11460,
+        "frameMs": 23.90000000037253,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 14,
+          "objects": 17,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12732,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 32
+        },
+        "leftHash": -551503480,
+        "rightHash": -1775320829,
+        "lit": 45935,
+        "pass": true
+      },
+      {
+        "sector": 8,
+        "quality": "performance",
+        "drawCalls": 16,
+        "visibleChunks": 14,
+        "triangles": 8496,
+        "frameMs": 32.69999999925494,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 3,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 9816,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 12
+        },
+        "leftHash": 1268352567,
+        "rightHash": 1222732874,
+        "lit": 45751,
+        "pass": true
+      },
+      {
+        "sector": 8,
+        "quality": "balanced",
+        "drawCalls": 18,
+        "visibleChunks": 16,
+        "triangles": 10360,
+        "frameMs": 18.59999999962747,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 9,
+          "objects": 14,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12024,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 26
+        },
+        "leftHash": -1464380147,
+        "rightHash": -1052334410,
+        "lit": 45751,
+        "pass": true
+      },
+      {
+        "sector": 8,
+        "quality": "high",
+        "drawCalls": 24,
+        "visibleChunks": 22,
+        "triangles": 12284,
+        "frameMs": 24.5,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 16,
+          "objects": 17,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12996,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 38
+        },
+        "leftHash": 1207034928,
+        "rightHash": -1722869388,
+        "lit": 45751,
+        "pass": true
+      },
+      {
+        "sector": 9,
+        "quality": "performance",
+        "drawCalls": 10,
+        "visibleChunks": 8,
+        "triangles": 8344,
+        "frameMs": 23.299999999813735,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 8,
+          "objects": 10,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 9942,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 12
+        },
+        "leftHash": -1413363019,
+        "rightHash": 936038326,
+        "lit": 45833,
+        "pass": true
+      },
+      {
+        "sector": 9,
+        "quality": "balanced",
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 10508,
+        "frameMs": 21.90000000037253,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 11,
+          "objects": 13,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12006,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        },
+        "leftHash": 1372404931,
+        "rightHash": 1095583613,
+        "lit": 45932,
+        "pass": true
+      },
+      {
+        "sector": 9,
+        "quality": "high",
+        "drawCalls": 16,
+        "visibleChunks": 14,
+        "triangles": 11888,
+        "frameMs": 21.5,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 21,
+          "objects": 18,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 13500,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 46
+        },
+        "leftHash": -1698391365,
+        "rightHash": -976364327,
+        "lit": 45932,
+        "pass": true
+      },
+      {
+        "sector": 10,
+        "quality": "performance",
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 9096,
+        "frameMs": 29.100000000558794,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 10,
+          "objects": 10,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 10026,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 12
+        },
+        "leftHash": -1137363842,
+        "rightHash": 1188163215,
+        "lit": 45834,
+        "pass": true
+      },
+      {
+        "sector": 10,
+        "quality": "balanced",
+        "drawCalls": 22,
+        "visibleChunks": 20,
+        "triangles": 12156,
+        "frameMs": 23.299999999813735,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 23,
+          "objects": 13,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12474,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        },
+        "leftHash": 688874423,
+        "rightHash": 1086612178,
+        "lit": 45935,
+        "pass": true
+      },
+      {
+        "sector": 10,
+        "quality": "high",
+        "drawCalls": 22,
+        "visibleChunks": 20,
+        "triangles": 13272,
+        "frameMs": 38.89999999944121,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 28,
+          "objects": 19,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 14148,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 48
+        },
+        "leftHash": -1651674324,
+        "rightHash": -1361676892,
+        "lit": 45935,
+        "pass": true
+      },
+      {
+        "sector": 11,
+        "quality": "performance",
+        "drawCalls": 12,
+        "visibleChunks": 10,
+        "triangles": 8328,
+        "frameMs": 30.899999999441206,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 5,
+          "objects": 7,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 10014,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 12
+        },
+        "leftHash": 889923361,
+        "rightHash": 34852634,
+        "lit": 46306,
+        "pass": true
+      },
+      {
+        "sector": 11,
+        "quality": "balanced",
+        "drawCalls": 18,
+        "visibleChunks": 16,
+        "triangles": 10960,
+        "frameMs": 43.299999999813735,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 16,
+          "objects": 12,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12462,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        },
+        "leftHash": 1865784416,
+        "rightHash": -707008304,
+        "lit": 47159,
+        "pass": true
+      },
+      {
+        "sector": 11,
+        "quality": "high",
+        "drawCalls": 20,
+        "visibleChunks": 18,
+        "triangles": 12184,
+        "frameMs": 34.700000000186265,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 27,
+          "objects": 16,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 13632,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 46
+        },
+        "leftHash": 1395649741,
+        "rightHash": -778151159,
+        "lit": 47197,
+        "pass": true
+      },
+      {
+        "sector": 12,
+        "quality": "performance",
+        "drawCalls": 10,
+        "visibleChunks": 8,
+        "triangles": 8208,
+        "frameMs": 24.700000000186265,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 4,
+          "objects": 11,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 9780,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 12
+        },
+        "leftHash": -1873167120,
+        "rightHash": -663334267,
+        "lit": 45831,
+        "pass": true
+      },
+      {
+        "sector": 12,
+        "quality": "balanced",
+        "drawCalls": 16,
+        "visibleChunks": 14,
+        "triangles": 10924,
+        "frameMs": 49.799999999813735,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 16,
+          "objects": 13,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 12144,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 28
+        },
+        "leftHash": 1128444051,
+        "rightHash": 2101356136,
+        "lit": 45935,
+        "pass": true
+      },
+      {
+        "sector": 12,
+        "quality": "high",
+        "drawCalls": 18,
+        "visibleChunks": 16,
+        "triangles": 12328,
+        "frameMs": 30.899999999441206,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 25,
+          "objects": 19,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 13674,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 46
+        },
+        "leftHash": 1579156467,
+        "rightHash": -574673129,
+        "lit": 45935,
+        "pass": true
+      },
+      {
+        "sector": 13,
+        "quality": "performance",
+        "drawCalls": 10,
+        "visibleChunks": 8,
+        "triangles": 8636,
+        "frameMs": 28.200000000186265,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 3,
+          "objects": 7,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 9930,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 12
+        },
+        "leftHash": -391026774,
+        "rightHash": 1289168571,
+        "lit": 41498,
+        "pass": true,
+        "mission": "CODE BROWN"
+      },
+      {
+        "sector": 13,
+        "quality": "balanced",
+        "drawCalls": 14,
+        "visibleChunks": 12,
+        "triangles": 10700,
+        "frameMs": 2.3999999994412065,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 4,
+          "objects": 8,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 11622,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 24
+        },
+        "leftHash": 205376698,
+        "rightHash": 685613229,
+        "lit": 44074,
+        "pass": true,
+        "mission": "CODE BROWN"
+      },
+      {
+        "sector": 13,
+        "quality": "high",
+        "drawCalls": 16,
+        "visibleChunks": 14,
+        "triangles": 12352,
+        "frameMs": 4,
+        "renderer": "native WebGL world",
+        "entities": {
+          "enemies": 8,
+          "objects": 9,
+          "particles": 0,
+          "projectiles": 0,
+          "vertices": 13374,
+          "dropped": 0,
+          "trails": 0,
+          "fixtures": 41
+        },
+        "leftHash": 1762090712,
+        "rightHash": 1035691238,
+        "lit": 44825,
+        "pass": true,
+        "mission": "CODE BROWN"
+      }
+    ],
+    "liveResourcesAfterDispose": 0,
+    "method": "Actual browser WebGL, all 12 sectors plus CODE BROWN and 3 presets, distinct stereo pixel hashes and tracked driver resource cleanup. No headset or compositor timing."
+  },
+  "immersive": {
+    "passed": false,
+    "total": 36,
+    "results": [
+      {
+        "name": "Rigid world and inverse compose through nonzero yaw and translation",
+        "pass": true
+      },
+      {
+        "name": "Left/right eye separation survives the world transform",
+        "pass": true
+      },
+      {
+        "name": "Frustum culling rejects behind-camera chunks but retains crossing chunks",
+        "pass": true
+      },
+      {
+        "name": "All twelve maps generate finite batched floors, ceilings, walls and export IR",
+        "pass": true
+      },
+      {
+        "name": "Door meshes use the shared open animation and passage threshold",
+        "pass": true
+      },
+      {
+        "name": "Atlas materials have unique bounded UV slots with insets",
+        "pass": true
+      },
+      {
+        "name": "Physical wall leaning cannot enter solid geometry or move the eye through it",
+        "pass": true
+      },
+      {
+        "name": "Physical motion cannot cross a locked door but can cross an opened door",
+        "pass": true
+      },
+      {
+        "name": "Head turn and crouch change view without changing body angle or hand aim",
+        "pass": true
+      },
+      {
+        "name": "Menus freeze movement/fire and discard physical head travel on resume",
+        "pass": true
+      },
+      {
+        "name": "Tracking discontinuity rebases safely and cancels simulation input",
+        "pass": true
+      },
+      {
+        "name": "Snap turn triggers once until neutral and smooth turn stays optional",
+        "pass": true
+      },
+      {
+        "name": "Head-relative and controller-relative movement use different references",
+        "pass": true
+      },
+      {
+        "name": "Unsafe muzzle extension is clamped at walls and at maximum reach",
+        "pass": true
+      },
+      {
+        "name": "Floor and ceiling intersections stop vertical tracked shots",
+        "pass": true
+      },
+      {
+        "name": "Walls occlude tracked targets independently of the gameplay body bearing",
+        "pass": true
+      },
+      {
+        "name": "All six weapons retain costs/cooldowns and use independent tracked aim",
+        "pass": true
+      },
+      {
+        "name": "Tracked pulse projectiles hit bodies at height and terminate at the floor",
+        "pass": true
+      },
+      {
+        "name": "Charged tracked fire uses the existing damage/energy multipliers",
+        "pass": true
+      },
+      {
+        "name": "The immersive adapter updates once with post-movement muzzle coordinates",
+        "pass": true
+      },
+      {
+        "name": "Wrist pointer actions suppress primary and alternate fire together",
+        "pass": true
+      },
+      {
+        "name": "Tracked dodge follows aim without snapping the gameplay body",
+        "pass": true
+      },
+      {
+        "name": "Old XR callbacks cannot advance a new distinct session after reentry",
+        "pass": true
+      },
+      {
+        "name": "Version-one saves resume in Classic without persisting XR pose state",
+        "pass": true
+      },
+      {
+        "name": "Comfort settings sanitize invalid values and preserve snap defaults",
+        "pass": true
+      },
+      {
+        "name": "Dynamic geometry and effects have bounded buffers and explicit overflow behavior",
+        "pass": true
+      },
+      {
+        "name": "Immersive session selects the world presenter and advances one shared frame",
+        "pass": true
+      },
+      {
+        "name": "Missing tracked right hand pauses immersive play without firing",
+        "pass": true
+      },
+      {
+        "name": "Controller removal and context loss pause or exit without stale input",
+        "pass": true
+      },
+      {
+        "name": "Failed GL compatibility disposes the partial session and allows retry",
+        "pass": true
+      },
+      {
+        "name": "Unavailable immersive entry keeps Classic usable and Arcade retry possible",
+        "pass": true
+      },
+      {
+        "name": "Deferred tracked shooting still drives Michael firing portrait feedback",
+        "pass": true
+      },
+      {
+        "name": "Canvas wrist HUD ray selection aligns with unlocked weapon buttons",
+        "pass": true
+      },
+      {
+        "name": "Wrist/map/subtitle canvases stay selective, anchored and actionable",
+        "pass": false,
+        "error": "Error: Assertion failed\n    at expect (http://127.0.0.1:5174/tests/immersive-checks.js:7:55)\n    at http://127.0.0.1:5174/tests/immersive-checks.js:50:273\n    at browserImmersiveChecks (http://127.0.0.1:5174/tests/immersive-checks.js:53:46)\n    at async $.onclick (http://127.0.0.1:5174/immersive-qa.html:4:37)"
+      },
+      {
+        "name": "Every owned atlas material paints nonempty art in browser Canvas",
+        "pass": true
+      },
+      {
+        "name": "Twelve full dynamic world batches stay finite and below capacity",
+        "pass": true
+      }
+    ],
+    "method": "Current reconstructed production math, collision, combat, rig and single-clock adapter; synthetic WebXR lifecycle. No physical headset/controller validation. Four actual browser Canvas/atlas/UI/batch checks."
+  },
+  "ui": {
+    "passed": true,
+    "total": 19,
+    "results": [
+      {
+        "name": "1920×1080: local typefaces load and title navigation is usable",
+        "pass": true
+      },
+      {
+        "name": "1920×1080: settings preserve all controls and return to title",
+        "pass": true
+      },
+      {
+        "name": "1920×1080: real gameplay HUD fits with six functional weapon slots",
+        "pass": true
+      },
+      {
+        "name": "1920×1080: map, pause, manual and resume still work",
+        "pass": true
+      },
+      {
+        "name": "1280×720: local typefaces load and title navigation is usable",
+        "pass": true
+      },
+      {
+        "name": "1280×720: settings preserve all controls and return to title",
+        "pass": true
+      },
+      {
+        "name": "1280×720: real gameplay HUD fits with six functional weapon slots",
+        "pass": true
+      },
+      {
+        "name": "1280×720: map, pause, manual and resume still work",
+        "pass": true
+      },
+      {
+        "name": "960×640: local typefaces load and title navigation is usable",
+        "pass": true
+      },
+      {
+        "name": "960×640: settings preserve all controls and return to title",
+        "pass": true
+      },
+      {
+        "name": "960×640: real gameplay HUD fits with six functional weapon slots",
+        "pass": true
+      },
+      {
+        "name": "960×640: map, pause, manual and resume still work",
+        "pass": true
+      },
+      {
+        "name": "390×844: local typefaces load and title navigation is usable",
+        "pass": true
+      },
+      {
+        "name": "390×844: settings preserve all controls and return to title",
+        "pass": true
+      },
+      {
+        "name": "390×844: real gameplay HUD fits with six functional weapon slots",
+        "pass": true
+      },
+      {
+        "name": "390×844: map, pause, manual and resume still work",
+        "pass": true
+      },
+      {
+        "name": "All canvas UI art renders using original vector paths",
+        "pass": true
+      },
+      {
+        "name": "VR Arcade menu and utility controls retain live hit targets",
+        "pass": true
+      },
+      {
+        "name": "Immersive wrist weapons, utilities, map and captions retain hit targets",
+        "pass": true
+      }
+    ],
+    "method": "Production HTML/CSS in real iframe viewports; native Canvas painting and synthetic UI events. No physical XR or controller hardware."
+  },
+  "arcade": {
+    "passed": true,
+    "total": 22,
+    "results": [
+      {
+        "name": "Matrix composition preserves an identity transform",
+        "pass": true
+      },
+      {
+        "name": "A screen is placed in front of the initial head pose",
+        "pass": true
+      },
+      {
+        "name": "Recenter ignores pitch and keeps the arcade screen upright",
+        "pass": true
+      },
+      {
+        "name": "Controller rays hit the panel in texture coordinates",
+        "pass": true
+      },
+      {
+        "name": "Rays behind, parallel to, or pointing away from a panel do not select",
+        "pass": true
+      },
+      {
+        "name": "Quest Touch thumbsticks map separately from Xbox navigator pads",
+        "pass": true
+      },
+      {
+        "name": "Quest triggers fire and charge; grip controls interact and Ori",
+        "pass": true
+      },
+      {
+        "name": "Quest face buttons and stick clicks expose the documented actions",
+        "pass": true
+      },
+      {
+        "name": "Generic xr-standard input keeps trigger/grip controls without guessing faces",
+        "pass": true
+      },
+      {
+        "name": "Losing a Touch controller cancels held fire until neutral",
+        "pass": true
+      },
+      {
+        "name": "Unavailable WebXR reports a fallback without requesting a session",
+        "pass": true
+      },
+      {
+        "name": "Session initialization makes GL compatible before allocating GPU objects",
+        "pass": true
+      },
+      {
+        "name": "Local-floor rejection falls back to local reference space",
+        "pass": true
+      },
+      {
+        "name": "Permission denial leaves VR inactive and permits another attempt",
+        "pass": true
+      },
+      {
+        "name": "Overlapping VR entry attempts request only one session",
+        "pass": true
+      },
+      {
+        "name": "Each XR frame advances once and renders both eye views",
+        "pass": true
+      },
+      {
+        "name": "Tracking loss and hidden headset visibility pause without simulation",
+        "pass": true
+      },
+      {
+        "name": "Recenter changes the anchored screen only on explicit request",
+        "pass": true
+      },
+      {
+        "name": "Pointed UI actions suppress a simultaneous game shot",
+        "pass": true
+      },
+      {
+        "name": "Exit and stale XR callbacks cannot restart or advance the game",
+        "pass": true
+      },
+      {
+        "name": "Real browser WebGL shader, canvas texture and arcade scene",
+        "pass": true
+      },
+      {
+        "name": "Two independent eye viewports rendered without a GL error",
+        "pass": true
+      }
+    ],
+    "method": "Pure matrix/input tests and a simulated WebXR session lifecycle. No headset, real XR session, Bluetooth pairing, Quest frame rate or comfort validation.",
+    "unavailable": 0,
+    "status": "passed"
+  },
+  "xbox": {
+    "passed": true,
+    "total": 27,
+    "results": [
+      {
+        "name": "Dead zone prevents resting-stick drift",
+        "pass": true
+      },
+      {
+        "name": "Radial stick preserves diagonals and caps full speed",
+        "pass": true
+      },
+      {
+        "name": "Controller settings sanitize old and invalid saves",
+        "pass": true
+      },
+      {
+        "name": "Analog movement keeps partial speed and legacy keyboard speed",
+        "pass": true
+      },
+      {
+        "name": "Diagonal analog movement cannot exceed full-stick speed",
+        "pass": true
+      },
+      {
+        "name": "Left and right sticks reach real movement and horizontal aiming",
+        "pass": true
+      },
+      {
+        "name": "Small movements still collide with map walls",
+        "pass": true
+      },
+      {
+        "name": "Keyboard and gamepad input coexist without extra speed",
+        "pass": true
+      },
+      {
+        "name": "RT fires a real weapon and holding continues automatic fire",
+        "pass": true
+      },
+      {
+        "name": "RT buffers a press near cooldown expiry",
+        "pass": true
+      },
+      {
+        "name": "LT charges and releases exactly one alternate shot",
+        "pass": true
+      },
+      {
+        "name": "A opens a real door and interacts only once per press",
+        "pass": true
+      },
+      {
+        "name": "A extracts through the real completion event before the next simulation tick",
+        "pass": true
+      },
+      {
+        "name": "All Xbox actions use the documented standard button layout",
+        "pass": true
+      },
+      {
+        "name": "Y, X, B, vision, weapon cycling and map reach real game actions",
+        "pass": true
+      },
+      {
+        "name": "Holding L3 sprints and D-pad down spends a full bass charge",
+        "pass": true
+      },
+      {
+        "name": "D-pad menu movement repeats; A confirm never repeats while held",
+        "pass": true
+      },
+      {
+        "name": "Pause or focus loss cancels held fire and charge until controls release",
+        "pass": true
+      },
+      {
+        "name": "Disconnect clears all held input; reconnect waits for neutral",
+        "pass": true
+      },
+      {
+        "name": "Multiple and sparse gamepads retain the active standard device",
+        "pass": true
+      },
+      {
+        "name": "Unmapped and blocked controllers fail safely without guessing buttons",
+        "pass": true
+      },
+      {
+        "name": "DOM menu skips disabled and hidden controls",
+        "pass": true
+      },
+      {
+        "name": "A activates a real focused button",
+        "pass": true
+      },
+      {
+        "name": "D-pad moves focus and left/right adjusts a real range",
+        "pass": true
+      },
+      {
+        "name": "Controller adjusts selects and toggles checkboxes",
+        "pass": true
+      },
+      {
+        "name": "B returns and Menu resumes through dedicated callbacks",
+        "pass": true
+      },
+      {
+        "name": "Optional vibration handles rejection and missing hardware",
+        "pass": true
+      }
+    ],
+    "method": "Synthetic standard Xbox snapshots through the production input adapter and real game simulation; no physical controller or Bluetooth stack exercised."
+  },
+  "smoke": {
+    "passed": true,
+    "results": [
+      {
+        "name": "Simulation starts in a valid first-sector spawn",
+        "pass": true
+      },
+      {
+        "name": "WASD input changes the player position",
+        "pass": true
+      },
+      {
+        "name": "Collision stops the player at the first closed door",
+        "pass": true
+      },
+      {
+        "name": "E opens the first door and movement passes through",
+        "pass": true
+      },
+      {
+        "name": "Resonance blaster hits and liberates an approaching host",
+        "pass": true
+      },
+      {
+        "name": "Ori uses a scan or stun and spends companion energy",
+        "pass": true
+      },
+      {
+        "name": "Frequency shift toggles and drains its own energy",
+        "pass": true
+      },
+      {
+        "name": "Checkpoint serializes and restores into a new Game",
+        "pass": true
+      },
+      {
+        "name": "Lethal damage gives death, then retry returns to play",
+        "pass": true
+      },
+      {
+        "name": "Three sectors progress through actual relay, key and boss gates",
+        "pass": true
+      }
+    ]
+  },
+  "offline": {
+    "passed": true,
+    "controlled": true,
+    "title": "BREAK THE MATRIX — Michael Wave & Ori",
+    "scripts": 34,
+    "codeBrownPlayable": true
+  },
+  "runtime": {
+    "browser": "153.0.8010.0",
+    "softwareWebGL": true,
+    "node": "v24.22.1",
+    "method": "Local production build in real Chromium; synthetic XR poses, actual Canvas/WebGL and offline worker. No physical XR/haptics/compositor or comfort validation."
+  },
+  "pageErrors": [],
+  "passed": false
+}
