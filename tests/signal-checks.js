@@ -167,7 +167,7 @@ export async function browserSignalChecks() {
    const f = fixture(), ui = new WorldUI();
    primeWrist(ui,{game: f.g, settings: {}, activate: () => {}},f.rig);
    const p = ui.wristPanel, ray = matIdentity();
-   const point = p.center.map((n, i) => n + p.up[i] * .1);
+   const point = p.center.map((n, i) => n + p.up[i] * .1 + p.right[i] * p.width * .3);
    aimMatrix(ray, f.rig.eye, point.map((n, i) => n - f.rig.eye[i]));
    // interfaceTarget transforms a reference-space ray, so use identity root here.
    const rig = {...f.rig, root: matIdentity()};

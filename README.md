@@ -1,5 +1,13 @@
 # Michael Wave & Ori: Break the Matrix
 
+## Gen.E.Wrist Field bridge — v0.7.0-rc.1 candidate
+
+The existing guarded immersive wrist now has an opt-in GEN.E view with original 3/6/9 rings, live BTM health/armor/energy, informational Loom Market and S.N.A.K.E. Toolkit, and a Realm Atlas with verified external destinations. Weapon, map, pinning, recentering and other existing controls remain on the original combat page.
+
+External travel uses an explicit in-headset confirmation. BTM saves its existing campaign checkpoint when supported, ends the current XR session, and then navigates to the selected HTTPS destination. Custom ΦWAD mission progress is not saveable and prompts a warning. This is a cross-site handoff, not seamless WebXR teleportation.
+
+Two canonical GenEWrist modules are pinned and bundled offline from [GenEWrist v0.2.0](https://github.com/MichaelWave369/GenEWrist), avoiding CDN dependencies. See [integration details and Quest checklist](docs/genewrist-bridge.md). No hardware headset acceptance has been performed.
+
 ## Cybernetic equipment — v0.6.0-rc.1 candidate
 
 Immersive VR now has original segmented cybernetic gloves in three finishes, six distinct weapon models with grip calibration, a compact forearm computer that opens on deliberate attention, and speaker-labelled Ori communication. The full wrist display defaults to 320mm wide, with pin/unpin, saved size/offset/activation settings and the existing input capture/neutral rearm. Comfort HUD captions are the default; optional Ori Spatial falls back when Ori is behind, distant or occluded.

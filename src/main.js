@@ -1,4 +1,5 @@
 import {EQUIPMENT_DEFAULTS,equipmentSettings} from './equipment-math.js';
+import {destinationFor} from './genewrist-bridge.js';
 import {Game,SECTORS,WEAPONS,CAMPAIGN_HOSTS,clamp,angleDiff} from './core.js';
 import {Renderer} from './renderer.js';
 import {enterPhiWadMission,leavePhiWadMission} from './phi-content/runtime.js';
@@ -34,6 +35,15 @@ function controllerBack(){if(screen==='settings-screen'||screen==='help-screen')
 const controllerMenu=new ControllerMenu({root:()=>screen?$(screen):null,back:controllerBack,resume:()=>{if(screen==='pause-screen')play();else controllerBack();}});
 const vr=new VRArcade({settings:()=>settings,onStatus:message=>{$('vr-status').textContent=message;for(const id of ['vr-btn','immersive-btn'])$(id).disabled=vr.pending||vr.active;},onStart:()=>{if(desktopFrame)cancelAnimationFrame(desktopFrame);desktopFrame=0;clearInput();if(game.mode==='playing')pause();setInputMode('vr');$('vr-session-tools').hidden=false;showScreen(screen||'pause-screen');},onPause:()=>{clearInput();pause();},onEnd:()=>{clearInput();pause();$('vr-session-tools').hidden=true;setInputMode('keyboard');lastFrame=performance.now();if(!desktopFrame)desktopFrame=requestAnimationFrame(frame);audio.pause(true);for(const id of ['vr-btn','immersive-btn'])$(id).disabled=false;showToast('VR SESSION ENDED / GAME PRESERVED');},onFrame:(now,pad,spatial)=>tick(now,pad,spatial),data:()=>({game,scene:canvas,screen,assets:renderer.assets,settings,map:mapOpen,immersive:vr.immersive,items:screen?controllerMenu.items():[],focused:document.activeElement,dialogue:$('dialogue').hidden?'':$('dialogue-name').textContent+': '+$('dialogue-text').textContent,toast:toastTimer>0?$('toast').textContent:'',activate:vrAction})});
 function vrAction(action,element){
+ if(action==='genewrist-travel'){
+  const destination=destinationFor(element);
+  if(!destination){showToast('GEN.E / DESTINATION UNAVAILABLE');return;}
+  if(game.mode==='playing'&&!game.phiwadCustom){game.saveCheckpoint();saveCheckpoint();}
+  clearInput();
+  void vr.exit().then(()=>window.location.assign(destination.url)).catch(()=>showToast('GEN.E / TRAVEL FAILED'));
+  return;
+ }
+
  if(action==='focus'){controllerMenu.focus(element);return;}if(action==='recenter'){vr.recenter();return;}if(action==='pause'){pause();return;}
  if(game.mode!=='playing')return;
  if(action==='weapon')game.selectWeapon(element);if(action==='reload')game.reload();if(action==='ori')game.oriAbility();if(action==='dodge')game.dodge();if(action==='vision')game.vision();if(action==='map')mapOpen=!mapOpen;if(action==='bass')game.bassDrop();processEvents();updateHUD();
