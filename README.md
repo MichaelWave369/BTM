@@ -1,6 +1,14 @@
 # Michael Wave & Ori: Break the Matrix
 
-## v0.4.1 — Neon Signal Edition
+## Immersive Next — v0.5.0-rc.1 candidate
+
+This upgrade extends the existing immersive world with twelve Neon Signal palettes, original panel/floor/ceiling materials, animated wall lights and terminals, two tracked gloved hands, clearer six-weapon presentation, Ori holographic rings and warning cues, combat trails and interaction highlights. The 0.48m wrist instrument adds vital meters, pointer feedback and discovered objective markers. Pointing anywhere on it captures stick/combat/ability input until controls return to neutral. Smooth-turn speed and vignette strength are saved in Settings.
+
+All original campaign rules, twelve sectors, six weapon mechanics, dialogue, v1 saves, CODE BROWN/ΦWAD, Classic, Xbox and VR Arcade remain. Quality presets budget the new geometry/effects. **Physical Quest 3, 72 FPS, Touch/haptics and human comfort acceptance remain pending.** Staging, teleport, direct touch, volumetric enemy replacements and deeper audio/menu redesign are follow-up phases.
+
+See the [implemented scope](docs/immersive-next/implementation.md), [current verification/performance report](docs/immersive-next/verification.md), [Quest controls](docs/QUEST_CONTROLS.md) and [manual Quest 3 checklist](docs/immersive-next/quest3-acceptance.md). `/immersive-next-qa.html` renders the actual production world with synthetic stereo poses; it is a developer viewer, not the game entry flow.
+
+## Neon Signal Edition
 
 **THEY CONTROL THE SIGNAL. WE CONTROL THE FREQUENCY.**
 
@@ -101,19 +109,19 @@ The actual twelve maps surround you in native WebGL, with independent per-eye po
 
 Look, lean, pitch and crouch naturally; head movement does not snap the body or weapon. Aim the **right hand**: right trigger fires, left trigger holds/releases charge, right grip/A interacts along the weapon ray within reach. Left stick moves, right stick snaps 30° by default. Left grip calls Ori; B dodges, X vents and Y reveals secrets. Raise the **left wrist** for vitals, objective, six weapons, discovered map, bass and utilities; point/trigger to select. Right stick click pauses. Point at menu buttons or navigate/adjust with the left stick. Checkpoint, settings, retry, recenter and exit remain available in the headset.
 
-Settings offer snap/smooth turn, 15/30/45° snap, head/left-controller movement, speed .25–1 (default .60), seated/standing eye-height presets and custom height, vignette, aim guide, diagnostics and three quality presets. Detail changes immediately; framebuffer scale applies next session. Diagnostics show world draw calls and CPU submission milliseconds, not GPU/compositor FPS. VR has no camera shake.
+Settings offer adjustable smooth-turn speed, vignette strength, snap/smooth turn, 15/30/45° snap, head/left-controller movement, speed .25–1 (default .60), seated/standing eye-height presets and custom height, vignette, aim guide, diagnostics and three quality presets. Detail changes immediately; framebuffer scale applies next session. Diagnostics show world draw calls and CPU submission milliseconds, not GPU/compositor FPS. VR has no camera shake.
 
 Physical head motion is swept through the same wall/door collision. Muzzle reach is clipped before surfaces and capped at .85m from the safe head. Menus freeze gameplay; physical head travel becomes a bounded collision-safe visual proxy discarded on resume. Tracking discontinuity, missing head/right hand, visibility interruption and controller removal pause safely. One XR clock replaces the desktop presentation loop; exit preserves the paused game.
 
 Ori follows in the world, signals danger/assistance, draws assist beams and scanned routes/objectives/secrets, and retains Michael/Ori banter. Practical enemy/Ori/door positional sounds and optional controller pulses augment the original effects. Classic/Arcade retain their existing audio behavior.
 
-**Physical acceptance remains pending.** No real Quest headset/session or controller validation occurred. This cloud browser lacks WebGL. Synthetic poses drive gameplay tests; software GLES separately verifies exact shaders, shared geometry/atlases and stereo pixels. Quest presentation, haptics/audio, comfort, long-session stability and the **72 FPS target** require the [manual checklist](docs/v0.4.0/quest3-acceptance.md). The fastest scripted VR speed is not a human balance-tested preset.
+**Physical acceptance remains pending.** No real Quest headset/session or controller validation occurred. Synthetic poses drive gameplay tests; genuine local Chromium with software WebGL now checks the production renderer, shared geometry/atlases, stereo pixels and resource cleanup. Quest presentation, haptics/audio, comfort, long-session stability and the **72 FPS target** require the [manual checklist](docs/v0.4.0/quest3-acceptance.md). The fastest scripted VR speed is not a human balance-tested preset.
 
 ## Saves, offline and ownership
 
 The existing v1 save key and format remain compatible. Map identifiers are now checked against the saved sector to reject mismatched checkpoints. Continue resumes the latest checkpoint. Fresh starts intentionally begin another run. Storage clearing/private storage can remove or prevent checkpoints.
 
-On HTTPS/localhost wait for **OFFLINE READY**. All **34** shell/runtime resources, including every immersive world module, local fonts and the original SVG city, are cached with a content-hashed worker. Browser XR permissions, hardware availability and secure-origin requirements still apply when offline. Refresh once more if an older cached release appears after deployment.
+On HTTPS/localhost wait for **OFFLINE READY**. All shell/runtime resources, including every immersive world module, local fonts and the original SVG city, are cached with a content-hashed worker. Browser XR permissions, hardware availability and secure-origin requirements still apply when offline. Refresh once more if an older cached release appears after deployment.
 
 How to Play links the full MIT source/build ZIP, generated on every build. It includes source, prebuilt runtime, tests, docs and the GitHub Pages workflow, without Site identity or credentials. No CDN, telemetry, account, external service or runtime framework is required.
 
@@ -129,9 +137,11 @@ node scripts/verify-build.mjs
 node scripts/verify-offline.mjs
 ```
 
-The UI release passes **170/170 Node tests**: all 162 existing cases plus eight UI, license, contrast, icon and minimap regressions. Existing tests include complete twelve-sector Classic and synthetic tracked campaigns, Wardens, live enemy deaths and checkpoint retries. All 15 existing test files and 18 gameplay/input/audio/XR engine files are byte-identical to the published v0.4.0 baseline. World asset factories are unchanged; only the UI portrait palette changed in `assets.js`.
+### Historical v0.4.1 evidence
 
-Fresh Chrome checks pass **19 UI checks** at 1920×1080, 1280×720, 960×640 and 390×844; **36 immersive/Canvas**, **27 simulated Xbox/DOM**, **10 original smoke** and **20 Arcade XR logic** checks. The two actual browser WebGL checks are unavailable in this environment. Physical Quest/Touch/Xbox/Bluetooth testing, headset readability/comfort and performance remain unverified. Native browser play exercised movement, the first door, shooting/liberation, Ori, live damage, pause/settings, natural death and retry with the new interface.
+Historical v0.4.1 UI verification recorded **170/170 Node tests**: all 162 existing cases plus eight UI, license, contrast, icon and minimap regressions. Existing tests include complete twelve-sector Classic and synthetic tracked campaigns, Wardens, live enemy deaths and checkpoint retries. All 15 existing test files and 18 gameplay/input/audio/XR engine files are byte-identical to the published v0.4.0 baseline. World asset factories are unchanged; only the UI portrait palette changed in `assets.js`.
+
+Historical v0.4.1 Chrome checks passed **19 UI checks** at 1920×1080, 1280×720, 960×640 and 390×844; **36 immersive/Canvas**, **27 simulated Xbox/DOM**, **10 original smoke** and **20 Arcade XR logic** checks. The v0.4.1 browser WebGL checks were unavailable; current genuine Chromium WebGL results are linked above. Physical Quest/Touch/Xbox/Bluetooth testing, headset readability/comfort and performance remain unverified. Native browser play exercised movement, the first door, shooting/liberation, Ori, live damage, pause/settings, natural death and retry with the new interface.
 
 `/ui-qa.html` exercises the actual production document at four viewports and paints both VR interfaces. `/qa.html` and `/immersive-qa.html` retain the original harnesses. The game uses the same v1 save keys and formats. UI colors are independent of gameplay weapon definitions. Reduced-motion settings suppress menu transitions and UI portrait motion; all important text uses high-contrast dark instrument backgrounds. The new desktop radar zooms the same discovered data; Tab keeps the full map. No new location knowledge or gameplay rule is introduced.
 
@@ -151,9 +161,10 @@ See [current verification](docs/v0.4.1/verification.md), [baseline preservation]
 | `src/vr-input.js`, `vr-math.js`, `vr-renderer.js` | Touch mapping, anchored-screen geometry, ray UI, Canvas HUD and WebGL eye views |
 | `src/immersive-rig.js`, `immersive-play.js`, `immersive-math.js` | Safe tracked transforms and one simulation adapter |
 | `src/level-geometry.js`, `world-atlas.js`, `world-scene.js`, `world-ui.js`, `vr-world-renderer.js` | Derived geometry/IR, owned atlas, world batches, wrist/captions, WebGL stereo |
+| `src/neon-signal.js`, `signal-presentation.js` | Immersive palettes, budgets, materials, fixtures, hands, Ori ornament and interaction focus |
 | `tests/`, `scripts/`, `docs/` | Regressions, traversal, build, portable package and verification receipts |
 
-Native JavaScript ES modules, Canvas and WebGL remain the architecture. The included GitHub Actions workflow checks/tests/builds and deploys `dist/` to Pages on `main`; relative URLs support a repository subpath. GitHub deployment itself is not claimed by this package. The v0.4.0 release was published before this UI pass. Sites source retains the release history and the recoverable v0.4.0 archive. This interface release uses the same Site identity and public audience. No matching GitHub game repository was identified, so no GitHub PR is claimed.
+Native JavaScript ES modules, Canvas and WebGL remain the architecture. The included GitHub Actions workflow checks/tests/builds and deploys `dist/` to Pages on `main`; relative URLs support a repository subpath. GitHub deployment itself is not claimed by this package. The v0.4.0 release was published before this UI pass. Sites source retains the release history and the recoverable v0.4.0 archive. This interface release uses the same Site identity and public audience. Current development uses this GitHub repository and reviewable pull requests; merging and production release remain human-owned.
 
 ## License
 
