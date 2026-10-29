@@ -1,4 +1,5 @@
 import {handMesh,appendEquipment} from './equipment-meshes.js';
+import {oriVisualTarget} from './ori-comfort.js';
 import {lineOfSight} from './collision.js';
 import {WORLD_SCALE, entityHeight, traceEnvironment, rayEntityDistance} from './spatial.js';
 import {signalFixtures, signalPalette} from './neon-signal.js';
@@ -73,20 +74,18 @@ export class SignalPresentation {
 
   // Ori's gameplay location, abilities and timing stay in the simulation.
   // The visual core follows smoothly and keeps a clear lane around the weapon ray.
-  let ox = game.ori.x * s, oz = game.ori.y * s;
-  if (rig.aim) {
-   const d = rig.aim.direction, dx = ox - eye[0], dz = oz - eye[2], n = Math.hypot(dx, dz) || 1;
-   if ((dx * d.x + dz * d.y) / n > .8 && n < 1.8) { ox -= d.y * .5; oz += d.x * .5; }
-  }
-  const follow = 1 - Math.exp(-Math.min(dt, .05) * 9);
+  const visualTarget = oriVisualTarget({eye, head:rig.headWorld, x:game.ori.x*s, z:game.ori.y*s, aim:rig.aim, peripheral:settings.vrOriPeripheral!==false});
+  const ox=visualTarget.x, oz=visualTarget.z;
+  const follow = 1 - Math.exp(-Math.min(dt, .05) * 6);
   this.ori[0] += (ox - this.ori[0]) * follow;
   this.ori[2] += (oz - this.ori[2]) * follow;
   this.ori[1] = 1.25 + (still ? 0 : Math.sin(t * 2.4) * .035);
   const threat = l.enemies.find(e => !e.dead && e.tell > 0 && Math.hypot(e.x - game.player.x, e.y - game.player.y) < 9);
   const oriColor = threat || game.player.health < 30 ? AMBER : CYAN;
-  this.ring(b, ...this.ori, .28 + (game.assistTime > 0 ? .04 : 0), quality.rings, eye, oriColor);
-  this.ring(b, ...this.ori, .23, quality.rings, eye, p.secondary, true);
-  b.billboard(this.ori[0], this.ori[1] - .18, this.ori[2], .36, .36, 'ori', eye, oriColor);
+  const oriSize = Number.isFinite(settings.vrOriScale)?Math.max(.4,Math.min(1,settings.vrOriScale)):.65;
+  this.ring(b, ...this.ori, (.28 + (game.assistTime > 0 ? .04 : 0))*oriSize, quality.rings, eye, oriColor);
+  this.ring(b, ...this.ori, .23*oriSize, quality.rings, eye, p.secondary, true);
+  b.billboard(this.ori[0], this.ori[1] - .18*oriSize, this.ori[2], .36*oriSize, .36*oriSize, 'ori', eye, oriColor);
   const attention = threat || (game.objectiveTime > 0 ? game.objectiveTarget : null);
   if (attention) {
    this.from.set(this.ori);
