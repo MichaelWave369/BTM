@@ -68,7 +68,7 @@ export class SignalPresentation {
     b.box([f.x - f.dx * .02, 1.32 + offset, f.z - f.dz * .02], [f.dx ? .012 : .42, .006, f.dx ? .42 : .012], 'white', this.color);
    }
   }
-  if (rig.hasLeft) this.hand(b,rig.leftWorld,'left',settings,rig.uiCaptured?.2:0,rig.uiCaptured?'point':'relaxed');
+  if (rig.hasLeft) this.hand(b,rig.leftVisualWorld||rig.leftWorld,'left',settings,rig.uiCaptured?.2:0,rig.uiCaptured?'point':'relaxed');
   if (rig.hasRightGrip) this.hand(b,rig.rightGripWorld,'right',settings,game.charge*.2+game.muzzle*.15,game.weapon===0?'relaxed':'grip');
 
   // Ori's gameplay location, abilities and timing stay in the simulation.

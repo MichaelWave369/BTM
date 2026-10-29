@@ -1,4 +1,5 @@
 import {EQUIPMENT_DEFAULTS,equipmentSettings,attachWeapon} from './equipment-math.js';
+import {visualLeftPose} from './left-hand-pose.js';
 import {moveBody} from './collision.js';
 import {WORLD_SCALE,WALL_HEIGHT,clamp,safeTrackedAim} from './spatial.js';
 import {matIdentity,matMultiply,rigidY,inverseRigidY,transformPoint,directionAngle} from './immersive-math.js';
@@ -10,7 +11,7 @@ export function immersiveSettings(s={}){
 }
 export class ImmersiveRig {
  constructor(){
-  this.root=matIdentity();this.inverse=matIdentity();this.rightWorld=matIdentity();this.weaponWorld=matIdentity();this.equipmentEpoch=0;this.rightGripWorld=matIdentity();this.leftWorld=matIdentity();this.headWorld=matIdentity();this.level=null;this.calibrated=false;this.snapReady=true;this.fade=0;this.blocked=false;this.eye=[0,0,0];this.menuPosition={x:0,y:0};
+  this.root=matIdentity();this.inverse=matIdentity();this.rightWorld=matIdentity();this.weaponWorld=matIdentity();this.equipmentEpoch=0;this.rightGripWorld=matIdentity();this.leftWorld=matIdentity();this.leftVisualWorld=matIdentity();this.headWorld=matIdentity();this.level=null;this.calibrated=false;this.snapReady=true;this.fade=0;this.blocked=false;this.eye=[0,0,0];this.menuPosition={x:0,y:0};
   this.input={moveForward:0,moveStrafe:0,sprint:false,fire:false,deferFire:true,afterMovement:()=>this.finish(this.game,this.pose,this.game.mode==='playing')};
  }
  recenter(){this.equipmentEpoch++;this.uiCaptured=false;this.calibrated=false;this.snapReady=false;this.fade=.18;}
@@ -46,7 +47,7 @@ export class ImmersiveRig {
   const x=body.x*WORLD_SCALE-(c*head[12]+s*head[14]),z=body.y*WORLD_SCALE-(-s*head[12]+c*head[14]),y=height-head[13];
   rigidY(this.root,this.yaw,x,y,z);inverseRigidY(this.inverse,this.yaw,x,y,z);transformPoint(this.eye,this.root,head[12],head[13],head[14]);matMultiply(this.headWorld,this.root,head);
   this.headAngle=directionAngle(head,this.yaw);this.head={x:body.x,y:body.y,height:height/WORLD_SCALE,angle:this.headAngle};this.aim=null;this.hasLeft=!!pose.leftGrip;this.hasRightGrip=!!(pose.rightGrip||pose.rightRay);
-  if(pose.leftGrip){matMultiply(this.leftWorld,this.root,pose.leftGrip);this.clipGrip(game,this.leftWorld);}
+  if(pose.leftGrip){matMultiply(this.leftWorld,this.root,pose.leftGrip);this.clipGrip(game,this.leftWorld);visualLeftPose(this.leftVisualWorld,this.leftWorld,settings);}
   if(this.hasRightGrip){matMultiply(this.rightGripWorld,this.root,pose.rightGrip||pose.rightRay);this.clipGrip(game,this.rightGripWorld);}
   if(pose.rightRay){
    matMultiply(this.rightWorld,this.root,pose.rightRay);

@@ -1,11 +1,11 @@
 import {WORLD_SCALE} from './spatial.js';
 // Meter-based equipment layout and sanitized optional settings. No simulation writes.
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-export const EQUIPMENT_DEFAULTS=Object.freeze({vrHandStyle:'combat',vrWristSize:.32,vrWristOffset:.065,vrWristActivation:'gaze',vrWristSensitivity:.4,vrHudVisible:true,vrHologramBrightness:.85,vrSubtitleSize:1,vrSubtitleMode:'comfort',vrSubtitleDuration:1,vrGripX:0,vrGripY:0,vrGripZ:0,vrInterfaceMotion:true});
+export const EQUIPMENT_DEFAULTS=Object.freeze({vrHandStyle:'combat',vrWristSize:.32,vrWristOffset:.065,vrWristActivation:'gaze',vrWristSensitivity:.4,vrHudVisible:true,vrHologramBrightness:.85,vrSubtitleSize:1,vrSubtitleMode:'comfort',vrSubtitleDuration:1,vrGripX:0,vrGripY:0,vrGripZ:0,vrLeftHandPitch:-20,vrLeftHandYaw:0,vrLeftHandRoll:0,vrWristTopOffset:.03,vrInterfaceMotion:true});
 export function equipmentSettings(s={}){
  const out={...EQUIPMENT_DEFAULTS};
  for(const [key,options]of Object.entries({vrHandStyle:['combat','neon','tactical'],vrWristActivation:['gaze','raised','manual'],vrSubtitleMode:['comfort','ori']}))if(options.includes(s[key]))out[key]=s[key];
- for(const [key,min,max]of [['vrWristSize',.24,.38],['vrWristOffset',.035,.10],['vrWristSensitivity',.35,.8],['vrHologramBrightness',.4,1.1],['vrSubtitleSize',.8,1.3],['vrSubtitleDuration',.75,2],['vrGripX',-.04,.04],['vrGripY',-.04,.04],['vrGripZ',-.04,.04]])if(Number.isFinite(s[key]))out[key]=clamp(s[key],min,max);
+ for(const [key,min,max]of [['vrWristSize',.24,.38],['vrWristOffset',.035,.10],['vrWristSensitivity',.35,.8],['vrHologramBrightness',.4,1.1],['vrSubtitleSize',.8,1.3],['vrSubtitleDuration',.75,2],['vrGripX',-.04,.04],['vrGripY',-.04,.04],['vrGripZ',-.04,.04],['vrLeftHandPitch',-65,65],['vrLeftHandYaw',-65,65],['vrLeftHandRoll',-90,90],['vrWristTopOffset',0,.08]])if(Number.isFinite(s[key]))out[key]=clamp(s[key],min,max);
  for(const key of ['vrHudVisible','vrInterfaceMotion'])if(typeof s[key]==='boolean')out[key]=s[key];return out;
 }
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
@@ -18,9 +18,10 @@ export class WristComputer{
  reset(){this.open=0;this.pinned=false;this.last=-1;this.attentionSince=this.lostSince=-1;this.requested=this.guard=this.visible=this.statusVisible=false;}
  update(rig,settings={},now=0){
   const s=equipmentSettings(settings),dt=this.last<0?0:clamp((now-this.last)/1000,0,.05);this.last=now;
-  const m=rig.leftWorld,eye=rig.eye;
+  // Visual calibration never alters controller tracking, aim, or interaction rays.
+  const m=rig.leftVisualWorld||rig.leftWorld,eye=rig.eye;
   if(!rig.hasLeft||!m||!s.vrHudVisible){this.open=0;this.visible=this.statusVisible=this.requested=this.guard=false;this.pinned=false;this.attentionSince=-1;return this;}
-  const status=this.status;at(status.center,m,0,.0415,.097);
+  const status=this.status;at(status.center,m,0,.0415+s.vrWristTopOffset,.115);
   for(let i=0;i<3;i++){status.right[i]=m[i];status.up[i]=-m[8+i];status.normal[i]=m[4+i];this.toEye[i]=eye[i]-status.center[i];}
   const distance=Math.hypot(...this.toEye);normal(this.toEye);this.statusVisible=distance>.28&&distance<1.05;
   const facing=dot(status.normal,this.toEye),head=rig.headWorld;
@@ -35,6 +36,8 @@ export class WristComputer{
   for(let i=0;i<3;i++)p.right[i]=(head?head[i]:i===0?1:0)*.85+status.right[i]*.15;
   const project=dot(p.right,p.normal);for(let i=0;i<3;i++)p.right[i]-=p.normal[i]*project;normal(p.right);
   const n=p.normal,r=p.right;p.up[0]=n[1]*r[2]-n[2]*r[1];p.up[1]=n[2]*r[0]-n[0]*r[2];p.up[2]=n[0]*r[1]-n[1]*r[0];normal(p.up);
+  // Prevent the panel from flipping upside down as the wrist rotates.
+  const upward=head?[head[4],head[5],head[6]]:[0,1,0];if(dot(p.up,upward)<0){for(let i=0;i<3;i++){p.up[i]*=-1;p.right[i]*=-1;}}
   p.width=s.vrWristSize*(.92+.08*this.open);p.height=p.width/1.5;
   for(let i=0;i<3;i++)p.center[i]=status.center[i]+p.normal[i]*s.vrWristOffset+p.up[i]*(.075-(1-this.open)*.018);
   // Project slightly inboard and keep the complete display clear of the face.
