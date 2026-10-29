@@ -1,5 +1,19 @@
 # Michael Wave & Ori: Break the Matrix
 
+## Quest 3 First-Contact Comfort Patch — v0.7.1-rc.1 candidate
+
+Based on actual Quest 3 playtesting, this focused upgrade makes **smooth turn the default for new preferences**, with optional snap turn (and a shorter snap fade). Existing user-saved turn choices are honored; select **Settings → Immersive VR → Turning → SMOOTH** if your previous default remains SNAP.
+
+The Quest right-stick vertical axis no longer triggers weapon cycling during diagonal turning. Select weapons deliberately through the existing interactive left-wrist Arsenal. All Xbox/desktop weapon mappings remain unchanged.
+
+The left glove and attached Gen.E.Wrist display now share an adjustable *visual-only* calibration transform (pitch/yaw/roll). The wrist gets additional top clearance and a consistent upright display orientation. **Actual controller grip tracking, right-hand aim and gameplay collision are unchanged.** Adjust the new calibration sliders in Settings → VR Equipment if the left glove still appears twisted in your particular Quest grip.
+
+Ori's visual companion is smaller by default, moves to the edge when drifting into the central view/aim lane and stays further from the player's face. Its AI and gameplay coordinates remain authoritative and unchanged. Adjustable **Ori visual size** and **Keep Ori outside central view** controls let you tune the result.
+
+See [Quest 3 field validation checklist](docs/quest3-first-contact.md). Software automation alone does not prove physical headset comfort.
+
+
+
 ## Gen.E.Wrist Field bridge — v0.7.0-rc.1 candidate
 
 The existing guarded immersive wrist now has an opt-in GEN.E view with original 3/6/9 rings, live BTM health/armor/energy, informational Loom Market and S.N.A.K.E. Toolkit, and a Realm Atlas with verified external destinations. Weapon, map, pinning, recentering and other existing controls remain on the original combat page.

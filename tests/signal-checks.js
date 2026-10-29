@@ -147,7 +147,7 @@ export function signalCases() { return [
   const f = fixture(), a = f.g.player.a; f.pad.turn = 1;
   f.rig.prepare(f.g, f.pose, f.pad, {vrTurnMode: 'smooth', vrTurnSpeed: .5}, .02);
   expect(near(f.g.player.a - a, .019));
-  const b = f.g.player.a; f.rig.prepare(f.g, f.pose, f.pad, {vrSnapAngle: 45, vrTurnSpeed: 2}, .02);
+  const b = f.g.player.a; f.rig.prepare(f.g, f.pose, f.pad, {vrTurnMode: 'snap', vrSnapAngle: 45, vrTurnSpeed: 2}, .02);
   expect(near(f.g.player.a - b, Math.PI / 4));
  }],
  ['Reduced motion steadies decorations without mutating ability timers', () => {

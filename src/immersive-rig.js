@@ -1,8 +1,9 @@
 import {EQUIPMENT_DEFAULTS,equipmentSettings,attachWeapon} from './equipment-math.js';
+import {visualLeftPose} from './left-hand-pose.js';
 import {moveBody} from './collision.js';
 import {WORLD_SCALE,WALL_HEIGHT,clamp,safeTrackedAim} from './spatial.js';
 import {matIdentity,matMultiply,rigidY,inverseRigidY,transformPoint,directionAngle} from './immersive-math.js';
-export const IMMERSIVE_DEFAULTS={...EQUIPMENT_DEFAULTS,vrTurnMode:'snap',vrSnapAngle:30,vrMoveReference:'head',vrMoveSpeed:.6,vrTurnSpeed:1,vrVignetteStrength:.7,vrEyeHeight:1.65,vrPosture:'seated',vrVignette:true,vrQuality:'balanced',vrAimLine:true,vrDiagnostics:false};
+export const IMMERSIVE_DEFAULTS={...EQUIPMENT_DEFAULTS,vrTurnMode:'smooth',vrSnapAngle:30,vrMoveReference:'head',vrMoveSpeed:.6,vrTurnSpeed:1,vrVignetteStrength:.7,vrEyeHeight:1.65,vrPosture:'seated',vrVignette:true,vrQuality:'balanced',vrAimLine:true,vrDiagnostics:false};
 export function immersiveSettings(s={}){
  const v={...IMMERSIVE_DEFAULTS};for(const [key,options]of Object.entries({vrTurnMode:['snap','smooth'],vrMoveReference:['head','controller'],vrPosture:['seated','standing'],vrQuality:['performance','balanced','high']}))if(options.includes(s[key]))v[key]=s[key];
  for(const [key,min,max]of [['vrMoveSpeed',.25,1],['vrTurnSpeed',.4,2],['vrVignetteStrength',.2,1],['vrEyeHeight',1.1,1.95]])if(Number.isFinite(s[key]))v[key]=clamp(s[key],min,max);
@@ -10,7 +11,7 @@ export function immersiveSettings(s={}){
 }
 export class ImmersiveRig {
  constructor(){
-  this.root=matIdentity();this.inverse=matIdentity();this.rightWorld=matIdentity();this.weaponWorld=matIdentity();this.equipmentEpoch=0;this.rightGripWorld=matIdentity();this.leftWorld=matIdentity();this.headWorld=matIdentity();this.level=null;this.calibrated=false;this.snapReady=true;this.fade=0;this.blocked=false;this.eye=[0,0,0];this.menuPosition={x:0,y:0};
+  this.root=matIdentity();this.inverse=matIdentity();this.rightWorld=matIdentity();this.weaponWorld=matIdentity();this.equipmentEpoch=0;this.rightGripWorld=matIdentity();this.leftWorld=matIdentity();this.leftVisualWorld=matIdentity();this.hasVisualLeft=false;this.headWorld=matIdentity();this.level=null;this.calibrated=false;this.snapReady=true;this.fade=0;this.blocked=false;this.eye=[0,0,0];this.menuPosition={x:0,y:0};
   this.input={moveForward:0,moveStrafe:0,sprint:false,fire:false,deferFire:true,afterMovement:()=>this.finish(this.game,this.pose,this.game.mode==='playing')};
  }
  recenter(){this.equipmentEpoch++;this.uiCaptured=false;this.calibrated=false;this.snapReady=false;this.fade=.18;}
@@ -29,7 +30,7 @@ export class ImmersiveRig {
   if(playing){const travel=Math.hypot(body.x-oldX,body.y-oldY);game.stats.distance+=travel;game.lessonDistance+=travel;game.footDistance+=travel;}
   if(beforeInput){this.finish(game,pose,playing);if(beforeInput())pad=null;}
   const turn=pad?.ready?pad.turn||0:0;if(Math.abs(turn)<.25)this.snapReady=true;
-  if(playing&&settings.vrTurnMode==='snap'&&Math.abs(turn)>.65&&this.snapReady){const delta=Math.sign(turn)*settings.vrSnapAngle*Math.PI/180;game.player.a+=delta;this.yaw-=delta;this.snapReady=false;this.fade=.11;}
+  if(playing&&settings.vrTurnMode==='snap'&&Math.abs(turn)>.65&&this.snapReady){const delta=Math.sign(turn)*settings.vrSnapAngle*Math.PI/180;game.player.a+=delta;this.yaw-=delta;this.snapReady=false;this.fade=.045;}
   if(playing&&settings.vrTurnMode==='smooth'){const delta=turn*dt*1.9*settings.vrTurnSpeed;game.player.a+=delta;this.yaw-=delta;}
   const reference=settings.vrMoveReference==='controller'&&pose.leftRay?pose.leftRay:pose.head,a=directionAngle(reference,this.yaw)-game.player.a,f=playing&&pad?.ready?pad.moveForward||0:0,r=playing&&pad?.ready?pad.moveStrafe||0:0;
   this.moveAngle=game.player.a+a;this.input.moveForward=(Math.cos(a)*f-Math.sin(a)*r)*settings.vrMoveSpeed;this.input.moveStrafe=(Math.sin(a)*f+Math.cos(a)*r)*settings.vrMoveSpeed;this.input.sprint=playing&&!!pad?.sprint;this.input.fire=false;this.input.deferFire=true;
@@ -45,8 +46,8 @@ export class ImmersiveRig {
   const settings=this.settings||IMMERSIVE_DEFAULTS,head=pose.head,body=playing?game.player:this.menuPosition,height=clamp(settings.vrEyeHeight+head[13]-this.headBase,.5,WALL_HEIGHT*WORLD_SCALE-.15),c=Math.cos(this.yaw),s=Math.sin(this.yaw);
   const x=body.x*WORLD_SCALE-(c*head[12]+s*head[14]),z=body.y*WORLD_SCALE-(-s*head[12]+c*head[14]),y=height-head[13];
   rigidY(this.root,this.yaw,x,y,z);inverseRigidY(this.inverse,this.yaw,x,y,z);transformPoint(this.eye,this.root,head[12],head[13],head[14]);matMultiply(this.headWorld,this.root,head);
-  this.headAngle=directionAngle(head,this.yaw);this.head={x:body.x,y:body.y,height:height/WORLD_SCALE,angle:this.headAngle};this.aim=null;this.hasLeft=!!pose.leftGrip;this.hasRightGrip=!!(pose.rightGrip||pose.rightRay);
-  if(pose.leftGrip){matMultiply(this.leftWorld,this.root,pose.leftGrip);this.clipGrip(game,this.leftWorld);}
+  this.headAngle=directionAngle(head,this.yaw);this.head={x:body.x,y:body.y,height:height/WORLD_SCALE,angle:this.headAngle};this.aim=null;this.hasLeft=!!pose.leftGrip;this.hasVisualLeft=false;this.hasRightGrip=!!(pose.rightGrip||pose.rightRay);
+  if(pose.leftGrip){matMultiply(this.leftWorld,this.root,pose.leftGrip);this.clipGrip(game,this.leftWorld);visualLeftPose(this.leftVisualWorld,this.leftWorld,settings);this.hasVisualLeft=true;}
   if(this.hasRightGrip){matMultiply(this.rightGripWorld,this.root,pose.rightGrip||pose.rightRay);this.clipGrip(game,this.rightGripWorld);}
   if(pose.rightRay){
    matMultiply(this.rightWorld,this.root,pose.rightRay);
