@@ -2,7 +2,7 @@ import {EQUIPMENT_DEFAULTS,equipmentSettings,attachWeapon} from './equipment-mat
 import {moveBody} from './collision.js';
 import {WORLD_SCALE,WALL_HEIGHT,clamp,safeTrackedAim} from './spatial.js';
 import {matIdentity,matMultiply,rigidY,inverseRigidY,transformPoint,directionAngle} from './immersive-math.js';
-export const IMMERSIVE_DEFAULTS={...EQUIPMENT_DEFAULTS,vrTurnMode:'snap',vrSnapAngle:30,vrMoveReference:'head',vrMoveSpeed:.6,vrTurnSpeed:1,vrVignetteStrength:.7,vrEyeHeight:1.65,vrPosture:'seated',vrVignette:true,vrQuality:'balanced',vrAimLine:true,vrDiagnostics:false};
+export const IMMERSIVE_DEFAULTS={...EQUIPMENT_DEFAULTS,vrTurnMode:'smooth',vrSnapAngle:30,vrMoveReference:'head',vrMoveSpeed:.6,vrTurnSpeed:1,vrVignetteStrength:.7,vrEyeHeight:1.65,vrPosture:'seated',vrVignette:true,vrQuality:'balanced',vrAimLine:true,vrDiagnostics:false};
 export function immersiveSettings(s={}){
  const v={...IMMERSIVE_DEFAULTS};for(const [key,options]of Object.entries({vrTurnMode:['snap','smooth'],vrMoveReference:['head','controller'],vrPosture:['seated','standing'],vrQuality:['performance','balanced','high']}))if(options.includes(s[key]))v[key]=s[key];
  for(const [key,min,max]of [['vrMoveSpeed',.25,1],['vrTurnSpeed',.4,2],['vrVignetteStrength',.2,1],['vrEyeHeight',1.1,1.95]])if(Number.isFinite(s[key]))v[key]=clamp(s[key],min,max);
@@ -29,7 +29,7 @@ export class ImmersiveRig {
   if(playing){const travel=Math.hypot(body.x-oldX,body.y-oldY);game.stats.distance+=travel;game.lessonDistance+=travel;game.footDistance+=travel;}
   if(beforeInput){this.finish(game,pose,playing);if(beforeInput())pad=null;}
   const turn=pad?.ready?pad.turn||0:0;if(Math.abs(turn)<.25)this.snapReady=true;
-  if(playing&&settings.vrTurnMode==='snap'&&Math.abs(turn)>.65&&this.snapReady){const delta=Math.sign(turn)*settings.vrSnapAngle*Math.PI/180;game.player.a+=delta;this.yaw-=delta;this.snapReady=false;this.fade=.11;}
+  if(playing&&settings.vrTurnMode==='snap'&&Math.abs(turn)>.65&&this.snapReady){const delta=Math.sign(turn)*settings.vrSnapAngle*Math.PI/180;game.player.a+=delta;this.yaw-=delta;this.snapReady=false;this.fade=.045;}
   if(playing&&settings.vrTurnMode==='smooth'){const delta=turn*dt*1.9*settings.vrTurnSpeed;game.player.a+=delta;this.yaw-=delta;}
   const reference=settings.vrMoveReference==='controller'&&pose.leftRay?pose.leftRay:pose.head,a=directionAngle(reference,this.yaw)-game.player.a,f=playing&&pad?.ready?pad.moveForward||0:0,r=playing&&pad?.ready?pad.moveStrafe||0:0;
   this.moveAngle=game.player.a+a;this.input.moveForward=(Math.cos(a)*f-Math.sin(a)*r)*settings.vrMoveSpeed;this.input.moveStrafe=(Math.sin(a)*f+Math.cos(a)*r)*settings.vrMoveSpeed;this.input.sprint=playing&&!!pad?.sprint;this.input.fire=false;this.input.deferFire=true;
