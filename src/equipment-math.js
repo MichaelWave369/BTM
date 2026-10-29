@@ -1,7 +1,7 @@
 import {WORLD_SCALE} from './spatial.js';
 // Meter-based equipment layout and sanitized optional settings. No simulation writes.
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-export const EQUIPMENT_DEFAULTS=Object.freeze({vrHandStyle:'combat',vrWristSize:.32,vrWristOffset:.065,vrWristActivation:'gaze',vrWristSensitivity:.4,vrHudVisible:true,vrHologramBrightness:.85,vrSubtitleSize:1,vrSubtitleMode:'comfort',vrSubtitleDuration:1,vrGripX:0,vrGripY:0,vrGripZ:0,vrLeftHandPitch:-20,vrLeftHandYaw:0,vrLeftHandRoll:0,vrWristTopOffset:.03,vrOriScale:.65,vrOriPeripheral:true,vrInterfaceMotion:true});
+export const EQUIPMENT_DEFAULTS=Object.freeze({vrHandStyle:'combat',vrWristSize:.32,vrWristOffset:.065,vrWristActivation:'gaze',vrWristSensitivity:.4,vrHudVisible:true,vrHologramBrightness:.85,vrSubtitleSize:1,vrSubtitleMode:'comfort',vrSubtitleDuration:1,vrGripX:0,vrGripY:0,vrGripZ:0,vrLeftHandPitch:20,vrLeftHandYaw:0,vrLeftHandRoll:0,vrWristTopOffset:.03,vrOriScale:.65,vrOriPeripheral:true,vrInterfaceMotion:true});
 export function equipmentSettings(s={}){
  const out={...EQUIPMENT_DEFAULTS};
  for(const [key,options]of Object.entries({vrHandStyle:['combat','neon','tactical'],vrWristActivation:['gaze','raised','manual'],vrSubtitleMode:['comfort','ori']}))if(options.includes(s[key]))out[key]=s[key];
