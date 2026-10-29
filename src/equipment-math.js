@@ -19,7 +19,7 @@ export class WristComputer{
  update(rig,settings={},now=0){
   const s=equipmentSettings(settings),dt=this.last<0?0:clamp((now-this.last)/1000,0,.05);this.last=now;
   // Visual calibration never alters controller tracking, aim, or interaction rays.
-  const m=rig.leftVisualWorld||rig.leftWorld,eye=rig.eye;
+  const m=rig.hasVisualLeft?rig.leftVisualWorld:rig.leftWorld,eye=rig.eye;
   if(!rig.hasLeft||!m||!s.vrHudVisible){this.open=0;this.visible=this.statusVisible=this.requested=this.guard=false;this.pinned=false;this.attentionSince=-1;return this;}
   const status=this.status;at(status.center,m,0,.0415+s.vrWristTopOffset,.115);
   for(let i=0;i<3;i++){status.right[i]=m[i];status.up[i]=-m[8+i];status.normal[i]=m[4+i];this.toEye[i]=eye[i]-status.center[i];}
