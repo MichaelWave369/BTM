@@ -50,8 +50,58 @@ export async function validateSkills(root = projectRoot) {
     const path = skillPath(slug);
     try {
       const content = await readFile(join(root, path), 'utf8');
-      if (!content.startsWith('---\n') || !new RegExp('^name: ' + slug + '$', 'm').test(content) ||
+      if (!content.startsWith('---\n') || !new RegExp('^name: ' + slug + '
+    } catch {
+      missing.push(path + ': missing');
+    }
+  }
+  return {ok: missing.length === 0, count: slugs.length, missing};
+}
+export async function routeTask(task, {root = projectRoot, load = false} = {}) {
+  const engine = await detectEngine(root);
+  if (engine === 'unknown') throw new Error('BTM fingerprint not found; refusing to guess an engine');
+  const skills = selectSkills(task, engine);
+  const result = {engine, task, skills};
+  if (load) result.contents = await Promise.all(skills.map(async item => ({
+    name: item.name,
+    content: await readFile(join(root, item.path), 'utf8')
+  })));
+  return result;
+}
+async function main(argv) {
+  const validate = argv.includes('--validate');
+  const load = argv.includes('--load');
+  const json = argv.includes('--json');
+  const i = argv.indexOf('--task');
+  if (validate) {
+    const result = await validateSkills();
+    console.log(JSON.stringify(result, null, 2));
+    if (!result.ok) process.exitCode = 1;
+    return;
+  }
+  const task = i >= 0 ? argv[i + 1] : argv.filter(arg => !arg.startsWith('--')).join(' ');
+  if (!task || task.startsWith('--')) throw new Error('Usage: node scripts/route-agent-skills.mjs --task "describe work" [--json] [--load] or --validate');
+  const result = await routeTask(task, {load});
+  if (json || load) console.log(JSON.stringify(result, null, 2));
+  else {
+    console.log('Engine: ' + result.engine);
+    console.log('Selected skills (read in order):');
+    for (const skill of result.skills) console.log('  ' + skill.path);
+  }
+}
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) main(process.argv.slice(2)).catch(error => {
+  console.error(error.message);
+  process.exitCode = 1;
+});
+, 'm').test(content) ||
           !/^description:/m.test(content)) missing.push(path + ': invalid metadata');
+      for (const match of content.matchAll(/`(references\\/[^\\`]+\\.md)`/g)) {
+        const ref = match[1];
+        if (ref.includes('..')) { missing.push(path + ': unsafe reference ' + ref); continue; }
+        try { await access(join(root, '.agents/skills', slug, ref)); }
+        catch { missing.push(path + ': missing ' + ref); }
+      }
     } catch {
       missing.push(path + ': missing');
     }

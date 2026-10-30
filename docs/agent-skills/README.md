@@ -31,7 +31,7 @@ https://github.com/gamedev-skills/awesome-gamedev-agent-skills
 Pinned upstream commit: `19d93f97c9c1ea0f8b306e77aa81e0d3e352d3e9` (October 2026).
 Source paths: `skills/genres/fps-shooter/SKILL.md`, `skills/disciplines/input-systems/SKILL.md`, `skills/disciplines/performance-optimization/SKILL.md`.
 
-Those vendored files are Apache-2.0 licensed (see `LICENSE-APACHE-2.0.txt` in this directory); the BTM game itself remains MIT licensed. No upstream skill text was modified. Future updates need an explicit upstream revision, review of changed content, license/notice preservation and regression checks.
+Those vendored files are Apache-2.0 licensed (see `LICENSE-APACHE-2.0.txt` in this directory); the BTM game itself remains MIT licensed. The three upstream skills' corresponding `references/*.md` documents are included unchanged so their on-demand deeper guidance remains usable. No upstream skill or reference text was modified. Future updates need an explicit upstream revision, review of changed content, license/notice preservation and regression checks.
 
 ## Pilot scorecard
 1. Zero functional gameplay or distribution changes.
