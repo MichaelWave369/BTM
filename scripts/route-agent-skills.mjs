@@ -14,11 +14,11 @@ const slugs = Object.freeze([
 ]);
 const rules = Object.freeze([
   ['btm-quest3-input', /\b(quest|touch|controller|controllers|thumbstick|joystick|turn|turning|input|rearm|grip|trigger|deadzone)\b/i],
-  ['btm-xr-comfort', /\b(comfort|vignette|nausea|motion sickness|ori|wrist alignment|flicker|flashing|fps|frame rate|frame pacing|framerate|latency|performance|calibration|stutter|headset|xr|vr|stereo)\b/i],
+  ['btm-xr-comfort', /\b(comfort|vignette|nausea|motion sickness|ori|wrist alignment|flicker|flashing|low fps|fps drops|fps stutter|frame drops|frame rate|frame pacing|framerate|latency|performance|calibration|stutter|headset|xr|vr|stereo)\b/i],
   ['btm-genewrist', /\b(gen[. -]?e[. -]?wrist|wrist|world mode|realm atlas|realm|3\/6\/9|travel|bridge)\b/i],
-  ['fps-shooter', /\b(fps|shooter|combat|weapons?|firing|shoot|shooting|enemies|enemy|boss|projectiles?|aim|recoil|damage|hitmarkers?)\b/i],
+  ['fps-shooter', /\b(shooter|combat|weapons?|firing|shoot|shooting|enemies|enemy|boss|projectiles?|aim|recoil|damage|hitmarkers?)\b/i],
   ['input-systems', /\b(controller|controllers|thumbstick|joystick|turn|turning|input|rearm|grip|trigger|deadzone|rebind|gamepad)\b/i],
-  ['performance-optimization', /\b(performance|optimi[sz]e|fps|framerate|frame rate|frame pacing|stutter|profiler|draw calls|gpu|cpu|latency)\b/i]
+  ['performance-optimization', /\b(performance|optimi[sz]e|low fps|fps drops|fps stutter|frame drops|framerate|frame rate|frame pacing|stutter|profiler|draw calls|gpu|cpu|latency)\b/i]
 ]);
 export function skillPath(slug) {
   if (!slugs.includes(slug)) throw new RangeError('Unknown skill: ' + slug);
