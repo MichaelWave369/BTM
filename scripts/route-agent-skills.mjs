@@ -96,9 +96,9 @@ if (isMain) main(process.argv.slice(2)).catch(error => {
 });
 , 'm').test(content) ||
           !/^description:/m.test(content)) missing.push(path + ': invalid metadata');
-      for (const match of content.matchAll(/`(references\\/[^\\`]+\\.md)`/g)) {
+      for (const match of content.matchAll(/`(references[^`]+[.]md)`/g)) {
         const ref = match[1];
-        if (ref.includes('..')) { missing.push(path + ': unsafe reference ' + ref); continue; }
+        if (!ref.startsWith('references/') || ref.includes('..')) { missing.push(path + ': unsafe reference ' + ref); continue; }
         try { await access(join(root, '.agents/skills', slug, ref)); }
         catch { missing.push(path + ': missing ' + ref); }
       }
