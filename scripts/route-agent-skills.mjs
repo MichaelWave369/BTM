@@ -50,7 +50,18 @@ export async function validateSkills(root = projectRoot) {
     const path = skillPath(slug);
     try {
       const content = await readFile(join(root, path), 'utf8');
-      if (!content.startsWith('---\n') || !new RegExp('^name: ' + slug + '
+      const lines = content.split('\n');
+      if (!content.startsWith('---\n') || !lines.includes('name: ' + slug) ||
+          !lines.some(line => line.startsWith('description:'))) missing.push(path + ': invalid metadata');
+      for (const match of content.matchAll(/`(references[^`]+[.]md)`/g)) {
+        const ref = match[1];
+        if (!ref.startsWith('references/') || ref.includes('..')) {
+          missing.push(path + ': unsafe reference ' + ref);
+          continue;
+        }
+        try { await access(join(root, '.agents/skills', slug, ref)); }
+        catch { missing.push(path + ': missing ' + ref); }
+      }
     } catch {
       missing.push(path + ': missing');
     }
