@@ -1,0 +1,129 @@
+{
+  "classic": {
+    "passed": true,
+    "error": null,
+    "steps": 8344,
+    "results": [
+      {
+        "sector": 1,
+        "name": "THE WAKE-UP CALL",
+        "seconds": 81.73,
+        "distance": 211.54,
+        "shots": 31,
+        "defeated": 8,
+        "freed": 9,
+        "pickups": 5,
+        "doors": 4,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": []
+      },
+      {
+        "sector": 2,
+        "name": "CATHEDRAL OF STATIC",
+        "seconds": 61.87,
+        "distance": 157.44,
+        "shots": 43,
+        "defeated": 9,
+        "freed": 6,
+        "pickups": 4,
+        "doors": 6,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": []
+      },
+      {
+        "sector": 3,
+        "name": "THE DEMIURGE CORE",
+        "seconds": 64.92,
+        "distance": 164.92,
+        "shots": 57,
+        "defeated": 9,
+        "freed": 4,
+        "pickups": 4,
+        "doors": 6,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": [
+          1,
+          2,
+          3
+        ]
+      }
+    ],
+    "method": "Production movement, aim, fire, reload, Ori, dodge, E interactions and exit proximity. No teleportation, direct objective/HP assignment, or calls to complete/damageEnemy."
+  },
+  "immersive": {
+    "passed": true,
+    "error": null,
+    "steps": 9200,
+    "results": [
+      {
+        "sector": 1,
+        "name": "THE WAKE-UP CALL",
+        "seconds": 82.23,
+        "distance": 212.86,
+        "shots": 31,
+        "defeated": 8,
+        "freed": 9,
+        "pickups": 5,
+        "doors": 4,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": []
+      },
+      {
+        "sector": 2,
+        "name": "CATHEDRAL OF STATIC",
+        "seconds": 65.65,
+        "distance": 166.32,
+        "shots": 48,
+        "defeated": 9,
+        "freed": 6,
+        "pickups": 4,
+        "doors": 6,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": []
+      },
+      {
+        "sector": 3,
+        "name": "THE DEMIURGE CORE",
+        "seconds": 82.05,
+        "distance": 209.88,
+        "shots": 97,
+        "defeated": 9,
+        "freed": 4,
+        "pickups": 6,
+        "doors": 6,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": [
+          1,
+          2,
+          3
+        ]
+      }
+    ],
+    "method": "Synthetic head/hand poses and thumbsticks through production stepImmersive + ImmersiveRig. Shared twelve sectors, live AI/combat/damage, interactions, pickups, secrets, Wardens and transitions. Fastest exposed VR speed (1.0), exact scripted aim and map knowledge; no player/HP/objective writes. Not human balance, real XR or physical controller validation.",
+    "adapterSteps": 9197
+  }
+}

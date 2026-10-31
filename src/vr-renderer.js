@@ -6,15 +6,15 @@ function text(ctx,value,x,y,max=82){ctx.fillText(String(value).slice(0,max),x,y)
 export class VRPanel {
  constructor(){this.canvas=document.createElement('canvas');this.canvas.width=W;this.canvas.height=H;this.g=this.canvas.getContext('2d',{alpha:false});this.targets=[];}
  targetAt(hit){return hit&&this.targets.find(t=>hit.u*W>=t.x&&hit.u*W<=t.x+t.w&&hit.v*H>=t.y&&hit.v*H<=t.y+t.h);}
- paint({game,scene,screen,items=[],focused,activate,dialogue='',toast='',immersive=false},cursor){
+ paint({game,scene,screen,items=[],focused,activate,dialogue='',toast='',immersive=false,settings={}},cursor){
   const g=this.g;g.fillStyle=UI.bg;g.fillRect(0,0,W,H);g.imageSmoothingEnabled=false;g.drawImage(scene,0,0,W,576);this.targets=[];
   const button=(x,y,w,h,label,action,selected=false)=>{drawPanel(g,x,y,w,h,selected?UI.pink:'#62729d',selected?'#602051':'#18233e');g.fillStyle=selected?'#fff1fb':UI.text;g.font=`600 19px ${UI_FONT}`;text(g,label,x+14,y+h/2+6,75);this.targets.push({x,y,w,h,action});};
   g.fillStyle=UI.bg;g.fillRect(0,576,W,H-576);g.fillStyle=UI.pink;g.fillRect(0,576,400,2);g.fillStyle=UI.cyan;g.fillRect(400,576,624,2);
   drawPanel(g,12,590,293,47,UI.pink);drawPanel(g,315,590,293,47,UI.cyan);drawPanel(g,618,590,394,47,UI.violet);
-  g.font=`600 22px ${UI_FONT}`;g.fillStyle=UI.pink;text(g,'HEALTH '+Math.ceil(game.player.health),26,621);g.fillStyle=UI.cyan;text(g,'ARMOR '+Math.ceil(game.player.armor),329,621);g.fillStyle=UI.violet;text(g,'ENERGY '+Math.floor(game.player.energy)+'  /  ORI '+Math.floor(game.player.ori),632,621);
+  g.font=`600 22px ${UI_FONT}`;g.fillStyle=UI.pink;text(g,'HEALTH '+Math.ceil(game.player.health),26,621);g.fillStyle=UI.cyan;text(g,'ARMOR '+Math.ceil(game.player.armor),329,621);g.fillStyle=UI.violet;text(g,'E '+Math.floor(game.player.energy)+(game.survival?' / RES '+Math.floor(game.player.reserve):' / ORI '+Math.floor(game.player.ori)),632,621);
   g.fillStyle=UI.cyan;g.font=`600 18px ${UI_FONT}`;text(g,'SECTOR '+String(game.levelIndex+1).padStart(2,'0')+'/12   /   '+game.objective,24,659,86);
-  g.fillStyle=UI.text;g.font=`18px ${UI_FONT}`;text(g,dialogue||toast||game.interactionHint().replace('[ E ]','[ R GRIP ]'),24,687,92);
-  if(!screen){const actions=[['PAUSE','pause'],['VENT','reload'],['ORI','ori'],['DODGE','dodge'],['VISION','vision'],['MAP','map'],['BASS','bass'],['CENTER','recenter']];actions.forEach(([label,action],i)=>button(12+i*126,704,118,49,label,()=>activate(action)));}
+  g.fillStyle=UI.text;g.font=`18px ${UI_FONT}`;text(g,(settings.captions===false?'':dialogue)||toast||game.interactionHint().replace('[ E ]','[ R GRIP ]'),24,687,92);
+  if(!screen){const actions=[['PAUSE','pause'],[game.survival?'RELOAD':'VENT','reload'],['ORI','ori'],[game.survival?'DASH':'DODGE','dodge'],['VISION','vision'],['MAP','map'],['BASS','bass'],['CENTER','recenter']];actions.forEach(([label,action],i)=>button(12+i*126,704,118,49,label,()=>activate(action)));}
   else{
    drawPanel(g,16,15,992,550,UI.cyan,'#0e122bf9');g.fillStyle=UI.cyan;g.font=`600 18px ${UI_FONT}`;text(g,'MICHAEL WAVE & ORI / '+(immersive?'IMMERSIVE WORLD':'VR ARCADE'),40,48);
    g.fillStyle=UI.pink;g.font=`600 31px ${UI_FONT}`;const titles={'title-screen':'BREAK THE MATRIX / 12 SECTORS','pause-screen':'SIGNAL PAUSED','result-screen':game.mode==='dead'?'SIGNAL LOST / RETRY':game.levelIndex===11?'THE FREQUENCY IS YOURS':'SECTOR LIBERATED','settings-screen':'TUNE YOUR FREQUENCY','help-screen':'QUEST / VR FIELD MANUAL'};text(g,titles[screen]||screen,40,92,52);

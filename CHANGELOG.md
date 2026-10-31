@@ -1,5 +1,15 @@
 # Cybernetic equipment — 0.6.0-rc.1 candidate
 
+## 0.8.0-rc.1 — Ori Reborn / Survival candidate
+
+- Hologram lower edge clears the calibrated glove silhouette across rotated grips; tracking and right-hand aim remain separate.
+- Small original procedural Φ369 drone follows a collision-checked right-side visual route; Classic Ori and authoritative assist AI are preserved.
+- Compact peripheral dialogue, captions toggle, optional device-local browser speech, independent speech volume, retained communication log and a separate critical-alert dock.
+- Default new Survival runs use finite charge/reserve, partial energy cells and manual reload; no passive, relay, retry bonus or sector-transition energy grants. Old saves use Legacy Recharge.
+- Survival dash bashes one frontal enemy, or grants a 0.30-second shield with an 18-damage total budget. Slap remains free. Legacy retains original dodge/recharge behavior.
+- Quest hardware acceptance and late-Survival human balance remain pending. Pit of Despair is tracked separately; no placeholder campaign is exposed.
+
+
 - Replace primitive gloves with connected mirrored cybernetic hands, segmented fingers/knuckles, cuffs and three original finishes. Add six role-specific weapon models, grip-anchored collision-safe muzzle calibration, local recoil and charge emission.
 - Replace the oversized wrist with compact status hardware and an intentional 320mm holographic link, bounded stereo placement, dwell/dismissal, pin/unpin and preserved capture/neutral rearm.
 - Add speaker-labelled communication with readable wrapped pages, portrait/waveform, Comfort HUD default, Ori Spatial fallback and saved size/duration preferences. Preserve actual dialogue content.

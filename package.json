@@ -1,9 +1,9 @@
 {
   "name": "michael-wave-ori-break-the-matrix",
-  "version": "0.7.1-rc.1",
+  "version": "0.8.0-rc.1",
   "private": true,
   "type": "module",
-  "description": "Neon Signal with opt-in ΦWAD custom missions in the shared Classic and immersive VR simulation.",
+  "description": "Ori Reborn: peripheral Quest equipment, optional communications and finite-energy Survival in the native BTM simulation.",
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "build": "node scripts/build.mjs",

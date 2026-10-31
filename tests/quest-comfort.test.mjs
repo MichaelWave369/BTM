@@ -46,8 +46,8 @@ test('Ori is moved to peripheral view without altering simulation coordinates',(
  assert.equal(central.x,0);assert.equal(central.z,-.9);
  assert.deepEqual(oriVisualTarget({...central,peripheral:false}),{x:0,z:-.9});
 });
-test('Ori already at the side is not re-anchored when it is comfortably distant',()=>{
+test('Ori stays in a bounded right peripheral dock even when the simulation is far away',()=>{
  const eye=[0,1.65,0],head=identity();
  const out=oriVisualTarget({eye,head,x:3.5,z:-2.2});
- assert.equal(out.x,3.5);assert.equal(out.z,-2.2);
+ assert(out.x>.6);assert(out.z<-.8);assert(Math.hypot(out.x,out.z)<2.4);
 });

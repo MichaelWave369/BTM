@@ -1,0 +1,1 @@
+Source archive checks pass: AGENTS, pinned router/Quest skills, routing script and communications are included; ZIP CRCs are valid.

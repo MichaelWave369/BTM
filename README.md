@@ -192,3 +192,14 @@ Native JavaScript ES modules, Canvas and WebGL remain the architecture. The incl
 ## License
 
 Original code, maps, dialogue, procedural pixel art, SVG illustrations and audio are MIT-licensed. Oxanium by Severin Meyer and Racing Sans One by Impallari Type use the included SIL Open Font License 1.1 texts in `public/fonts/`. No DOOM/Wolfenstein art, maps, samples or music are used. The untouched original brief remains `docs/controlling-spec.md`; current reconstructed scope is `docs/v0.4.0/controlling-brief.md`. Author-run checks are not independent certification.
+
+
+### Ori Reborn / Survival candidate (0.8.0-rc.1)
+
+New runs default to **Survival**: 100 current charge, 45 reserve, 180 reserve capacity. Map energy cells supply reserve; **R / Xbox X / Quest X / wrist RELOAD** transfers it after 0.8 seconds. Current charge persists between sectors and retry restores the whole checkpoint, including spent/taken cell state. No free passive, relay or transition ammo. Wake-Up Slap is free. Space / B dashes: a frontal hit bashes and staggers, otherwise a brief shield absorbs at most 18 damage. Bosses resist bash. The wrist and desktop HUD show charge, reserve and dash state.
+
+**Settings → New run rules → Legacy Recharge** retains original recharge/dodge behavior. Existing v1 saves migrate to Legacy; changing the setting applies to the next new run. ΦWAD / CODE BROWN keeps original mission rules and campaign save isolation.
+
+Immersive communications use a small right peripheral dock, yield when it is obstructed and remain in **wrist COMMS LOG / Field Manual → Communication Log**. Captions and spoken dialogue are independent. Speech is off by default, needs a page gesture and an available device-local browser voice, and falls back to the log. Quest voice availability and offline speech are not guaranteed. Critical alerts remain separate when dialogue captions are off.
+
+See [implementation and verification](docs/ori-reborn/verification.md) and the [pending physical Quest checklist](docs/ori-reborn/quest3-acceptance.md). Pit of Despair is follow-up work; this candidate does not expose twelve placeholder levels.

@@ -5,6 +5,7 @@ import {Renderer} from './renderer.js';
 import {enterPhiWadMission,leavePhiWadMission} from './phi-content/runtime.js';
 import {loadHostedMission} from './phi-content/hosted-missions.js';
 import {UI,WEAPON_UI,drawOri,drawWeaponIcon} from './arcade-ui.js';
+import {Communications,criticalMessage} from './communications.js';
 import {AudioEngine} from './audio.js';
 import {drawPortrait} from './assets.js';
 import {VRArcade} from './vr.js';
@@ -12,14 +13,15 @@ import {IMMERSIVE_DEFAULTS,immersiveSettings} from './immersive-rig.js';
 import {stepImmersive} from './immersive-play.js';
 import {PointerCapture,keyCode} from './controls.js';
 import {GamepadInput,ControllerMenu,ControllerRumble,CONTROLLER_DEFAULTS,controllerSettings,gameplayInput,controllerActions} from './gamepad.js';
-const $=id=>document.getElementById(id),canvas=$('game'),game=new Game(),renderer=new Renderer(canvas),audio=new AudioEngine();
+const $=id=>document.getElementById(id),canvas=$('game'),game=new Game(),renderer=new Renderer(canvas),audio=new AudioEngine(),communications=new Communications();
 const SAVE_KEY='mwave-ori-checkpoint-v1',SETTINGS_KEY='mwave-ori-settings-v1';
 const defaults={...IMMERSIVE_DEFAULTS,vrDistance:2.5,vrWidth:2.8,...CONTROLLER_DEFAULTS,sensitivity:1,music:.35,sfx:.65,muted:false,resolution:640,crt:true,controlMode:'auto',reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches};
-const controller=new GamepadInput(),rumble=new ControllerRumble();let inputMode='keyboard',desktopFrame=0;
-let settings={...defaults},saved=null,screen='title-screen',returnScreen='title-screen',keys=new Set(),fire=false,mapOpen=false,dragging=false,lastMouseX=0,toastTimer=0,dialogueTimer=0,lastFrame=performance.now(),hudTime=0,fpsTime=0,fpsFrames=0,ambientTimer=8,touch=matchMedia('(pointer:coarse)').matches,altStart=0;
+const controller=new GamepadInput(),rumble=new ControllerRumble();let inputMode='keyboard',desktopFrame=0,alertText='',alertTimer=0;
+let settings={...defaults,energyMode:'survival'},saved=null,screen='title-screen',returnScreen='title-screen',keys=new Set(),fire=false,mapOpen=false,dragging=false,lastMouseX=0,toastTimer=0,dialogueTimer=0,lastFrame=performance.now(),hudTime=0,fpsTime=0,fpsFrames=0,ambientTimer=8,touch=matchMedia('(pointer:coarse)').matches,altStart=0;
 try{
   const stored=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null');
   if(stored&&typeof stored==='object'){
+    if(['legacy','survival'].includes(stored.energyMode))settings.energyMode=stored.energyMode;
     Object.assign(settings,controllerSettings(stored),immersiveSettings(stored));
     for(const k of ['sensitivity','music','sfx'])if(Number.isFinite(stored[k]))settings[k]=clamp(stored[k],k==='sensitivity'?.3:0,k==='sensitivity'?3:1);
     for(const k of ['muted','crt','reducedMotion'])if(typeof stored[k]==='boolean')settings[k]=stored[k];
@@ -33,7 +35,7 @@ game.events=[];
 const capture=new PointerCapture({request:()=>{if(!canvas.requestPointerLock)throw Error('Unavailable');return canvas.requestPointerLock();},onState:()=>updateCapture(),onLost:()=>{if(game.mode==='playing')pause();}});
 function controllerBack(){if(screen==='settings-screen'||screen==='help-screen')showScreen(returnScreen);else if(screen==='pause-screen')play();else if(screen==='result-screen')home();}
 const controllerMenu=new ControllerMenu({root:()=>screen?$(screen):null,back:controllerBack,resume:()=>{if(screen==='pause-screen')play();else controllerBack();}});
-const vr=new VRArcade({settings:()=>settings,onStatus:message=>{$('vr-status').textContent=message;for(const id of ['vr-btn','immersive-btn'])$(id).disabled=vr.pending||vr.active;},onStart:()=>{if(desktopFrame)cancelAnimationFrame(desktopFrame);desktopFrame=0;clearInput();if(game.mode==='playing')pause();setInputMode('vr');$('vr-session-tools').hidden=false;showScreen(screen||'pause-screen');},onPause:()=>{clearInput();pause();},onEnd:()=>{clearInput();pause();$('vr-session-tools').hidden=true;setInputMode('keyboard');lastFrame=performance.now();if(!desktopFrame)desktopFrame=requestAnimationFrame(frame);audio.pause(true);for(const id of ['vr-btn','immersive-btn'])$(id).disabled=false;showToast('VR SESSION ENDED / GAME PRESERVED');},onFrame:(now,pad,spatial)=>tick(now,pad,spatial),data:()=>({game,scene:canvas,screen,assets:renderer.assets,settings,map:mapOpen,immersive:vr.immersive,items:screen?controllerMenu.items():[],focused:document.activeElement,dialogue:$('dialogue').hidden?'':$('dialogue-name').textContent+': '+$('dialogue-text').textContent,toast:toastTimer>0?$('toast').textContent:'',activate:vrAction})});
+const vr=new VRArcade({settings:()=>settings,onStatus:message=>{$('vr-status').textContent=message;for(const id of ['vr-btn','immersive-btn'])$(id).disabled=vr.pending||vr.active;},onStart:()=>{if(desktopFrame)cancelAnimationFrame(desktopFrame);desktopFrame=0;clearInput();if(game.mode==='playing')pause();setInputMode('vr');$('vr-session-tools').hidden=false;showScreen(screen||'pause-screen');},onPause:()=>{clearInput();pause();},onEnd:()=>{clearInput();pause();$('vr-session-tools').hidden=true;setInputMode('keyboard');lastFrame=performance.now();if(!desktopFrame)desktopFrame=requestAnimationFrame(frame);audio.pause(true);for(const id of ['vr-btn','immersive-btn'])$(id).disabled=false;showToast('VR SESSION ENDED / GAME PRESERVED');},onFrame:(now,pad,spatial)=>tick(now,pad,spatial),data:()=>({game,scene:canvas,screen,assets:renderer.assets,settings,map:mapOpen,immersive:vr.immersive,items:screen?controllerMenu.items():[],focused:document.activeElement,communications:communications.log,alert:alertTimer>0?alertText:'',dialogue:dialogueTimer<=0?'':$('dialogue-name').textContent+': '+$('dialogue-text').textContent,toast:toastTimer>0?$('toast').textContent:'',activate:vrAction})});
 function vrAction(action,element){
  if(action==='genewrist-travel'){
   const destination=destinationFor(element);
@@ -75,9 +77,9 @@ function clearInput(){game.clearCombatPose();keys.clear();fire=false;dragging=fa
 function storeSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch{$('storage-warning').hidden=false;}}
 function saveCheckpoint(){if(game.phiwadCustom)return;if(game.player.health<=0)return;try{const data=game.checkpoint||game.snapshot();localStorage.setItem(SAVE_KEY,JSON.stringify(data));saved=data;$('continue-btn').hidden=false;}catch{$('storage-warning').hidden=false;}}
 function showToast(text){$('toast').textContent=text;$('toast').classList.add('visible');toastTimer=2.7;}
-function showDialogue(text,speaker='ORI',priority=1){if(speaker==='WAVE'&&!game.hurt){game.portraitMood='GRIN';game.portraitTime=1.1;}$('dialogue-text').textContent=text;$('dialogue-name').textContent=speaker;$('dialogue-channel').textContent=speaker==='WAVE'?'MICHAEL WAVE':speaker==='ARCHIVE'?'RECOVERED LOG':'COMPANION LINK';$('dialogue').dataset.speaker=speaker;$('dialogue').classList.toggle('urgent',priority>=3);$('dialogue').hidden=false;dialogueTimer=Math.max(3.6,text.length*.04)*(vr.immersive?settings.vrSubtitleDuration:1);}
+function showDialogue(text,speaker='ORI',priority=1){communications.record(text,speaker,priority);refreshCommunications();if(speaker==='WAVE'&&!game.hurt){game.portraitMood='GRIN';game.portraitTime=1.1;}$('dialogue-text').textContent=text;$('dialogue-name').textContent=speaker;$('dialogue-channel').textContent=speaker==='WAVE'?'MICHAEL WAVE':speaker==='ARCHIVE'?'RECOVERED LOG':'COMPANION LINK';$('dialogue').dataset.speaker=speaker;$('dialogue').classList.toggle('urgent',priority>=3);$('dialogue').hidden=!settings.captions;dialogueTimer=Math.max(3.6,text.length*.04)*(vr.immersive?settings.vrSubtitleDuration:1);}
 function showScreen(id){
-  controllerMenu.clear();clearInput();
+  communications.cancel();controllerMenu.clear();clearInput();
   screen=id;if(id&&vr.active)$(id).append($('vr-session-tools'));$('overlay').hidden=!id;$('overlay').classList.toggle('title-overlay',id==='title-screen');
   for(const n of ['title-screen','pause-screen','result-screen','settings-screen','help-screen'])$(n).hidden=n!==id;
   $('view-top').hidden=!!id;$('touch-controls').hidden=!!id||!touch||inputMode!=='keyboard';$('onboarding').hidden=!!id||game.levelIndex!==0||game.lesson>=3;
@@ -86,13 +88,14 @@ function showScreen(id){
   if(id==='title-screen'){$('dialogue').hidden=true;$('boss-bar').hidden=true;$('vision-tag').hidden=true;$('interaction').textContent='';$('header-sector').textContent='SIMULATION ONLINE';}updateCapture();
 }
 function lockMouse(){if(touch||vr.active||inputMode!=='keyboard'||settings.controlMode!=='auto')return;canvas.focus({preventScroll:true});void capture.capture();}
-function play(fresh=false){if(fresh){game.start();mapOpen=false;}else game.mode='playing';showScreen('');audio.start();audio.pause(false);canvas.focus({preventScroll:true});lockMouse();processEvents();updateHUD();}
+function play(fresh=false){if(fresh){communications.reset();game.start({energyMode:settings.energyMode});mapOpen=false;}else game.mode='playing';showScreen('');audio.start();audio.pause(false);canvas.focus({preventScroll:true});lockMouse();processEvents();updateHUD();}
 function pause(){if(game.mode!=='playing')return;game.mode='paused';audio.pause(true);showScreen('pause-screen');}
 function home(){if(game.phiwadCustom)leavePhiWadMission(game);else if(game.mode==='playing'||game.mode==='paused'){game.saveCheckpoint();saveCheckpoint();}game.mode='title';audio.pause(true);showScreen('title-screen');$('continue-btn').hidden=!saved;}
 function openSettings(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('settings-screen');}
 function openHelp(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('help-screen');}
 function applySettings(){
   for(const [id,value]of Object.entries(EQUIPMENT_DEFAULTS)){const element=$(id);if(typeof value==='boolean')element.checked=settings[id];else element.value=settings[id];}
+  communications.configure(settings);$('energyMode').value=settings.energyMode;$('dialogue').hidden=!settings.captions||dialogueTimer<=0;
   if(canvas.width!==settings.resolution)renderer.setResolution(settings.resolution);audio.configure(settings);$('scanlines').hidden=!settings.crt;document.body.classList.toggle('reduced-motion',settings.reducedMotion);
   $('mute-btn').setAttribute('aria-pressed',String(settings.muted));$('mute-btn').setAttribute('aria-label',settings.muted?'Unmute audio':'Mute audio');$('mute-btn').title=settings.muted?'Unmute [M]':'Mute [M]';
   for(const id of ['sensitivity','music','sfx','resolution','controlMode','controllerSensitivity','controllerDeadzone','vrDistance','vrWidth','vrTurnMode','vrSnapAngle','vrMoveReference','vrMoveSpeed','vrTurnSpeed','vrVignetteStrength','vrEyeHeight','vrPosture','vrQuality'])$(id).value=settings[id];$('crt').checked=settings.crt;$('reducedMotion').checked=settings.reducedMotion;$('controllerRumble').checked=settings.controllerRumble;for(const id of ['vrVignette','vrAimLine','vrDiagnostics'])$(id).checked=settings[id];
@@ -120,7 +123,7 @@ function result(){
   audio.pause(true);audio.play(dead?'hurt':'complete');$('result-screen').classList.toggle('dead',dead);
   $('result-eyebrow').textContent=dead?'CONNECTION INTERRUPTED':continuation?'ACT '+act+' COMPLETE / THE SIGNAL CONTINUES':ending?'FOUR ACTS COMPLETE / TWELVE SECTORS LIBERATED':'SECTOR '+String(game.levelIndex+1).padStart(2,'0')+' LIBERATED';
   $('result-title').innerHTML=dead?'SIGNAL<br><em>LOST.</em>':ending?'YOU ARE<br><em>UNPLUGGED.</em>':'SIGNAL<br><em>RECLAIMED.</em>';
-  $('result-copy').textContent=dead?'Ori kept your checkpoint. Break your movement rhythm, use Ori to stun, and vent your capacitor. Your frequency is still yours.':continuation?(game.levelIndex===2?'The original Warden falls. Follow Ori into Act II.':game.levelIndex===5?'The Null Crown breaks. Six nightmare sectors are listening. Predictive fire punishes constant circles. Take cover, change direction, and keep Ori close.':'The backup Warden falls. The last three sectors are the hardest. “Bro. They have run out of polite warnings.” — Michael Wave'):ending?'Twelve sectors liberated. Four acts unplugged. “Ledger above ego. Frequency above fear. Turn it UP.” — Michael Wave':SECTORS[game.levelIndex].name+' is offline. One less system deciding who people get to be.';
+  $('result-copy').textContent=dead?'Ori kept your checkpoint. Break your movement rhythm, use Ori to stun, and reload from reserve, and scavenge energy cells. Slap and Dash Bash still work when empty. Your frequency is still yours.':continuation?(game.levelIndex===2?'The original Warden falls. Follow Ori into Act II.':game.levelIndex===5?'The Null Crown breaks. Six nightmare sectors are listening. Predictive fire punishes constant circles. Take cover, change direction, and keep Ori close.':'The backup Warden falls. The last three sectors are the hardest. “Bro. They have run out of polite warnings.” — Michael Wave'):ending?'Twelve sectors liberated. Four acts unplugged. “Ledger above ego. Frequency above fear. Turn it UP.” — Michael Wave':SECTORS[game.levelIndex].name+' is offline. One less system deciding who people get to be.';
   const stats=dead?[['CHECKPOINT','PRESERVED'],['MINDS FREED',String(game.levelFreed)],['TIME IN SECTOR',minutes(game.time)],['FREQUENCY','STILL YOURS']]:[['MINDS FREED',ending?game.totalFreed+' / '+CAMPAIGN_HOSTS:String(game.levelFreed)],['SECTOR TIME',minutes(game.time)],['SECRETS',ending?game.totalSecrets+' / '+SECTORS.length:(game.level.secretFound?1:0)+' / 1'],['LIBERATION',game.liberation+'%']];
   $('result-stats').replaceChildren(...stats.map(([label,value])=>{const d=document.createElement('div');d.textContent=label;const b=document.createElement('b');b.textContent=value;d.append(b);return d;}));
   $('result-btn').innerHTML=(dead?'RETRY CHECKPOINT':continuation?(game.levelIndex===2?'FOLLOW THE ECHO / ACT II':game.levelIndex===5?'ENTER NIGHTMARE / ACT III':'ENTER THE IMPOSSIBLE / ACT IV'):ending?'PLAY AGAIN':'ENTER SECTOR '+String(game.levelIndex+2).padStart(2,'0'))+' <b>→</b>';showScreen('result-screen');
@@ -129,7 +132,8 @@ function processEvents(){
   for(const e of game.events.splice(0)){
     if(inputMode==='controller'&&game.mode==='playing'){if(e.type==='sound'&&['fire','hurt'].includes(e.name))rumble.play(controller.pad,e.name,settings.controllerRumble);if(e.type==='bass')rumble.play(controller.pad,'bass',settings.controllerRumble);}
     renderer.event(e);vr.event(e,game);if(e.type==='sound'){if(vr.immersive&&e.position)audio.playAt(e.name,e.weapon,e.position);else audio.play(e.name,e.weapon);}if(e.type==='hit'&&e.source!=='ori')audio.play('hit');
-    if(e.type==='dialogue')showDialogue(e.text,e.speaker,e.priority);if(e.type==='toast')showToast(e.text);if(e.type==='checkpoint')saveCheckpoint();
+    if(e.type==='dryFire'){alertText='DRY / RELOAD OR SLAP';alertTimer=2;}if(e.type==='shield'){alertText='DASH SHIELD / 18';alertTimer=.3;}if(e.type==='bash'){alertText='DASH BASH';alertTimer=.8;}
+    if(e.type==='dialogue'){const critical=criticalMessage(e,game.player.health);if(critical){alertText=critical;alertTimer=3;}showDialogue(e.text,e.speaker,e.priority);}if(e.type==='toast'){communications.log.push({text:e.text,speaker:'FIELD',priority:1});if(communications.log.length>100)communications.log.shift();refreshCommunications();showToast(e.text);}if(e.type==='checkpoint')saveCheckpoint();
     if(e.type==='pickup')showToast((e.item==='artifact'?'Φ ARTIFACT / ':'')+e.item.toUpperCase()+' ACQUIRED');
     if(e.type==='secret'){showToast('SECRET FOUND / CODE BROWN SUPPLY CLOSET');audio.play('free');}
     if(e.type==='sector'){audio.sector=e.index;showToast('SECTOR '+String(e.index+1).padStart(2,'0')+' / '+e.name);}
@@ -147,7 +151,7 @@ function updateHUD(){
   $('bottom-controls').textContent=vrMode?'LS MOVE · RS AIM · R TRIGGER FIRE · R GRIP USE':padMode?'LS MOVE · RS AIM · RT FIRE · A USE · MENU PAUSE':'WASD MOVE · MOUSE AIM · E INTERACT · ESC PAUSE';
   const p=game.player,w=WEAPONS[game.weapon],alive=game.level.enemies.find(e=>e.type==='warden'&&!e.dead),playing=game.mode==='playing';
   $('health').textContent=Math.ceil(p.health);$('armor').textContent=Math.ceil(p.armor);$('health-meter').style.width=p.health+'%';$('health-meter').style.background=p.health<30?UI.red:UI.pink;$('armor-meter').style.width=clamp(p.armor,0,100)+'%';$('hud').classList.toggle('critical',p.health<30);
-  $('weapon-name').textContent=w.name;$('weapon-index').textContent=String(game.weapon+1).padStart(2,'0')+' / 06';$('weapon-name').style.color=WEAPON_UI[game.weapon];$('energy').textContent=Math.floor(p.energy);$('energy-meter').style.width=p.energy+'%';$('energy-meter').style.background=WEAPON_UI[game.weapon];
+  $('weapon-name').textContent=w.name;$('weapon-index').textContent=String(game.weapon+1).padStart(2,'0')+' / 06';$('weapon-name').style.color=WEAPON_UI[game.weapon];$('energy').textContent=Math.floor(p.energy);$('reserve').textContent=game.survival?'RES '+Math.floor(p.reserve)+'/180':'LEGACY RECHARGE';$('dash-status').textContent=!game.survival?(game.dodgeCooldown>0?'DODGE '+game.dodgeCooldown.toFixed(1)+'s':'DODGE READY'):game.shieldTime>0&&game.shieldCharge>0?'SHIELD '+Math.ceil(game.shieldCharge):game.dodgeCooldown>0?'DASH '+game.dodgeCooldown.toFixed(1)+'s':'BASH / SHIELD READY';$('energy-meter').style.width=p.energy+'%';$('energy-meter').style.background=WEAPON_UI[game.weapon];
   $('ori-energy').innerHTML=Math.floor(p.ori)+'<small>%</small>';$('ori-meter').style.width=p.ori+'%';$('ori-status').textContent=game.assistTime>0?'ASSISTING MICHAEL':p.ori>=30?'COMPANION ONLINE':'RECHARGING';
   const liberation=game.phiwadCustom?Math.min(100,Math.round(game.levelFreed/Math.max(1,game.level.captives.length+game.level.enemies.filter(e=>e.human).length)*100)):game.liberation;
   $('liberation').textContent=liberation;$('liberation-meter').style.width=liberation+'%';$('freed-count').textContent=String(game.totalFreed).padStart(2,'0')+' MINDS FREED';$('key-icon').classList.toggle('acquired',p.key);$('key-label').textContent=p.key?'GOLD KEY':'NO KEY';$('artifacts').textContent=String(game.totalArtifacts).padStart(2,'0')+' ARTIFACTS';
@@ -158,7 +162,7 @@ function updateHUD(){
   const bossVisible=playing&&alive&&Math.hypot(alive.x-p.x,alive.y-p.y)<11;$('boss-bar').hidden=!bossVisible;if(bossVisible){$('boss-hp').style.width=alive.hp/alive.maxHp*100+'%';$('boss-phase').textContent='PHASE '+alive.phase;}
   for(const b of $('weapon-slots').children){const n=Number(b.dataset.weapon);b.classList.toggle('active',n===game.weapon);b.disabled=n>=game.unlocked;b.setAttribute('aria-pressed',String(n===game.weapon));const enabled=n<game.unlocked;if(b.dataset.enabled!==String(enabled)){const iconContext=b.querySelector('canvas').getContext('2d');iconContext.clearRect(0,0,80,44);drawWeaponIcon(iconContext,n,0,0,80,44,enabled);b.querySelector('.weapon-lock').hidden=enabled;b.dataset.enabled=enabled;}b.title=(n>=game.unlocked?'LOCKED / ':'')+WEAPONS[n].name;}
   $('portrait-mood').textContent=game.portraitMood;$('onboarding').hidden=!!screen||game.levelIndex!==0||game.lesson>=3;
-  $('onboarding-text').textContent=(vrMode?['LEFT STICK TO MOVE / RIGHT STICK TO TURN','FACE THE STRIPED DOOR / RIGHT GRIP TO OPEN','R TRIGGER FIRE / L GRIP ORI / X OR TOOLBAR VENT']:padMode?['LEFT STICK TO MOVE / RIGHT STICK TO TURN','FACE THE STRIPED DOOR / A TO OPEN','RT TO FIRE / Y FOR ORI / X TO RECHARGE']:['WASD TO MOVE / MOUSE OR ← → TO TURN','FACE THE STRIPED DOOR / E TO OPEN','CLICK OR Z TO FIRE / Q FOR ORI / R TO RECHARGE'])[Math.min(2,game.lesson)];
+  $('onboarding-text').textContent=(vrMode?['LEFT STICK TO MOVE / RIGHT STICK TO TURN','FACE THE STRIPED DOOR / RIGHT GRIP TO OPEN','R TRIGGER FIRE / L GRIP ORI / X OR WRIST RELOAD']:padMode?['LEFT STICK TO MOVE / RIGHT STICK TO TURN','FACE THE STRIPED DOOR / A TO OPEN','RT TO FIRE / Y FOR ORI / X TO RELOAD']:['WASD TO MOVE / MOUSE OR ← → TO TURN','FACE THE STRIPED DOOR / E TO OPEN','CLICK OR Z TO FIRE / Q FOR ORI / R TO RELOAD'])[Math.min(2,game.lesson)];
   $('hud-sector').textContent=game.phiwadCustom?'ΦWAD / CUSTOM':'SECTOR '+String(game.levelIndex+1).padStart(2,'0')+' / 12';$('hud-sector-name').textContent=SECTORS[game.levelIndex].name;
   const relays=game.level.relays.filter(r=>r.active).length,rescues=game.level.captives.filter(c=>c.freed).length;
   const summary=[['RELAYS '+relays+'/'+game.level.relays.length,relays===game.level.relays.length],['RESCUES '+rescues+'/'+game.level.captives.length,rescues===game.level.captives.length],['KEY '+(p.key?'ACQUIRED':'NEEDED'),p.key]];
@@ -203,8 +207,10 @@ $('phiwad-input').addEventListener('change',async event=>{
   }catch(error){showToast('ΦWAD IMPORT FAILED / '+error.message);}
   finally{input.value='';}
 });
-$('start-btn').addEventListener('click',()=>play(true));$('nightmare-btn').addEventListener('click',()=>{game.startNightmare();mapOpen=false;play();});$('continue-btn').hidden=!saved;
+$('start-btn').addEventListener('click',()=>play(true));$('nightmare-btn').addEventListener('click',()=>{communications.reset();game.startNightmare({energyMode:settings.energyMode});mapOpen=false;play();});$('continue-btn').hidden=!saved;
 $('continue-btn').addEventListener('click',()=>{try{game.restore(saved);play();showDialogue('Welcome back, Michael. I saved your place in the rebellion.');}catch(e){showToast(e.message);saved=null;$('continue-btn').hidden=true;}});
+function refreshCommunications(){const entries=communications.log.slice(-30);$('communication-log').textContent=entries.map(e=>e.speaker+': '+e.text).join('\n')||'No transmissions yet.';}
+$('energyMode').addEventListener('input',()=>{settings.energyMode=$('energyMode').value;storeSettings();});
 $('resume-btn').addEventListener('click',()=>play());$('save-btn').addEventListener('click',()=>{game.saveCheckpoint();saveCheckpoint();showToast('CHECKPOINT SAVED / YOUR SIGNAL IS YOURS');});$('quit-btn').addEventListener('click',home);$('result-home').addEventListener('click',home);
 $('result-btn').addEventListener('click',()=>{if(game.phiwadCustom){if(game.mode==='dead'){game.retry();play();}else home();return;}if(game.mode==='dead'){game.retry();play();}else if(game.mode==='ending'&&game.levelIndex<SECTORS.length-1){game.continueCampaign()||game.continueBeyond();play();}else if(game.mode==='ending')play(true);else{game.next();play();}});
 $('title-settings').addEventListener('click',openSettings);$('map-toggle').addEventListener('click',()=>{if(game.mode==='playing'){mapOpen=!mapOpen;updateHUD();}});$('settings-btn').addEventListener('click',openSettings);$('pause-settings').addEventListener('click',openSettings);$('settings-back').addEventListener('click',()=>showScreen(returnScreen));$('howto-btn').addEventListener('click',openHelp);$('help-back').addEventListener('click',()=>showScreen(returnScreen));
@@ -215,6 +221,7 @@ $('fullscreen-btn').addEventListener('click',()=>{const promise=document.fullscr
 for(const id of ['sensitivity','music','sfx','resolution','crt','reducedMotion','controlMode','controllerSensitivity','controllerDeadzone','controllerRumble','vrDistance','vrWidth','vrTurnMode','vrSnapAngle','vrMoveReference','vrMoveSpeed','vrTurnSpeed','vrVignetteStrength','vrEyeHeight','vrPosture','vrQuality','vrVignette','vrAimLine','vrDiagnostics'])$(id).addEventListener('input',()=>{settings[id]=['crt','reducedMotion','controllerRumble','vrVignette','vrAimLine','vrDiagnostics'].includes(id)?$(id).checked:['controlMode','vrTurnMode','vrMoveReference','vrPosture','vrQuality'].includes(id)?$(id).value:Number($(id).value);if(id==='vrPosture')settings.vrEyeHeight=settings.vrPosture==='standing'?1.75:1.65;applySettings();if(['vrDistance','vrWidth','vrEyeHeight','vrPosture'].includes(id))vr.recenter();if(id==='vrQuality'&&vr.active)showToast('QUALITY SCALE APPLIES NEXT VR SESSION / DETAIL CHANGED NOW');if(id==='controllerRumble'&&!settings.controllerRumble)rumble.stop();storeSettings();});
 const pressedActions={KeyE:()=>game.interact(),KeyQ:()=>game.oriAbility(),KeyF:()=>game.vision(),KeyR:()=>game.reload(),KeyB:()=>game.bassDrop(),Space:()=>game.dodge({left:keys.has('KeyA'),right:keys.has('KeyD'),back:keys.has('KeyS')})};
 document.addEventListener('keydown',e=>{
+  if(e.isTrusted)communications.unlock();
   if(vr.immersive&&game.mode==='playing')return;setInputMode('keyboard');
   if(e.target.matches('input,select'))return;const code=keyCode(e);
   if(code==='KeyM'&&!e.repeat){toggleMute();return;}
@@ -231,15 +238,16 @@ function releasePointer(e){if(e.button===0||e.type==='pointercancel'){fire=false
 document.addEventListener('pointerup',releasePointer);document.addEventListener('pointercancel',()=>clearInput());
 document.addEventListener('pointermove',e=>{if(vr.immersive||game.mode!=='playing'||mapOpen||settings.controlMode==='keyboard')return;if(document.pointerLockElement===canvas)game.player.a+=clamp(e.movementX,-150,150)*.0022*settings.sensitivity;else if(dragging){game.player.a+=clamp(e.clientX-lastMouseX,-150,150)*.005*settings.sensitivity;lastMouseX=e.clientX;}});
 canvas.addEventListener('wheel',e=>{if(vr.immersive||game.mode!=='playing')return;e.preventDefault();game.selectWeapon((game.weapon+(e.deltaY>0?1:game.unlocked-1))%game.unlocked);processEvents();updateHUD();},{passive:false});
-document.addEventListener('pointerdown',()=>{if(vr.immersive){audio.start();return;}setInputMode('keyboard');audio.start();audio.pause(game.mode!=='playing');},{capture:true});
+document.addEventListener('pointerdown',e=>{if(e.isTrusted)communications.unlock();if(vr.immersive){audio.start();return;}setInputMode('keyboard');audio.start();audio.pause(game.mode!=='playing');},{capture:true});
 document.addEventListener('pointerlockchange',()=>capture.lockChange(document.pointerLockElement===canvas));document.addEventListener('pointerlockerror',()=>capture.denied());
-window.addEventListener('blur',()=>{if(vr.active)return;clearInput();if(game.mode==='playing')pause();});document.addEventListener('visibilitychange',()=>{if(!vr.active&&document.hidden&&game.mode==='playing')pause();});
-window.addEventListener('pagehide',()=>{if(game.mode==='playing'||game.mode==='paused'){game.saveCheckpoint();saveCheckpoint();}});
+window.addEventListener('blur',()=>{communications.cancel();if(vr.active)return;clearInput();if(game.mode==='playing')pause();});document.addEventListener('visibilitychange',()=>{if(document.hidden)communications.cancel();if(!vr.active&&document.hidden&&game.mode==='playing')pause();});
+window.addEventListener('pagehide',()=>{communications.cancel();if(game.mode==='playing'||game.mode==='paused'){game.saveCheckpoint();saveCheckpoint();}});
 for(const b of document.querySelectorAll('[data-key]')){b.addEventListener('pointerdown',e=>{e.preventDefault();keys.add(b.dataset.key);b.setPointerCapture(e.pointerId);});for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,()=>keys.delete(b.dataset.key));}
 $('touch-fire').addEventListener('pointerdown',e=>{e.preventDefault();fire=true;game.requestFire();e.target.setPointerCapture(e.pointerId);});for(const event of ['pointerup','pointercancel','lostpointercapture'])$('touch-fire').addEventListener(event,()=>fire=false);
 $('touch-use').addEventListener('click',()=>game.interact());$('touch-ori').addEventListener('click',()=>game.oriAbility());$('touch-turn').addEventListener('pointerdown',e=>{keys.add('ArrowRight');e.target.setPointerCapture(e.pointerId);});for(const event of ['pointerup','pointercancel','lostpointercapture'])$('touch-turn').addEventListener(event,()=>keys.delete('ArrowRight'));$('touch-pause').addEventListener('click',pause);
 function tick(now,externalPad,spatial){
-  const realDt=Math.max(.001,(now-lastFrame)/1000),dt=Math.min(.05,realDt);lastFrame=now;
+  if(alertTimer>0)alertTimer-=Math.min(.05,(now-lastFrame)/1000);
+  const realDt=Math.max(.001,(now-lastFrame)/1000),dt=Math.min(.05,realDt);lastFrame=now;communications.tick(realDt);
   const pad=pollController(dt,externalPad,!!spatial);
   if(spatial){const r=stepImmersive(game,spatial,pad,settings,dt,{map:()=>{mapOpen=!mapOpen;},reset:()=>vr.input.reset()});if(r.trackingLost)pause();audio.listener(spatial.rig);processEvents();}
   else if(game.mode==='playing'){

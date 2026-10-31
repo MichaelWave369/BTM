@@ -5,7 +5,7 @@ import {mkdtemp,mkdir,readFile,writeFile,copyFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 const require=createRequire(import.meta.url),{chromium}=require(process.env.BTM_PLAYWRIGHT_MODULE||'playwright');
-const root=process.cwd(),out='docs/equipment/ci',baseline='43a6be45c1b6cba8081ba94beac7b8edb4d679ab',servers=[];
+const root=process.cwd(),out=process.env.BTM_EQUIPMENT_OUTPUT||'docs/equipment/ci',baseline=process.env.BTM_EQUIPMENT_BASELINE||'4ada1488d1d80b4fda6398d642c136060f59ff75',servers=[];
 await mkdir(out+'/screenshots',{recursive:true});const temp=await mkdtemp(path.join(tmpdir(),'btm-equipment-'));let browser,worktree=false;
 const results={baseline,method:'Actual production Canvas/WebGL from baseline and candidate, identical synthetic poses. No physical Quest/Touch, comfort or frame rate proof.',captures:[],pageErrors:[]};
 function start(cwd,port){const p=spawn(process.execPath,['scripts/serve.mjs','--port',String(port)],{cwd,stdio:['ignore','pipe','inherit']});servers.push(p);return new Promise((resolve,reject)=>{p.stdout.once('data',resolve);p.once('error',reject);});}
@@ -33,6 +33,8 @@ try{
  }
  for(const style of ['neon','tactical'])await capture('after',{pose:'hands',weapon:0,equipmentOnly:true,style},'hands-'+style);
  await capture('after',{pose:'wrist',weapon:1,posture:'standing'},'wrist-standing');
+ await capture('after',{pose:'wrist',weapon:1,leftRoll:180,pin:true},'wrist-inverted');
+ await capture('after',{pose:'wrist',weapon:1,leftRoll:70,leftPitch:-30,pin:true},'wrist-tilted');
  // Contacts combine only actual rendered captures; they are not concept mockups.
  const gallery=await context.newPage();
  async function contact(file,rows){

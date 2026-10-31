@@ -4,6 +4,7 @@ import {validAim,traceEnvironment,traceTrackedShot,rayEntityDistance,entityHeigh
 import {EXPANSION,decorateLevel} from './expansion.js';
 import {GAUNTLET} from './gauntlet.js';
 // Deterministic simulation. No DOM, rendering, network, or audio dependencies.
+export const ENERGY_CAPACITY=100,RESERVE_CAPACITY=180;
 export const TAU = Math.PI * 2;
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const angleDiff = (a, b) => Math.atan2(Math.sin(a-b), Math.cos(a-b));
@@ -65,7 +66,7 @@ export function createLevel(index){
   decorateLevel(level,def,index);return level;
 }
 export class Game {
-  constructor(){this.mode='title';this.events=[];this.time=0;this.levelIndex=0;this.totalFreed=0;this.totalArtifacts=0;this.totalSecrets=0;this.campaignTime=0;this.unlocked=3;this.weapon=1;this.effects=[];this.projectiles=[];this.rng=369;this.loadLevel(0,false);this.mode='title';}
+  constructor(){this.energyMode='survival';this.mode='title';this.events=[];this.time=0;this.levelIndex=0;this.totalFreed=0;this.totalArtifacts=0;this.totalSecrets=0;this.campaignTime=0;this.unlocked=3;this.weapon=1;this.effects=[];this.projectiles=[];this.rng=369;this.loadLevel(0,false);this.mode='title';}
   random(){this.rng=(Math.imul(1664525,this.rng)+1013904223)>>>0;return this.rng/4294967296;}
   emit(type,data={}){this.events.push({type,...data});}
   say(text,speaker='ORI',priority=1){
@@ -79,11 +80,14 @@ export class Game {
     this.combatPose=null;this.playerMotion={x:0,y:0};this.speechQueue=[];this.speechCooldown=0;this.chatterUsed=saved.chatterUsed||{};this.footDistance=0;this.dangerCooldown=0;this.hitPulse=0;this.muzzle=0;this.equipAnim=0;this.bufferedFire=null;this.portraitMood='FOCUSED';this.portraitTime=0;this.assistTime=0;this.scanTime=0;this.charge=0;this.damageDirection=null;this.region='';this.lesson=0;this.lessonDistance=0;
     this.stats=saved.stats||{distance:0,damageTaken:0,damageDealt:0,shots:0,doors:0,pickups:0,oriAssists:0};
   }
-  start(){this.totalFreed=0;this.totalArtifacts=0;this.totalSecrets=0;this.campaignTime=0;this.unlocked=3;this.weapon=1;this.rng=369;this.loadLevel(0,false);this.mode='playing';this.banter('hello',[['ORI','Rise and shine, Michael. The Matrix has terrible customer service.'],['WAVE','Good. I brought a cancellation policy. And a bass cannon.']]);}
+  get survival(){return this.energyMode==='survival';}
+  get tactics(){return SECTORS[this.levelIndex].tactics||0;}
+  start({energyMode='survival'}={}){this.energyMode=energyMode==='legacy'?'legacy':'survival';this.totalFreed=0;this.totalArtifacts=0;this.totalSecrets=0;this.campaignTime=0;this.unlocked=3;this.weapon=1;this.rng=369;this.loadLevel(0,false);this.mode='playing';this.banter('hello',[['ORI','Rise and shine, Michael. The Matrix has terrible customer service.'],['WAVE','Good. I brought a cancellation policy. And a bass cannon.']]);}
   loadLevel(index,carry=true){
     const health=carry?Math.max(65,this.player?.health??100):100,armor=carry?Math.max(20,this.player?.armor??0):25;this.nav=null;this.navTime=0;
-    this.levelIndex=index;this.level=createLevel(index);this.player={...SECTORS[index].spawn,health,armor,energy:100,ori:100,vision:100,key:false};
-    this.ori={x:this.player.x+.35,y:this.player.y+.3,a:0};this.effects=[];this.projectiles=[];this.time=0;this.levelFreed=0;this.shots=0;this.hits=0;this.cooldown=0;this.recharge=0;this.vent=0;this.shotAnim=0;this.hurt=0;this.shake=0;this.shift=false;this.bassCharge=0;this.dodgeCooldown=0;this.dodgeFlash=0;this.oriCooldown=0;this.oriAuto=3;this.warning=4;this.objectiveTime=0;this.levelKills=0;this.unlocked=Math.max(this.unlocked,index===0?3:index===1?4:6);this.mode='playing';this.resetFeel();this.checkpoint=this.snapshot();this.emit('checkpoint');this.emit('sector',{index,name:SECTORS[index].name});
+    const energy=this.survival?(carry?this.player?.energy??100:100):100,reserve=this.survival?(carry?this.player?.reserve??45:45):0;
+    this.levelIndex=index;this.level=createLevel(index);if(this.survival)for(const e of this.level.enemies){e.speed*=1.08;e.damage*=1.1;}this.player={...SECTORS[index].spawn,health,armor,energy,reserve,ori:100,vision:100,key:false};
+    this.ori={x:this.player.x+.35,y:this.player.y+.3,a:0};this.effects=[];this.projectiles=[];this.time=0;this.levelFreed=0;this.shots=0;this.hits=0;this.cooldown=0;this.recharge=0;this.vent=0;this.shotAnim=0;this.hurt=0;this.shake=0;this.shift=false;this.bassCharge=0;this.dodgeCooldown=0;this.dodgeFlash=0;this.shieldTime=0;this.shieldCharge=0;this.oriCooldown=0;this.oriAuto=3;this.warning=4;this.objectiveTime=0;this.levelKills=0;this.unlocked=Math.max(this.unlocked,index===0?3:index===1?4:6);this.mode='playing';this.resetFeel();this.checkpoint=this.snapshot();this.emit('checkpoint');this.emit('sector',{index,name:SECTORS[index].name});
   }
   get liberation(){return Math.round(this.totalFreed/CAMPAIGN_HOSTS*100);}
   get objective(){const n=this.level.relays.filter(r=>r.active).length;if(n<2)return `BREAK CONTROL RELAYS ${n}/2`;if(!this.player.key)return 'FIND THE GOLDEN ACCESS KEY';if(this.level.enemies.some(e=>e.type==='warden'&&!e.dead))return 'UNPLUG THE WARDEN';return 'REACH THE EXTRACTION PORTAL';}
@@ -95,8 +99,30 @@ export class Game {
   advanceCombat(dt,fire=false){if(this.mode!=='playing')return;if(this.bufferedFire){this.bufferedFire.left-=dt;if(this.bufferedFire.left<=0)this.bufferedFire=null;else if(this.cooldown<=0){const shot=this.bufferedFire;this.bufferedFire=null;this.shoot(shot.alternate,shot.charge);}}if(fire)this.shoot();}
   requestFire(alternate=false,charge=0){if(this.mode!=='playing')return false;if(this.shoot(alternate,charge))return true;if(this.cooldown<=.14&&this.vent<=0)this.bufferedFire={alternate,charge,left:.15};return false;}
   vision(){if(!this.shift&&this.player.vision<8){this.emit('toast',{text:'RESONANCE RECHARGING'});return;}this.shift=!this.shift;this.emit('sound',{name:'vision'});}
-  reload(){if(this.recharge>0||this.vent>0||this.player.energy>=99)return;this.vent=.8;this.recharge=5;this.emit('sound',{name:'reload'});this.emit('toast',{text:'VENTING · RECHARGING CAPACITOR'});}
-  dodge(input={}){if(this.dodgeCooldown>0)return;this.dodgeCooldown=1.7;this.dodgeFlash=.24;const base=Number.isFinite(input.angle)?input.angle:this.combatPose?Math.atan2(this.combatPose.aim.direction.y,this.combatPose.aim.direction.x):this.player.a,a=base+(input.left?-Math.PI/2:input.right?Math.PI/2:input.back?Math.PI:0);moveBody(this.level,this.player,Math.cos(a)*1.0,Math.sin(a)*1.0);this.emit('sound',{name:'dodge'});}
+  reload(){
+    if(this.mode!=='playing'||this.recharge>0||this.vent>0||this.player.energy>=(this.survival?ENERGY_CAPACITY:99))return false;
+    if(this.survival&&this.player.reserve<=0){this.emit('toast',{text:'NO RESERVE · FIND ENERGY CELLS · 1 FOR SLAP'});return false;}
+    this.vent=.8;this.recharge=this.survival?.9:5;if(this.survival)this.bufferedFire=null;
+    this.emit('sound',{name:'reload'});this.emit('toast',{text:this.survival?'RELOADING · DRAWING FROM RESERVE':'VENTING · LEGACY RECHARGE'});return true;
+  }
+  dodge(input={}){
+    if(this.mode!=='playing'||this.dodgeCooldown>0)return false;
+    if(!this.survival){this.dodgeCooldown=1.7;this.dodgeFlash=.24;const base=Number.isFinite(input.angle)?input.angle:this.combatPose?Math.atan2(this.combatPose.aim.direction.y,this.combatPose.aim.direction.x):this.player.a,a=base+(input.left?-Math.PI/2:input.right?Math.PI/2:input.back?Math.PI:0);moveBody(this.level,this.player,Math.cos(a),Math.sin(a));this.emit('sound',{name:'dodge'});return true;}
+    this.dodgeCooldown=1.7;this.dodgeFlash=.24;
+    const base=Number.isFinite(input.angle)?input.angle:this.combatPose?Math.atan2(this.combatPose.aim.direction.y,this.combatPose.aim.direction.x):this.player.a;
+    const a=base+(input.left?-Math.PI/2:input.right?Math.PI/2:input.back?Math.PI:0),dx=Math.cos(a),dy=Math.sin(a),p=this.player,l=this.level,start={x:p.x,y:p.y};
+    // A narrow frontal sweep, bounded by the actual collision-safe travel.
+    const frontal=l.enemies.filter(e=>!e.dead&&Math.abs(angleDiff(Math.atan2(e.y-p.y,e.x-p.x),base))<.55&&lineOfSight(l,p,e)).map(e=>({e,forward:(e.x-p.x)*dx+(e.y-p.y)*dy,side:Math.abs((e.x-p.x)*dy-(e.y-p.y)*dx)})).filter(t=>t.forward>=0&&t.forward<=1.5&&t.side<.42).sort((a,b)=>a.forward-b.forward)[0];
+    const travel=frontal?Math.min(1,Math.max(0,frontal.forward-.46)):1;
+    moveBody(l,p,dx*travel,dy*travel);
+    if(frontal&&distance(p,frontal.e)<.76&&lineOfSight(l,start,frontal.e)){
+      const e=frontal.e,boss=e.type==='warden',armored=e.type==='enforcer';
+      this.damageEnemy(e,boss?8:armored?14:28,boss?.18:armored?.45:.9,'bash');
+      moveBody(l,e,dx*(boss?.08:armored?.25:.5),dy*(boss?.08:armored?.25:.5),.23);
+      this.emit('bash',{x:e.x,y:e.y});this.emit('burst',{x:e.x,y:e.y,color:'#ffcd75',count:18});this.emit('toast',{text:boss?'BASH · BOSS RESISTS':'DASH BASH'});
+    }else{this.shieldTime=.30;this.shieldCharge=18;this.emit('shield',{charge:18});}
+    this.emit('sound',{name:'dodge'});return true;
+  }
   interact(){
     if(this.mode!=='playing')return;
     const p=this.player,l=this.level;
@@ -104,7 +130,7 @@ export class Game {
     const captive=l.captives.find(c=>!c.freed&&close(c));
     if(captive){captive.freed=true;this.freeHost(captive);this.banter('captive',[['ORI','One more mind, back in its own hands. That is the whole point.'],['WAVE','You pick your own frequency from here, bro.']]);return;}
     const relay=l.relays.find(r=>!r.active&&close(r));
-    if(relay){relay.active=true;p.health=Math.min(100,p.health+15);p.energy=100;this.emit('sound',{name:'relay'});this.emit('burst',{x:relay.x,y:relay.y,color:'#b9ff53',count:28});this.say(l.relays.every(r=>r.active)?'Control signal is down. Grab the key and find our exit.':'One relay down. Bureaucracy is taking physical damage.');this.saveCheckpoint();return;}
+    if(relay){relay.active=true;p.health=Math.min(100,p.health+15);if(!this.survival)p.energy=100;this.emit('sound',{name:'relay'});this.emit('burst',{x:relay.x,y:relay.y,color:'#b9ff53',count:28});this.say(l.relays.every(r=>r.active)?'Control signal is down. Grab the key and find our exit.':'One relay down. Bureaucracy is taking physical damage.');this.saveCheckpoint();return;}
     // Interact with the first solid cell in the direction of the crosshair.
     const hit=aim?traceEnvironment(l,aim.origin,aim.direction,1.8):null,ray=aim?(hit.cell?{...hit.cell,distance:hit.distance}:{x:-1,y:-1,distance:Infinity}):castRay(l,p.x,p.y,Math.cos(p.a),Math.sin(p.a),1.8),d=l.doors[`${ray.x},${ray.y}`];
     if(d&&ray.distance<1.8){
@@ -128,7 +154,7 @@ export class Game {
   }
   freeHost(entity){this.totalFreed++;this.levelFreed++;this.lesson=3;this.bassCharge=clamp(this.bassCharge+20,0,100);this.portraitMood='GRIN';this.portraitTime=1.1;this.emit('liberation',{x:entity.x,y:entity.y});this.emit('sound',{name:'free'});}
   damageEnemy(e,damage,stun=0,source='weapon'){
-    if(e.dead)return;const actual=damage*(1+Math.floor(this.totalArtifacts/2)*.15);e.hp-=actual;e.flash=.15;e.pain=.18;e.stun=Math.max(e.stun,stun*(source==='weapon'?1-(SECTORS[this.levelIndex].tactics||0)*.65:1),source==='weapon'&&e.type!=='warden'?.08:0);e.state='pursue';e.recoil=source==='ori'?0:.16;
+    if(e.dead)return;const actual=damage*(1+Math.floor(this.totalArtifacts/2)*.15);e.hp-=actual;e.flash=.15;e.pain=.18;e.stun=Math.max(e.stun,stun*(source==='weapon'?1-this.tactics*.65:1),source==='weapon'&&e.type!=='warden'?.08:0);e.state='pursue';e.recoil=source==='ori'?0:.16;
     this.stats.damageDealt+=Math.min(actual,Math.max(0,e.hp+actual));if(source==='weapon')this.hitPulse=.16;
     this.emit('hit',{x:e.x,y:e.y,color:source==='ori'?'#5df6ec':WEAPONS[this.weapon].color,source,damage:Math.round(actual),finisher:e.hp<=0});
     if(e.hp<=0){e.dead=true;e.state='freed';this.levelKills++;this.bassCharge=clamp(this.bassCharge+12,0,100);if(e.human)this.freeHost(e);else{this.emit('burst',{x:e.x,y:e.y,color:e.type==='warden'?'#ffd870':'#5df6ec',count:20});this.emit('sound',{name:'destroy'});}
@@ -140,7 +166,7 @@ export class Game {
   shoot(alternate=false,charge=0){
     if(this.mode!=='playing'||this.cooldown>0||this.vent>0)return false;
     const w=WEAPONS[this.weapon],mult=alternate?1.65:1,cost=Math.ceil(w.cost*mult);
-    if(this.player.energy<cost){if(this.weapon!==0)this.emit('toast',{text:'LOW ENERGY · R TO VENT · 1 FOR SLAP'});this.cooldown=.25;return false;}
+    if(this.player.energy<cost){if(this.weapon!==0)this.emit('dryFire');if(this.weapon!==0)this.emit('toast',{text:this.survival?'DRY · R / X RELOAD · 1 FOR SLAP':'LOW ENERGY · R TO VENT · 1 FOR SLAP'});this.cooldown=.25;return false;}
     this.player.energy-=cost;this.cooldown=w.cooldown*(alternate?1.5:1);this.shotAnim=1;this.muzzle=1;this.shake=[.08,.12,.42,.17,.24,.38][this.weapon]*(alternate?1.25:1);this.shots++;this.stats.shots++;this.emit('shot',{weapon:this.weapon,alternate,charge,...(this.combatPose?{aim:{origin:{...this.combatPose.aim.origin},direction:{...this.combatPose.aim.direction}}}:{})});this.emit('sound',{name:'fire',weapon:this.weapon,alternate});
     const p=this.player,damage=w.damage*mult*(1+charge*.5);
     if(this.combatPose)return this.shootTracked(w,damage,alternate);
@@ -165,7 +191,8 @@ export class Game {
   }
   bassDrop(){if(this.bassCharge<100){this.emit('toast',{text:'BASS DROP CHARGES BY LIBERATING HOSTS'});return false;}this.bassCharge=0;this.shake=.6;this.emit('bass');for(const e of this.level.enemies)if(!e.dead&&distance(e,this.player)<6&&lineOfSight(this.level,e,this.player))this.damageEnemy(e,70,3);this.portraitMood='BROOO';this.portraitTime=1.5;this.say('BROOOOO! Time to change the frequency!','WAVE',2);return true;}
   damagePlayer(amount,source=null){
-    if(this.mode!=='playing'||this.dodgeFlash>0)return;
+    if(this.mode!=='playing'||!this.survival&&this.dodgeFlash>0)return;
+    if(this.shieldTime>0&&this.shieldCharge>0){const shield=Math.min(amount,this.shieldCharge);this.shieldCharge-=shield;amount-=shield;this.emit('shieldHit',{absorbed:shield});if(amount<=0)return;}
     const absorbed=Math.min(this.player.armor,amount*.6);this.player.armor-=absorbed;this.player.health=Math.max(0,this.player.health-(amount-absorbed));this.stats.damageTaken+=amount-absorbed;this.hurt=.65;this.shake=.22;this.portraitMood='OUCH';this.portraitTime=.7;this.damageDirection=source?Math.atan2(source.y-this.player.y,source.x-this.player.x):null;this.emit('sound',{name:'hurt'});this.emit('playerHurt',{angle:this.damageDirection});
     if(this.player.health<=0){this.mode='dead';this.emit('dead');}
   }
@@ -173,20 +200,20 @@ export class Game {
   next(){if(this.mode!=='complete')return;this.loadLevel(this.levelIndex+1);this.say(SECTORS[this.levelIndex].subtitle);}
   continueCampaign(){if(this.mode!=='ending'||this.levelIndex!==2)return false;this.loadLevel(3);this.banter('aftershock',[['ORI','The core is down. But three more control signals just woke up.'],['WAVE','An encore? Bro, you should not have.']]);return true;}
   continueBeyond(){if(this.mode!=='ending'||![5,8].includes(this.levelIndex))return false;this.loadLevel(this.levelIndex+1);this.banter('nightmare-entry',[['ORI',SECTORS[this.levelIndex].subtitle],['WAVE','Bro. They patched the easy mode.']]);return true;}
-  startNightmare(){this.start();this.loadLevel(6,false);this.say('Nightmare entry. All six weapons unlocked. No artifact upgrades earned yet.','ORI',2);}
-  retry(){const snap=this.checkpoint;if(snap){this.restore(snap);this.mode='playing';this.player.health=Math.max(65,this.player.health);this.player.energy=100;this.hurt=0;this.projectiles=[];this.emit('checkpoint');}else this.loadLevel(this.levelIndex);}
-  snapshot(){return {version:1,release:'0.4.0',levelIndex:this.levelIndex,level:structuredClone(this.level),player:{...this.player},time:this.time,totalFreed:this.totalFreed,totalArtifacts:this.totalArtifacts,totalSecrets:this.totalSecrets,campaignTime:this.campaignTime,unlocked:this.unlocked,weapon:this.weapon,levelFreed:this.levelFreed,levelKills:this.levelKills,shots:this.shots,hits:this.hits,bassCharge:this.bassCharge,rng:this.rng,v2:{chatterUsed:structuredClone(this.chatterUsed),stats:{...this.stats}}};}
+  startNightmare(options={}){this.start(options);this.loadLevel(6,false);this.say('Nightmare entry. All six weapons unlocked. No artifact upgrades earned yet.','ORI',2);}
+  retry(){const snap=this.checkpoint;if(snap){this.restore(snap);this.mode='playing';this.player.health=Math.max(65,this.player.health);if(!this.survival)this.player.energy=100;this.hurt=0;this.projectiles=[];this.emit('checkpoint');}else this.loadLevel(this.levelIndex);}
+  snapshot(){return {version:1,energyMode:this.energyMode,release:'0.8.0-rc.1',levelIndex:this.levelIndex,level:structuredClone(this.level),player:{...this.player},time:this.time,totalFreed:this.totalFreed,totalArtifacts:this.totalArtifacts,totalSecrets:this.totalSecrets,campaignTime:this.campaignTime,unlocked:this.unlocked,weapon:this.weapon,levelFreed:this.levelFreed,levelKills:this.levelKills,shots:this.shots,hits:this.hits,bassCharge:this.bassCharge,rng:this.rng,v2:{chatterUsed:structuredClone(this.chatterUsed),stats:{...this.stats}}};}
   restore(s){
     if(!s||s.version!==1||!Number.isInteger(s.levelIndex)||!SECTORS[s.levelIndex]||!s.player||!s.level||s.level.index!==s.levelIndex||!Array.isArray(s.level.cells)||s.level.cells.length!==25||s.level.cells.some(row=>!Array.isArray(row)||row.length!==29)||!Array.isArray(s.level.enemies)||!s.level.doors||!Array.isArray(s.level.relays)||!Array.isArray(s.level.items)||!Array.isArray(s.level.captives)||!Array.isArray(s.level.seen)||!s.level.key||!s.level.exit||![s.player.x,s.player.y,s.player.health,s.player.a].every(Number.isFinite)||s.player.health<=0||!canOccupy(s.level,s.player.x,s.player.y))throw Error('Checkpoint is not valid. Start a new transmission.');
-    const copy=structuredClone(s);Object.assign(this,copy);if(!this.level.regions)decorateLevel(this.level,SECTORS[this.levelIndex],this.levelIndex);this.nav=null;this.navTime=0;this.ori={x:this.player.x+.3,y:this.player.y+.2,a:0};this.mode='playing';this.cooldown=0;this.recharge=0;this.vent=0;this.shotAnim=0;this.hurt=0;this.shake=0;this.shift=false;this.dodgeCooldown=0;this.dodgeFlash=0;this.oriCooldown=0;this.oriAuto=3;this.warning=5;this.objectiveTime=0;this.effects=[];this.projectiles=[];this.events=[];this.resetFeel(copy.v2);this.checkpoint=this.snapshot();return true;
+    const copy=structuredClone(s);Object.assign(this,copy);this.energyMode=s.energyMode==='survival'?'survival':'legacy';this.player.energy=clamp(Number.isFinite(s.player.energy)?s.player.energy:100,0,ENERGY_CAPACITY);this.player.reserve=this.survival?clamp(Number.isFinite(s.player.reserve)?s.player.reserve:0,0,RESERVE_CAPACITY):0;if(!this.level.regions)decorateLevel(this.level,SECTORS[this.levelIndex],this.levelIndex);this.nav=null;this.navTime=0;this.ori={x:this.player.x+.3,y:this.player.y+.2,a:0};this.mode='playing';this.cooldown=0;this.recharge=0;this.vent=0;this.shotAnim=0;this.hurt=0;this.shake=0;this.shift=false;this.dodgeCooldown=0;this.dodgeFlash=0;this.shieldTime=0;this.shieldCharge=0;this.oriCooldown=0;this.oriAuto=3;this.warning=5;this.objectiveTime=0;this.effects=[];this.projectiles=[];this.events=[];this.resetFeel(copy.v2);this.checkpoint=this.snapshot();return true;
   }
   update(dt,input={}){
     if(this.mode!=='playing')return;dt=clamp(dt,0,.05);this.time+=dt;const p=this.player,l=this.level;
-    for(const name of ['cooldown','recharge','shotAnim','hurt','shake','oriCooldown','dodgeCooldown','dodgeFlash','objectiveTime','hitPulse','assistTime','scanTime','equipAnim','portraitTime','speechCooldown','dangerCooldown','muzzle'])this[name]=Math.max(0,this[name]-dt*(name==='shotAnim'?5:name==='muzzle'?12:1));
+    for(const name of ['cooldown','recharge','shotAnim','hurt','shake','oriCooldown','dodgeCooldown','dodgeFlash','objectiveTime','hitPulse','assistTime','scanTime','equipAnim','portraitTime','speechCooldown','dangerCooldown','muzzle','shieldTime'])this[name]=Math.max(0,this[name]-dt*(name==='shotAnim'?5:name==='muzzle'?12:1));
     if(this.speechCooldown<=0&&this.speechQueue.length){const line=this.speechQueue.shift();this.say(line.text,line.speaker,line.priority);}
     if(this.portraitTime<=0)this.portraitMood=p.health<30?'DETERMINED':this.charge>.3?'CHARGING':input.fire?'FIRING':'FOCUSED';
-    if(this.vent>0){this.vent-=dt;if(this.vent<=0)p.energy=Math.min(100,p.energy+40);}
-    p.energy=Math.min(100,p.energy+dt*3.7);p.ori=Math.min(100,p.ori+dt*5.5);
+    if(this.vent>0){this.vent-=dt;if(this.vent<=0){if(this.survival){const amount=Math.min(ENERGY_CAPACITY-p.energy,p.reserve);p.reserve-=amount;p.energy+=amount;this.emit('reloaded',{amount});}else p.energy=Math.min(100,p.energy+40);}}
+    if(!this.survival)p.energy=Math.min(100,p.energy+dt*3.7);p.ori=Math.min(100,p.ori+dt*5.5);
     p.vision=clamp(p.vision+(this.shift?-13:9)*dt,0,100);if(p.vision<=0)this.shift=false;
     if(input.turn)p.a+=input.turn*dt*1.9;if(input.look)p.a+=input.look;
     let forward=Number.isFinite(input.moveForward)?clamp(input.moveForward,-1,1):(input.forward?1:0)-(input.back?1:0),strafe=Number.isFinite(input.moveStrafe)?clamp(input.moveStrafe,-1,1):(input.right?1:0)-(input.left?1:0);const norm=Math.max(1,Math.hypot(forward,strafe)),speed=(input.sprint?4.1:2.65)*dt;
@@ -201,7 +228,7 @@ export class Game {
     for(const d of Object.values(l.doors))d.open=clamp(d.open+(d.target-d.open)*dt*4,0,1);
     // Automap fog is discovery-based, never leaks the entire layout by default.
     for(let y=Math.floor(p.y)-3;y<=p.y+3;y++)for(let x=Math.floor(p.x)-3;x<=p.x+3;x++)if(x>=0&&y>=0&&x<l.w&&y<l.h&&lineOfSight(l,p,{x:x+.5,y:y+.5}))l.seen[y*l.w+x]=true;
-    for(const item of l.items){if(!item.taken&&distance(p,item)<.6){if(item.type==='health'&&p.health>=100||item.type==='energy'&&p.energy>=99||item.type==='armor'&&p.armor>=100)continue;item.taken=true;this.stats.pickups++;if(item.type==='health')p.health=Math.min(100,p.health+35);if(item.type==='energy')p.energy=Math.min(100,p.energy+45);if(item.type==='armor')p.armor=Math.min(100,p.armor+45);if(item.type==='artifact'){this.totalArtifacts++;this.banter('artifact',[['ORI',this.totalArtifacts%2===0?'Artifact resonance upgraded every weapon.':'Φ artifact recovered. Two of these upgrade every weapon.'],['WAVE','That belongs in a museum. A very loud museum.']]);this.saveCheckpoint();}this.emit('pickup',{item:item.type});this.emit('sound',{name:'pickup'});}}
+    for(const item of l.items){if(!item.taken&&distance(p,item)<.6){if(item.type==='health'&&p.health>=100||item.type==='energy'&&(this.survival?p.reserve>=RESERVE_CAPACITY:p.energy>=99)||item.type==='armor'&&p.armor>=100)continue;item.taken=true;this.stats.pickups++;if(item.type==='health')p.health=Math.min(100,p.health+35);if(item.type==='energy'){if(this.survival){const available=item.remaining??45,amount=Math.min(available,RESERVE_CAPACITY-p.reserve);p.reserve+=amount;item.remaining=available-amount;item.taken=item.remaining<=0;}else p.energy=Math.min(100,p.energy+45);}if(item.type==='armor')p.armor=Math.min(100,p.armor+45);if(item.type==='artifact'){this.totalArtifacts++;this.banter('artifact',[['ORI',this.totalArtifacts%2===0?'Artifact resonance upgraded every weapon.':'Φ artifact recovered. Two of these upgrade every weapon.'],['WAVE','That belongs in a museum. A very loud museum.']]);this.saveCheckpoint();}this.emit('pickup',{item:item.type});this.emit('sound',{name:'pickup'});}}
     if(!l.key.taken&&distance(p,l.key)<.6){l.key.taken=true;p.key=true;this.stats.pickups++;this.banter('key',[['ORI','Gold access acquired. Extraction doors are yours.'],['WAVE','A key to reality? Finally, something I will not lose in the couch.']]);this.emit('pickup',{item:'GOLDEN ACCESS KEY'});this.emit('sound',{name:'pickup'});this.saveCheckpoint();}
     for(const e of l.enemies){this.updateEnemy(e,dt);if(this.mode!=='playing')return;}
     for(const b of this.projectiles){
@@ -227,9 +254,9 @@ export class Game {
       // Crawlers can phase across one thin wall, but never into a solid tile.
       for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const x=Math.floor(e.x)+.5,y=Math.floor(e.y)+.5,landing={x:x+dx*2,y:y+dy*2};if(solidAt(l,x+dx,y+dy)&&canOccupy(l,landing.x,landing.y,.24)&&distance(landing,p)<d-1){this.emit('burst',{x:e.x,y:e.y,color:'#bd8bff',count:8});e.x=landing.x;e.y=landing.y;e.lastPhase=this.time;e.stun=.35;this.emit('burst',{x:e.x,y:e.y,color:'#5df6ec',count:8});return;}}
     }
-    if(e.tell>0){e.tell-=dt;if(e.tell<=0&&visible){if(e.range<2){if(d<1.45)this.damagePlayer(e.damage,e);}else{const def=SECTORS[this.levelIndex],pressure=def.tactics||0,speed=def.shotSpeed||(e.type==='warden'?3.6:3),lead=Math.min(.7,d/speed)*pressure,aim={x:p.x+(this.playerMotion?.x||0)*lead,y:p.y+(this.playerMotion?.y||0)*lead},a=Math.atan2(aim.y-e.y,aim.x-e.x),count=e.type==='warden'?e.phase+(pressure>.6?2:pressure>0?1:0):pressure>.6&&e.type==='enforcer'?3:1;for(let i=0;i<count;i++)this.projectiles.push({x:e.x,y:e.y,a:a+(i-(count-1)/2)*.16,speed,life:5,damage:e.damage,enemy:true,color:e.type==='warden'?'#ffbd62':'#ff667d',r:.13,...(this.combatPose?{height:Math.min(1,entityHeight(e.type)*.8),vh:(Math.min(.8,this.combatPose.head.height*.65)-Math.min(1,entityHeight(e.type)*.8))/Math.max(.1,d/speed)}:{})});this.emit('sound',{name:'enemy',position:{x:e.x,y:e.y,height:.8}});}e.cooldown=e.delay/(e.type==='warden'?1+e.phase*.13:1)/(1+(SECTORS[this.levelIndex].tactics||0)*.55);}return;}
-    if(e.state==='pursue'&&visible&&d<e.range&&e.cooldown<=0){e.tell=(e.type==='warden'?.95:.65)*(1-(SECTORS[this.levelIndex].tactics||0)*.22);this.emit('telegraph',{x:e.x,y:e.y});if(e.type==='warden')this.banter('warden-tell-'+e.phase,[['ORI','Warden charge! Strafe now. I will keep its signal busy.']],2);if(e.type==='repeater'&&this.time-(this.broadcastTime??-10)>9){this.broadcastTime=this.time;this.emit('toast',{text:['REPEATER: YOUR COMPLIANCE IS OUR PRIORITY.','REPEATER: PLEASE ACCEPT ALL REALITY COOKIES.','REPEATER: NOTHING TO THINK ABOUT HERE.'][e.id%3]});}return;}
-    const pressure=SECTORS[this.levelIndex].tactics||0;if(pressure&&e.state==='pursue'&&visible&&d>2&&d<e.range){const side=e.id%2?1:-1,a=Math.atan2(p.y-e.y,p.x-e.x)+Math.PI/2*side;moveBody(l,e,Math.cos(a)*e.speed*pressure*dt,Math.sin(a)*e.speed*pressure*dt,.23);}
+    if(e.tell>0){e.tell-=dt;if(e.tell<=0&&visible){if(e.range<2){if(d<1.45)this.damagePlayer(e.damage,e);}else{const def=SECTORS[this.levelIndex],pressure=this.tactics,speed=def.shotSpeed||(e.type==='warden'?3.6:3),lead=Math.min(.7,d/speed)*pressure,aim={x:p.x+(this.playerMotion?.x||0)*lead,y:p.y+(this.playerMotion?.y||0)*lead},a=Math.atan2(aim.y-e.y,aim.x-e.x),count=e.type==='warden'?e.phase+(pressure>.6?2:pressure>0?1:0):pressure>.6&&e.type==='enforcer'?3:1;for(let i=0;i<count;i++)this.projectiles.push({x:e.x,y:e.y,a:a+(i-(count-1)/2)*.16,speed,life:5,damage:e.damage,enemy:true,color:e.type==='warden'?'#ffbd62':'#ff667d',r:.13,...(this.combatPose?{height:Math.min(1,entityHeight(e.type)*.8),vh:(Math.min(.8,this.combatPose.head.height*.65)-Math.min(1,entityHeight(e.type)*.8))/Math.max(.1,d/speed)}:{})});this.emit('sound',{name:'enemy',position:{x:e.x,y:e.y,height:.8}});}e.cooldown=e.delay/(e.type==='warden'?1+e.phase*.13:1)/(1+this.tactics*.55);}return;}
+    if(e.state==='pursue'&&visible&&d<e.range&&e.cooldown<=0){e.tell=(e.type==='warden'?.95:.65)*(1-this.tactics*.22);this.emit('telegraph',{x:e.x,y:e.y});if(e.type==='warden')this.banter('warden-tell-'+e.phase,[['ORI','Warden charge! Strafe now. I will keep its signal busy.']],2);if(e.type==='repeater'&&this.time-(this.broadcastTime??-10)>9){this.broadcastTime=this.time;this.emit('toast',{text:['REPEATER: YOUR COMPLIANCE IS OUR PRIORITY.','REPEATER: PLEASE ACCEPT ALL REALITY COOKIES.','REPEATER: NOTHING TO THINK ABOUT HERE.'][e.id%3]});}return;}
+    const pressure=this.tactics;if(pressure&&e.state==='pursue'&&visible&&d>2&&d<e.range){const side=e.id%2?1:-1,a=Math.atan2(p.y-e.y,p.x-e.x)+Math.PI/2*side;moveBody(l,e,Math.cos(a)*e.speed*pressure*dt,Math.sin(a)*e.speed*pressure*dt,.23);}
     if(e.state==='pursue'&&d>.8&&(d>e.range*.6||!visible)){
       // Local navigation via a shared breadth-first distance field.
       if(!this.nav||this.time-this.navTime>.45){this.nav=new Map();const q=[[Math.floor(p.x),Math.floor(p.y)]];this.nav.set(q[0].join(','),0);for(let i=0;i<q.length;i++){const [x,y]=q[i],n=this.nav.get(`${x},${y}`)+1;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,yy=y+dy,k=`${xx},${yy}`;if(this.nav.has(k)||solidAt(l,xx+.5,yy+.5))continue;this.nav.set(k,n);q.push([xx,yy]);}}this.navTime=this.time;}

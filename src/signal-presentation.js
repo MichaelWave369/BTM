@@ -1,5 +1,5 @@
-import {handMesh,appendEquipment} from './equipment-meshes.js';
-import {oriVisualTarget} from './ori-comfort.js';
+import {handMesh,oriMesh,appendEquipment} from './equipment-meshes.js';
+import {OriFlight} from './ori-comfort.js';
 import {lineOfSight} from './collision.js';
 import {WORLD_SCALE, entityHeight, traceEnvironment, rayEntityDistance} from './spatial.js';
 import {signalFixtures, signalPalette} from './neon-signal.js';
@@ -32,7 +32,7 @@ export class SignalPresentation {
  constructor() {
   this.from = new Float32Array(3); this.to = new Float32Array(3);
   this.color = new Float32Array(4); this.ori = new Float32Array(3);
-  this.fixtures = []; this.level = null; this.pulse = 0; this.clock = 0; this.fixtureCount = 0;
+  this.flight=new OriFlight();this.oriMatrix=new Float32Array(16);this.oriMatrix[15]=1;this.fixtures = []; this.level = null; this.pulse = 0; this.clock = 0; this.fixtureCount = 0;
  }
  event(e) { if (['shot', 'oriAssist', 'bass', 'liberation'].includes(e.type)) this.pulse = .18; }
  ring(b, x, y, z, radius, segments, eye, color, vertical = false) {
@@ -48,7 +48,7 @@ export class SignalPresentation {
   const l = game.level, eye = rig.eye, s = WORLD_SCALE, still = settings.reducedMotion;
   if (this.level !== l) {
    this.level = l; this.fixtures = signalFixtures(l); this.palette = signalPalette(l.index);
-   this.ori.set([game.ori.x * s, 1.25, game.ori.y * s]); this.pulse = 0; this.clock = 0;
+   this.flight.reset();this.ori.set([game.ori.x * s, 1.25, game.ori.y * s]); this.pulse = 0; this.clock = 0;
   }
   if (game.mode === 'playing') { this.clock += dt; this.pulse = Math.max(0, this.pulse - dt); }
   const t = still ? 0 : this.clock, p = this.palette, reach = quality.distance * quality.distance;
@@ -74,26 +74,18 @@ export class SignalPresentation {
 
   // Ori's gameplay location, abilities and timing stay in the simulation.
   // The visual core follows smoothly and keeps a clear lane around the weapon ray.
-  const visualTarget = oriVisualTarget({eye, head:rig.headWorld, x:game.ori.x*s, z:game.ori.y*s, aim:rig.aim, peripheral:settings.vrOriPeripheral!==false});
-  const ox=visualTarget.x, oz=visualTarget.z;
-  const follow = 1 - Math.exp(-Math.min(dt, .05) * 6);
-  this.ori[0] += (ox - this.ori[0]) * follow;
-  this.ori[2] += (oz - this.ori[2]) * follow;
-  this.ori[1] = 1.25 + (still ? 0 : Math.sin(t * 2.4) * .035);
-  const threat = l.enemies.find(e => !e.dead && e.tell > 0 && Math.hypot(e.x - game.player.x, e.y - game.player.y) < 9);
-  const oriColor = threat || game.player.health < 30 ? AMBER : CYAN;
-  const oriSize = Number.isFinite(settings.vrOriScale)?Math.max(.4,Math.min(1,settings.vrOriScale)):.65;
-  this.ring(b, ...this.ori, (.28 + (game.assistTime > 0 ? .04 : 0))*oriSize, quality.rings, eye, oriColor);
-  this.ring(b, ...this.ori, .23*oriSize, quality.rings, eye, p.secondary, true);
-  b.billboard(this.ori[0], this.ori[1] - .18*oriSize, this.ori[2], .36*oriSize, .36*oriSize, 'ori', eye, oriColor);
-  const attention = threat || (game.objectiveTime > 0 ? game.objectiveTarget : null);
-  if (attention) {
-   this.from.set(this.ori);
-   const dx = attention.x * s - this.ori[0], dz = attention.y * s - this.ori[2], n = Math.hypot(dx, dz) || 1;
-   this.to.set([this.ori[0] + dx / n * .42, this.ori[1], this.ori[2] + dz / n * .42]);
-   b.line(this.from, this.to, .018, eye, oriColor);
+  const flight=this.flight.update(game,rig,dt,settings);this.ori.set(flight.position);
+  const threat=l.enemies.find(e=>!e.dead&&e.tell>0&&Math.hypot(e.x-game.player.x,e.y-game.player.y)<9);
+  const state=game.player.health<30?'low':game.assistTime>0?'assist':game.scanTime>0?'scan':'idle';
+  this.oriVisible=flight.visible;
+  if(flight.visible){
+   const m=this.oriMatrix,scale=.8+(Number.isFinite(settings.vrOriScale)?Math.max(.4,Math.min(1,settings.vrOriScale)):.65)*.3;
+   const dx=eye[0]-this.ori[0],dz=eye[2]-this.ori[2],n=Math.hypot(dx,dz)||1;
+   m[0]=dz/n*scale;m[1]=0;m[2]=-dx/n*scale;m[4]=0;m[5]=scale;m[6]=0;m[8]=dx/n*scale;m[9]=0;m[10]=dz/n*scale;
+   m[12]=this.ori[0];m[13]=this.ori[1]+(still?0:Math.sin(t*2.4)*.009);m[14]=this.ori[2];
+   appendEquipment(b,oriMesh(state,settings.vrQuality==='performance'?6:8),m,settings.vrHologramBrightness??.85,game.assistTime>0?.2:0);
+   if(game.scanTime>0)this.ring(b,this.ori[0],this.ori[1],this.ori[2],.12,quality.rings,eye,CYAN);
   }
-  if (game.scanTime > 0) this.ring(b, this.ori[0], .035, this.ori[2], .35 + (1.4 - game.scanTime) * 1.6, quality.rings, eye, CYAN);
   for (const e of l.enemies) {
    if (e.dead || (e.x * s - eye[0]) ** 2 + (e.y * s - eye[2]) ** 2 > reach) continue;
    if (e.type === 'warden') {
