@@ -2,12 +2,12 @@
 // It never assigns player coordinates/health, enemy HP, keys, relays, or door states.
 import {Game,SECTORS,angleDiff,canOccupy,distance,findRoute,lineOfSight} from '../src/core.js';
 export class CampaignDriver {
-  constructor({sectors=6,onEvent,game,resume=false,secrets=false}={}){this.game=game||new Game();if(!resume)this.game.start();this.limit=sectors;this.withSecrets=secrets;this.onEvent=onEvent;this.results=[];this.steps=0;this.done=false;this.error=null;this.enterSector();}
+  constructor({sectors=6,onEvent,game,resume=false,secrets=false,energyMode='legacy'}={}){this.game=game||new Game();if(!resume)this.game.start({energyMode});this.limit=sectors;this.withSecrets=secrets;this.onEvent=onEvent;this.results=[];this.steps=0;this.done=false;this.error=null;this.enterSector();}
   enterSector(){this.route=[];this.goalKey='';this.routeCell='';this.activeCaptive=null;this.detour=null;this.elapsed=0;this.measuredDistance=0;this.pickups=0;this.shots=0;this.defeated=0;this.hosts=0;this.doors=0;this.deaths=0;this.damage=0;this.bossPhases=new Set();this.startLevel=this.game.levelIndex;}
   routeTo(target,secrets=false){return findRoute(this.game.level,this.game.player,target,{allowLocked:this.game.player.key,secrets});}
   chooseGoal(){
     const g=this.game,p=g.player,l=g.level,nightmare=g.levelIndex>=6;
-    const resources=l.items.filter(i=>!i.taken&&(i.type==='health'&&p.health<65||i.type==='armor'&&p.armor<35||i.type==='energy'&&p.energy<25)).map(i=>({...i,route:this.routeTo(i)})).filter(i=>i.route.length&&i.route.length<23).sort((a,b)=>a.route.length-b.route.length);
+    const resources=l.items.filter(i=>!i.taken&&(i.type==='health'&&p.health<65||i.type==='armor'&&p.armor<35||i.type==='energy'&&(g.survival?p.reserve<80:p.energy<25))).map(i=>({...i,route:this.routeTo(i)})).filter(i=>i.route.length&&i.route.length<23).sort((a,b)=>a.route.length-b.route.length);
     if(resources.length)return {...resources[0],goal:'pickup',key:'pickup-'+resources[0].id};
     const captive=l.captives.find(c=>!c.freed&&c.id===this.activeCaptive)||l.captives.find(c=>!c.freed&&distance(p,c)<2&&lineOfSight(l,p,c));if(captive){this.activeCaptive=captive.id;return {...captive,goal:'captive',key:'captive-'+captive.id};}this.activeCaptive=null;
     const relay=l.relays.find(r=>!r.active);if(relay)return {...relay,goal:'relay',key:'relay-'+relay.id};
@@ -38,9 +38,10 @@ export class CampaignDriver {
     if(p.energy<55&&g.recharge<=0&&g.vent<=0)g.reload();
     if(target&&p.ori>=30&&g.oriCooldown<=0)g.oriAbility();
     if(g.bassCharge>=100&&threats.filter(e=>distance(p,e)<6).length>=2)g.bassDrop();
-    if(target){const d=distance(p,target),group=threats.length>1;let weapon=g.levelIndex>=6&&group&&d<5&&p.energy>=10?2:d<1.35?0:g.unlocked>=6&&target.type==='warden'&&p.energy>=25?5:g.unlocked>=5&&target.type==='enforcer'&&p.energy>=14?4:group&&d<7&&p.energy>=10?2:1;if(p.energy<2)weapon=0;if(weapon!==g.weapon)g.selectWeapon(weapon);}
+    if(target){const d=distance(p,target),group=threats.length>1;let weapon=g.survival?(d<1.35||p.energy<2?0:1):g.levelIndex>=6&&group&&d<5&&p.energy>=10?2:d<1.35?0:g.unlocked>=6&&target.type==='warden'&&p.energy>=25?5:g.unlocked>=5&&target.type==='enforcer'&&p.energy>=14?4:group&&d<7&&p.energy>=10?2:1;if(p.energy<2)weapon=0;if(weapon!==g.weapon)g.selectWeapon(weapon);}
     let dx=point.x-p.x,dy=point.y-p.y;
     if(target&&!(g.levelIndex>=6&&goal.goal==='pickup'&&goal.type==='health'&&p.health<45&&distance(p,goal)<4)){const d=distance(p,target);if(d<(target.type==='warden'?7:6)&&d>1.2){const side=Math.floor(g.time/(g.levelIndex===11?.65:1.2))%2?1:-1;const tx=-Math.sin(aim)*side,ty=Math.cos(aim)*side;if(canOccupy(l,p.x+tx*.3,p.y+ty*.3)){dx=tx;dy=ty;}}else if(d<1.2){dx=p.x-target.x;dy=p.y-target.y;}}
+    if(target&&g.survival&&g.weapon===0){dx=target.x-p.x;dy=target.y-p.y;if(distance(p,target)<1.5&&g.dodgeCooldown<=0)g.dodge();}
     const mag=Math.hypot(dx,dy)||1;dx/=mag;dy/=mag;const forward=Math.cos(aim)*dx+Math.sin(aim)*dy,side=-Math.sin(aim)*dx+Math.cos(aim)*dy;
     const input={sprint:g.levelIndex>=6&&threats.some(e=>e.type==='warden'),look:angleDiff(aim,p.a),forward:forward>.25,back:forward<-.25,right:side>.25,left:side<-.25,fire:!!target&&distance(p,target)<(g.weapon===0?1.7:24)};
     const incoming=g.projectiles.find(b=>b.enemy&&distance(p,b)<(g.levelIndex===11?1.9:1.35));if(incoming&&g.dodgeCooldown<=0)g.dodge({left:Math.floor(g.time)%2===0,right:Math.floor(g.time)%2!==0});

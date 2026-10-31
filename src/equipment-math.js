@@ -1,12 +1,12 @@
-import {WORLD_SCALE} from './spatial.js';
+import {WORLD_SCALE,entityHeight} from './spatial.js';
 // Meter-based equipment layout and sanitized optional settings. No simulation writes.
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-export const EQUIPMENT_DEFAULTS=Object.freeze({vrHandStyle:'combat',vrWristSize:.32,vrWristOffset:.065,vrWristActivation:'gaze',vrWristSensitivity:.4,vrHudVisible:true,vrHologramBrightness:.85,vrSubtitleSize:1,vrSubtitleMode:'comfort',vrSubtitleDuration:1,vrGripX:0,vrGripY:0,vrGripZ:0,vrLeftHandPitch:20,vrLeftHandYaw:0,vrLeftHandRoll:0,vrWristTopOffset:.03,vrOriScale:.65,vrOriPeripheral:true,vrInterfaceMotion:true});
+export const EQUIPMENT_DEFAULTS=Object.freeze({captions:true,spokenDialogue:false,speechVolume:.7,vrHandStyle:'combat',vrWristSize:.32,vrWristOffset:.065,vrWristActivation:'gaze',vrWristSensitivity:.4,vrHudVisible:true,vrHologramBrightness:.85,vrSubtitleSize:1,vrSubtitleMode:'comfort',vrSubtitleDuration:1,vrGripX:0,vrGripY:0,vrGripZ:0,vrLeftHandPitch:20,vrLeftHandYaw:0,vrLeftHandRoll:0,vrWristTopOffset:.03,vrOriScale:.65,vrOriPeripheral:true,vrInterfaceMotion:true});
 export function equipmentSettings(s={}){
  const out={...EQUIPMENT_DEFAULTS};
  for(const [key,options]of Object.entries({vrHandStyle:['combat','neon','tactical'],vrWristActivation:['gaze','raised','manual'],vrSubtitleMode:['comfort','ori']}))if(options.includes(s[key]))out[key]=s[key];
- for(const [key,min,max]of [['vrWristSize',.24,.38],['vrWristOffset',.035,.10],['vrWristSensitivity',.35,.8],['vrHologramBrightness',.4,1.1],['vrSubtitleSize',.8,1.3],['vrSubtitleDuration',.75,2],['vrGripX',-.04,.04],['vrGripY',-.04,.04],['vrGripZ',-.04,.04],['vrLeftHandPitch',-65,65],['vrLeftHandYaw',-65,65],['vrLeftHandRoll',-90,90],['vrWristTopOffset',0,.08],['vrOriScale',.4,1]])if(Number.isFinite(s[key]))out[key]=clamp(s[key],min,max);
- for(const key of ['vrHudVisible','vrInterfaceMotion','vrOriPeripheral'])if(typeof s[key]==='boolean')out[key]=s[key];return out;
+ for(const [key,min,max]of [['speechVolume',0,1],['vrWristSize',.24,.38],['vrWristOffset',.035,.10],['vrWristSensitivity',.35,.8],['vrHologramBrightness',.4,1.1],['vrSubtitleSize',.8,1.3],['vrSubtitleDuration',.75,2],['vrGripX',-.04,.04],['vrGripY',-.04,.04],['vrGripZ',-.04,.04],['vrLeftHandPitch',-65,65],['vrLeftHandYaw',-65,65],['vrLeftHandRoll',-90,90],['vrWristTopOffset',0,.08],['vrOriScale',.4,1]])if(Number.isFinite(s[key]))out[key]=clamp(s[key],min,max);
+ for(const key of ['captions','spokenDialogue','vrHudVisible','vrInterfaceMotion','vrOriPeripheral'])if(typeof s[key]==='boolean')out[key]=s[key];return out;
 }
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 function normal(v){const n=Math.hypot(v[0],v[1],v[2])||1;for(let i=0;i<3;i++)v[i]/=n;return v;}
@@ -32,17 +32,26 @@ export class WristComputer{
   let requested=inRange&&(this.pinned||eligible&&now-this.attentionSince>=160||this.requested&&now-this.lostSince<220);if(!inRange)requested=false;
   if(requested&&!this.requested)this.guardUntil=now+240;this.requested=requested;this.guard=requested&&now<this.guardUntil;
   const motion=s.vrInterfaceMotion&&!settings.reducedMotion;this.open=motion?this.open+((requested?1:0)-this.open)*(1-Math.exp(-dt*15)):(requested?1:0);this.visible=inRange&&this.open>.08;
-  const p=this.panel;for(let i=0;i<3;i++)p.normal[i]=status.normal[i]*.3+this.toEye[i]*.7;normal(p.normal);
+  // The grip's local +Y can point DOWN after a real Touch wrist roll. Keep the
+  // hardware on the calibrated cuff, but project the hologram from the glove's
+  // upper silhouette in viewer-up space. Its entire lower edge clears the hand.
+  const p=this.panel;for(let i=0;i<3;i++)p.normal[i]=this.toEye[i];normal(p.normal);
   for(let i=0;i<3;i++)p.right[i]=(head?head[i]:i===0?1:0)*.85+status.right[i]*.15;
   const project=dot(p.right,p.normal);for(let i=0;i<3;i++)p.right[i]-=p.normal[i]*project;normal(p.right);
   const n=p.normal,r=p.right;p.up[0]=n[1]*r[2]-n[2]*r[1];p.up[1]=n[2]*r[0]-n[0]*r[2];p.up[2]=n[0]*r[1]-n[1]*r[0];normal(p.up);
   // Prevent the panel from flipping upside down as the wrist rotates.
   const upward=head?[head[4],head[5],head[6]]:[0,1,0];if(dot(p.up,upward)<0){for(let i=0;i<3;i++){p.up[i]*=-1;p.right[i]*=-1;}}
   p.width=s.vrWristSize*(.92+.08*this.open);p.height=p.width/1.5;
-  for(let i=0;i<3;i++)p.center[i]=status.center[i]+p.normal[i]*s.vrWristOffset+p.up[i]*(.075-(1-this.open)*.018);
-  // Project slightly inboard and keep the complete display clear of the face.
-  const lateral=head?(status.center[0]-eye[0])*head[0]+(status.center[1]-eye[1])*head[1]+(status.center[2]-eye[2])*head[2]:status.center[0]-eye[0],shift=-Math.sign(lateral)*Math.min(.075,Math.abs(lateral)*.4);
-  for(let i=0;i<3;i++)p.center[i]+=(head?head[i]:i===0?1:0)*shift;
+  at(p.center,m,0,.015,.07);
+  let top=-Infinity;
+  // Conservative bounds of the existing glove, fingers and forearm, in meters.
+  for(const x of [-.06,.06])for(const y of [-.06,.045])for(const z of [-.11,.16]){
+   const corner=[m[12]+m[0]*x+m[4]*y+m[8]*z,m[13]+m[1]*x+m[5]*y+m[9]*z,m[14]+m[2]*x+m[6]*y+m[10]*z];
+   top=Math.max(top,dot(corner,upward));
+  }
+  for(let i=0;i<3;i++)p.center[i]+=p.normal[i]*s.vrWristOffset;
+  const lift=(top+s.vrWristTopOffset+.012+p.height*.5*Math.abs(dot(p.up,upward))+p.width*.5*Math.abs(dot(p.right,upward))-dot(p.center,upward))/Math.max(.25,dot(p.up,upward));
+  for(let i=0;i<3;i++)p.center[i]+=p.up[i]*Math.max(0,lift);
   const px=p.center[0]-eye[0],py=p.center[1]-eye[1],pz=p.center[2]-eye[2],range=Math.hypot(px,py,pz)||1;if(range<.6){p.center[0]=eye[0]+px/range*.6;p.center[1]=eye[1]+py/range*.6;p.center[2]=eye[2]+pz/range*.6;}
   // Conservatively fit all four corners, including a 64mm binocular eye span.
   if(head){let depth=0;for(const x of [-.5,.5])for(const y of [-.5,.5]){const dx=p.center[0]-eye[0]+p.right[0]*p.width*x+p.up[0]*p.height*y,dy=p.center[1]-eye[1]+p.right[1]*p.width*x+p.up[1]*p.height*y,dz=p.center[2]-eye[2]+p.right[2]*p.width*x+p.up[2]*p.height*y,side=dx*head[0]+dy*head[1]+dz*head[2],up=dx*head[4]+dy*head[5]+dz*head[6],forward=-(dx*head[8]+dy*head[9]+dz*head[10]);depth=Math.max(depth,(Math.abs(side)+.032)/.82-forward,Math.abs(up)/.92-forward);}if(depth>.2){this.visible=false;this.guard=false;}else for(let i=0;i<3;i++)p.center[i]-=head[8+i]*depth;}return this;
@@ -59,9 +68,25 @@ export function panelAngularBounds(panel,rig){
 }
 export function panelsOverlap(a,b,rig,padding=.035){const x=panelAngularBounds(a,rig),y=panelAngularBounds(b,rig);return Math.abs(x.x-y.x)<x.w+y.w+padding&&Math.abs(x.y-y.y)<x.h+y.h+padding;}
 export function placeComfortCaption(out,rig,settings={},wrist=null,rows=2){
- const a=Number.isFinite(rig.headAngle)?rig.headAngle:-Math.PI/2,fx=Math.cos(a),fz=Math.sin(a);
- out.width=1.12;out.height=.28+Math.max(0,rows-2)*.045;out.right[0]=-fz;out.right[1]=0;out.right[2]=fx;out.up[0]=0;out.up[1]=1;out.up[2]=0;out.normal[0]=-fx;out.normal[1]=0;out.normal[2]=-fz;
- out.center[0]=rig.eye[0]+fx*1.72;out.center[1]=rig.eye[1]-.46;out.center[2]=rig.eye[2]+fz*1.72;let obstructsWeapon=false;
- if(rig.aim){const o=rig.aim.origin,dx=o.x*WORLD_SCALE-rig.eye[0],dz=o.y*WORLD_SCALE-rig.eye[2],dy=o.height*WORLD_SCALE-rig.eye[1],forward=dx*fx+dz*fz,side=-dx*fz+dz*fx,bounds=panelAngularBounds(out,rig),yaw=Math.atan2(side,forward),pitch=Math.atan2(dy,Math.hypot(dx,dz));obstructsWeapon=Math.abs(yaw-bounds.x)<bounds.w+.06&&Math.abs(pitch-bounds.y)<bounds.h+.08;}
- if(obstructsWeapon||wrist&&panelsOverlap(out,wrist,rig))out.center[1]=rig.eye[1]+.48;return out;
+ const a=Number.isFinite(rig.headAngle)?rig.headAngle:-Math.PI/2,fx=Math.cos(a),fz=Math.sin(a),rx=-fz,rz=fx;
+ out.width=settings.alertDock?.46:.68;out.height=settings.alertDock?.075:.20+Math.max(0,rows-2)*.025;
+ out.right.splice(0,3,rx,0,rz);out.up.splice(0,3,0,1,0);out.normal.splice(0,3,-fx,0,-fz);
+ // Compact lower-right dock: its inner edge stays outside the central 15°.
+ for(const height of settings.alertDock?[.5,-.52,-.82]:[-.52,.54,-.82]){
+  out.center.splice(0,3,rig.eye[0]+fx*1.55+rx*.88,rig.eye[1]+height,rig.eye[2]+fz*1.55+rz*.88);
+  let blocked=!!wrist&&panelsOverlap(out,wrist,rig,.07);
+  if(rig.aim?.direction){const d=rig.aim.direction,b=panelAngularBounds(out,rig),yaw=Math.atan2(-d.x*fz+d.y*fx,d.x*fx+d.y*fz),pitch=Math.atan2(d.z||0,Math.hypot(d.x,d.y));blocked ||= Math.abs(yaw-b.x)<b.w+.09&&Math.abs(pitch-b.y)<b.h+.09;}
+  if(!blocked&&settings.level){
+   const b=panelAngularBounds(out,rig),level=settings.level;
+   for(const e of [...level.enemies.filter(e=>!e.dead),level.exit,...level.relays.filter(r=>!r.active),...level.captives.filter(c=>!c.freed)]){
+    const dx=e.x*WORLD_SCALE-rig.eye[0],dz=e.y*WORLD_SCALE-rig.eye[2],d=Math.hypot(dx,dz),f=dx*fx+dz*fz;
+    if(f<=0||d>10)continue;
+    const yaw=Math.atan2(-dx*fz+dz*fx,f),height=(e.type?entityHeight(e.type):1.3)*WORLD_SCALE,pitch=Math.atan2(height*.5-rig.eye[1],d),radius=Math.atan2(.35*WORLD_SCALE,d),half=Math.atan2(height*.5,d);
+    if(Math.abs(yaw-b.x)<b.w+radius&&Math.abs(pitch-b.y)<b.h+half){blocked=true;break;}
+   }
+  }
+  if(!blocked){out.hidden=false;return out;}
+ }
+ // Aim takes precedence. The communication log retains a temporarily hidden line.
+ out.hidden=true;return out;
 }

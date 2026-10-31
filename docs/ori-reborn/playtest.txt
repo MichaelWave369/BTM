@@ -1,0 +1,273 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> michael-wave-ori-break-the-matrix@0.8.0-rc.1 playtest
+> node scripts/playthrough.mjs
+
+{
+  "campaign": {
+    "passed": true,
+    "error": null,
+    "steps": 33321,
+    "results": [
+      {
+        "sector": 1,
+        "name": "THE WAKE-UP CALL",
+        "seconds": 68.25,
+        "distance": 174.57,
+        "shots": 24,
+        "defeated": 8,
+        "freed": 9,
+        "pickups": 3,
+        "doors": 5,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": []
+      },
+      {
+        "sector": 2,
+        "name": "CATHEDRAL OF STATIC",
+        "seconds": 56,
+        "distance": 141.92,
+        "shots": 34,
+        "defeated": 9,
+        "freed": 6,
+        "pickups": 2,
+        "doors": 6,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": []
+      },
+      {
+        "sector": 3,
+        "name": "THE DEMIURGE CORE",
+        "seconds": 63.65,
+        "distance": 161.42,
+        "shots": 21,
+        "defeated": 9,
+        "freed": 4,
+        "pickups": 3,
+        "doors": 6,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "sector": 4,
+        "name": "THE MEMORY FOUNDRY",
+        "seconds": 40.35,
+        "distance": 99.37,
+        "shots": 23,
+        "defeated": 12,
+        "freed": 7,
+        "pickups": 2,
+        "doors": 6,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": []
+      },
+      {
+        "sector": 5,
+        "name": "THE BLACKOUT STACK",
+        "seconds": 59.67,
+        "distance": 149.27,
+        "shots": 33,
+        "defeated": 15,
+        "freed": 8,
+        "pickups": 2,
+        "doors": 7,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": []
+      },
+      {
+        "sector": 6,
+        "name": "THE NULL CROWN",
+        "seconds": 61.67,
+        "distance": 155.07,
+        "shots": 41,
+        "defeated": 18,
+        "freed": 8,
+        "pickups": 3,
+        "doors": 8,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 18.64,
+        "health": 100,
+        "bossPhases": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "sector": 7,
+        "name": "THE DEAD LETTER DEPOT",
+        "seconds": 48.17,
+        "distance": 121.66,
+        "shots": 30,
+        "defeated": 20,
+        "freed": 10,
+        "pickups": 3,
+        "doors": 6,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 0,
+        "health": 100,
+        "bossPhases": []
+      },
+      {
+        "sector": 8,
+        "name": "MEATSPACE FIREWALL",
+        "seconds": 43.72,
+        "distance": 110.91,
+        "shots": 39,
+        "defeated": 20,
+        "freed": 10,
+        "pickups": 3,
+        "doors": 5,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 12.06,
+        "health": 87.9,
+        "bossPhases": []
+      },
+      {
+        "sector": 9,
+        "name": "THE REDUNDANCY PIT",
+        "seconds": 69.05,
+        "distance": 193.6,
+        "shots": 57,
+        "defeated": 26,
+        "freed": 13,
+        "pickups": 5,
+        "doors": 7,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 8.57,
+        "health": 100,
+        "bossPhases": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "sector": 10,
+        "name": "THE PANOPTICON",
+        "seconds": 94.23,
+        "distance": 250.23,
+        "shots": 67,
+        "defeated": 29,
+        "freed": 14,
+        "pickups": 5,
+        "doors": 6,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 33.93,
+        "health": 100,
+        "bossPhases": []
+      },
+      {
+        "sector": 11,
+        "name": "THE GOD PROCESS",
+        "seconds": 124.05,
+        "distance": 349.17,
+        "shots": 78,
+        "defeated": 32,
+        "freed": 15,
+        "pickups": 7,
+        "doors": 8,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 74.88,
+        "health": 97.6,
+        "bossPhases": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "sector": 12,
+        "name": "THE IMPOSSIBLE FREQUENCY",
+        "seconds": 103.9,
+        "distance": 305,
+        "shots": 75,
+        "defeated": 36,
+        "freed": 17,
+        "pickups": 6,
+        "doors": 8,
+        "secrets": 1,
+        "artifacts": 1,
+        "deaths": 0,
+        "damageTaken": 47.69,
+        "health": 75.3,
+        "bossPhases": [
+          1,
+          2,
+          3
+        ]
+      }
+    ],
+    "method": "Production movement, aim, fire, reload, Ori, dodge, E interactions and exit proximity. No teleportation, direct objective/HP assignment, or calls to complete/damageEnemy."
+  },
+  "failureRecovery": {
+    "passed": true,
+    "naturalDeath": true,
+    "secondsToDeath": 9.08,
+    "damageTaken": 109.2,
+    "retryHealth": 100,
+    "retryAtCheckpoint": true,
+    "recovery": {
+      "passed": true,
+      "error": null,
+      "steps": 2888,
+      "results": [
+        {
+          "sector": 1,
+          "name": "THE WAKE-UP CALL",
+          "seconds": 72.17,
+          "distance": 187.49,
+          "shots": 31,
+          "defeated": 8,
+          "freed": 9,
+          "pickups": 4,
+          "doors": 3,
+          "secrets": 0,
+          "artifacts": 0,
+          "deaths": 0,
+          "damageTaken": 0,
+          "health": 100,
+          "bossPhases": []
+        }
+      ],
+      "method": "Production movement, aim, fire, reload, Ori, dodge, E interactions and exit proximity. No teleportation, direct objective/HP assignment, or calls to complete/damageEnemy."
+    },
+    "method": "Walk through the first door, stop firing, take live enemy attacks until death, retry the stored checkpoint, then traverse and clear sector one."
+  }
+}

@@ -40,3 +40,6 @@ body[data-input=controller] #game,body[data-input=vr] #game{cursor:none}.reduced
 .codebrown-choice .choice-code{color:#ffd2f0}
 .codebrown-choice:hover,.codebrown-choice:focus-visible{border-color:#ff93e0;box-shadow:0 0 18px #ff68bf3b,inset 0 1px #ffd6f066}
 .codebrown-choice:disabled{opacity:.7;cursor:progress}
+
+/* Survival instruments and accessible retained communication history. */
+#reserve{font:600 11px Oxanium,sans-serif;color:var(--muted,#a5b4d6);white-space:nowrap}#dash-status{font-size:10px;color:#ffcd75}.communication-log{white-space:pre-wrap;max-height:240px;overflow:auto;font:14px/1.6 Oxanium,sans-serif;background:#07121f;padding:14px;border:1px solid #394b80}

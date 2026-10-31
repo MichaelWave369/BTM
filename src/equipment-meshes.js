@@ -47,6 +47,28 @@ export function weaponMesh(id,detail=8){
  }
  return cache.set(key,b.finish(key)).get(key);
 }
+// Original Φ369 pocket drone. Cached mesh; the entire silhouette is <25cm.
+export function oriMesh(state='idle',detail=8){
+ const key='ori:'+state+':'+detail;if(cache.has(key))return cache.get(key);
+ const b=new MeshBuilder(),eye=state==='low'?C.amber:state==='assist'?C.magenta:C.cyan;
+ b.tube([0,0,-.05],[0,0,.045],.082,0,C.composite,false,detail);
+ b.tube([0,0,.042],[0,0,.053],.065,.052,C.edge,false,detail);
+ b.tube([0,0,.049],[0,0,.056],.049,0,C.rubber,false,detail);
+ b.tube([0,.008,.056],[0,.008,.059],.033,.025,eye,true,detail);
+ b.box([0,.008,.061],[.008,.081,.004],eye,true);
+ for(const side of [-1,1]){
+  b.box([side*.092,-.006,0],[.034,.065,.07],C.metal);
+  b.tube([side*.092,-.039,0],[side*.092,-.05,0],.012,0,eye,true,6);
+  b.box([side*.092,.003,.039],[.019,.009,.004],eye,true);
+ }
+ for(let i=0;i<4;i++)b.box([-.018+i*.012,-.046,.064],[.005,.012,.004],C.edge);
+ b.box([.035,.09,-.012],[.004,.045,.004],C.metal);
+ b.box([.035,.115,-.012],[.011,.009,.011],eye,true);
+ // Three-six-nine identity ticks, no borrowed logos or textures.
+ for(let i=0;i<3;i++)b.box([-.026+i*.026,.058,.049],[.007,.006,.006],C.amber,true);
+ if(state==='scan')b.box([0,.03,.063],[.073,.004,.003],C.magenta,true);
+ return cache.set(key,b.finish(key)).get(key);
+}
 // No per-frame geometry allocation: append cached vertices to the existing batch.
 export function appendEquipment(batch,mesh,matrix,brightness=.85,pulse=0){
  const d=batch.data,source=mesh.data;if(batch.length+source.length>d.length){batch.dropped++;return false;}let n=batch.length;

@@ -1,0 +1,317 @@
+{
+  "passed": true,
+  "equipment": {
+    "passed": true,
+    "total": 38,
+    "results": [
+      {
+        "name": "Equipment settings sanitize old storage and invalid values",
+        "pass": true
+      },
+      {
+        "name": "Optional preferences survive a JSON settings round trip",
+        "pass": true
+      },
+      {
+        "name": "Cybernetic hands are cached, finite, mirrored and human-scale",
+        "pass": true
+      },
+      {
+        "name": "Index and little fingers mirror correctly around each opposing thumb",
+        "pass": true
+      },
+      {
+        "name": "Three finishes differ while sharing one atlas layout",
+        "pass": true
+      },
+      {
+        "name": "Six weapon silhouettes are distinct and bounded",
+        "pass": true
+      },
+      {
+        "name": "Model append transforms cached vertices and reports overflow explicitly",
+        "pass": true
+      },
+      {
+        "name": "Flat-color mesh UVs sample the atlas interior to avoid precision holes",
+        "pass": true
+      },
+      {
+        "name": "Raised wrist requires dwell then opens at compact meter dimensions",
+        "pass": true
+      },
+      {
+        "name": "Combat hand height leaves only the compact hardware status",
+        "pass": true
+      },
+      {
+        "name": "Brief wrist-attention loss retains hysteresis while sustained lowering closes",
+        "pass": true
+      },
+      {
+        "name": "Near-face distance and tracking loss remove interactive panels",
+        "pass": true
+      },
+      {
+        "name": "Manual pin is intentional and visibility preference overrides it",
+        "pass": true
+      },
+      {
+        "name": "Opening capture guard has a bounded transition interval",
+        "pass": true
+      },
+      {
+        "name": "Panel basis remains orthonormal for seated and standing heights",
+        "pass": true
+      },
+      {
+        "name": "Default wrist corners fit both synthetic eye frusta and retain face clearance",
+        "pass": true
+      },
+      {
+        "name": "Reduced motion suppresses ornamental interpolation",
+        "pass": true
+      },
+      {
+        "name": "Weapon follows grip translation while retaining independent ray orientation",
+        "pass": true
+      },
+      {
+        "name": "Calibrated model muzzle equals the collision-safe combat origin",
+        "pass": true
+      },
+      {
+        "name": "Grip calibration never bypasses the safe head reach limit",
+        "pass": true
+      },
+      {
+        "name": "Every weapon and preset fits the batch and preserves game snapshots",
+        "pass": true
+      },
+      {
+        "name": "Equipment capture retains suppression of fire, charge, sticks and abilities",
+        "pass": true
+      },
+      {
+        "name": "Comfort captions clear sights and an active wrist footprint",
+        "pass": true
+      },
+      {
+        "name": "Comfort placement clears the actual held-weapon aim cone",
+        "pass": true
+      },
+      {
+        "name": "Equipment tracking and preferences never enter v1 checkpoints",
+        "pass": true
+      },
+      {
+        "name": "Canvas shows compact inactive status and an intentional active panel",
+        "pass": true
+      },
+      {
+        "name": "Pin is a point target without another Touch button mapping",
+        "pass": true
+      },
+      {
+        "name": "GenEWrist ring view uses existing input targets and returns to combat",
+        "pass": true
+      },
+      {
+        "name": "GenEWrist travel requires confirmation and supports cancellation",
+        "pass": true
+      },
+      {
+        "name": "Responsive subtitle pages preserve complete dialogue content",
+        "pass": true
+      },
+      {
+        "name": "Ori Spatial reliably falls back for behind or near-face positions",
+        "pass": true
+      },
+      {
+        "name": "Legacy Ori Spatial preference uses the same safe peripheral dock",
+        "pass": true
+      },
+      {
+        "name": "Panel whitespace outside the GEN.E button remains an input-capture target",
+        "pass": true
+      },
+      {
+        "name": "Combat and map controls keep distinct non-overlapping pointer targets",
+        "pass": true
+      },
+      {
+        "name": "Caption opt-out retains a separate critical alert and wrist communication log",
+        "pass": true
+      },
+      {
+        "name": "Communication dock avoids a right-side enemy or temporarily yields to gameplay",
+        "pass": true
+      },
+      {
+        "name": "Paused menus remove communications and alerts while preserving full log history",
+        "pass": true
+      },
+      {
+        "name": "Hiding wrist equipment preserves the independent communication channel",
+        "pass": true
+      }
+    ],
+    "method": "Production equipment models, Canvas, timers and synthetic tracked poses; no physical Quest acceptance."
+  },
+  "captures": [
+    {
+      "build": "before",
+      "name": "hands",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "before",
+      "name": "weapon-1",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "before",
+      "name": "weapon-2",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "before",
+      "name": "weapon-3",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "before",
+      "name": "weapon-4",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "before",
+      "name": "weapon-5",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "before",
+      "name": "combat",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "before",
+      "name": "wrist",
+      "pass": true,
+      "wristOpen": true
+    },
+    {
+      "build": "before",
+      "name": "dialogue",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "after",
+      "name": "hands",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "after",
+      "name": "weapon-1",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "after",
+      "name": "weapon-2",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "after",
+      "name": "weapon-3",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "after",
+      "name": "weapon-4",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "after",
+      "name": "weapon-5",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "after",
+      "name": "combat",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "after",
+      "name": "wrist",
+      "pass": true,
+      "wristOpen": true
+    },
+    {
+      "build": "after",
+      "name": "dialogue",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "after",
+      "name": "hands-neon",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "after",
+      "name": "hands-tactical",
+      "pass": true,
+      "wristOpen": false
+    },
+    {
+      "build": "after",
+      "name": "wrist-standing",
+      "pass": true,
+      "wristOpen": true
+    },
+    {
+      "build": "after",
+      "name": "wrist-inverted",
+      "pass": true,
+      "wristOpen": true
+    },
+    {
+      "build": "after",
+      "name": "wrist-tilted",
+      "pass": true,
+      "wristOpen": true
+    }
+  ],
+  "settings": {
+    "passed": true,
+    "values": {
+      "style": "tactical",
+      "width": "0.36",
+      "subtitles": "ori"
+    }
+  },
+  "behavior": {
+    "passed": true,
+    "combatPanelVisible": false,
+    "activeWidth": 0.32,
+    "activeHeight": 0.21333333333333335
+  },
+  "pageErrors": []
+}

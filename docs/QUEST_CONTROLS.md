@@ -12,10 +12,10 @@ Open the HTTPS game in Quest Browser, choose **Immersive VR**, then use the exis
 | Left trigger hold/release | Charge/release existing alternate shot using energy |
 | Right grip / A | Use nearby pointed door, captive, relay or archive; extraction keeps original gates |
 | Left grip | Ori scan/stun |
-| B / X / Y | Dodge / vent / vision |
+| B / X / Y | Dash Bash or shield / reload / vision (Legacy: dodge / vent) |
 | Left stick click, held | Sprint |
 | Right stick click | Pause/resume |
-| Left wrist panel | Vitals, objective, six weapons, discovered map, Ori, bass, vent, dodge, vision, pause, recenter |
+| Left wrist panel | Vitals, objective, six weapons, discovered map, Ori, bass, reload, Dash Bash / shield, vision, pause, recenter |
 | Pause / settings | Checkpoints, comfort/graphics, manual, recenter and safe XR exit |
 
 Raise the left forearm toward your gaze and face its display toward you. After a short deliberate dwell the full hologram opens; lowering your hand closes it. Ordinary combat shows compact status hardware. Aim the right controller at the hologram: the laser and gold outline indicate selection. The full panel captures sticks, combat, weapon cycling and abilities, including blank space and locked weapons. Release gameplay controls after pointing away to rearm. Physical head collision continues; enemies and simulation remain live while using the wrist. Pause to stop gameplay.

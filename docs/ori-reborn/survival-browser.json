@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "browser": "151.0.7922.34",
+  "initial": 100,
+  "spent": 98,
+  "reloaded": 100,
+  "reserve": "RES 43/180",
+  "dash": "SHIELD 18",
+  "captionsOff": true,
+  "speechOptInFallback": true,
+  "logRetained": true,
+  "survivalCheckpoint": true,
+  "pageErrors": [],
+  "method": "Real Chromium, production dist, real DOM controls and keyboard movement/fire/reload/dash. No simulation or HP/objective writes. Optional speech engine unavailable/device-dependent; no assertion of audible output. Desktop gameplay captures, no physical Quest."
+}
