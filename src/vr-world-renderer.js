@@ -21,13 +21,24 @@ export class VRWorldRenderer {
  setLevel(level,settings={},cacheKey=null,tileSize=null){const g=this.gl;if(this.level!==level){for(const c of this.staticBuffers)g.deleteBuffer(c.buffer);this.level=level;this.geometry=buildLevelGeometry(level);this.staticBuffers=this.geometry.chunks.map(c=>{const buffer=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,buffer);g.bufferData(g.ARRAY_BUFFER,c.vertices,g.STATIC_DRAW);return {...c,buffer};});}this.atlasCanvas=createWorldAtlas(level,this.assets,settings,{tileSize:tileSize||textureTileSize(settings,2048),images:this.packImages});this.textureKey=cacheKey||textureSignature(level,settings);g.activeTexture(g.TEXTURE0);g.bindTexture(g.TEXTURE_2D,this.atlas);g.pixelStorei(g.UNPACK_FLIP_Y_WEBGL,false);g.texImage2D(g.TEXTURE_2D,0,g.RGBA,g.RGBA,g.UNSIGNED_BYTE,this.atlasCanvas);this.ui.lastPaint=-Infinity;}
  bind(buffer){const g=this.gl,a=this.attributes;g.bindBuffer(g.ARRAY_BUFFER,buffer);for(const [loc,size,offset]of [[a.p,3,0],[a.uv,2,12],[a.tint,4,20]]){g.enableVertexAttribArray(loc);g.vertexAttribPointer(loc,size,g.FLOAT,false,36,offset);}}
  event(event,game){this.scene.event(event,game);}
- interfaceTarget(pose,rig,game,now=performance.now()){
-  const ui=this.ui;ui.cursor=null;rig.uiPointer=null;ui.placeWrist(rig,rig.settings||{},now);if(!pose.rightRay)return ui.wrist.guard?ui.blocker:null;
+ interfaceTarget(pose,rig,game,now=performance.now(),pad=null){
+  const ui=this.ui;ui.cursor=null;rig.uiPointer=null;
+  ui.placeWrist(rig,rig.settings||{},now);
+  // Left grip is still Ori in combat. Only redirect an intentional grip tap
+  // while the left cuff is raised in front of the headset (or already pinned).
+  if(pad?.actions?.includes('ori')&&ui.wrist.canToggle(rig,rig.settings)){
+   ui.wrist.togglePin();ui.placeWrist(rig,rig.settings||{},now);
+   ui.lastPaint=-Infinity;return ui.blocker;
+  }
+  // A visible menu owns gameplay input, even if the right ray briefly misses
+  // a tiny button or leaves the panel. No accidental shots behind the menu.
+  if(ui.wrist.guard)return ui.blocker;
+  if(!pose.rightRay)return ui.wrist.requested?ui.blocker:null;
   matMultiply(this.rayWorld,rig.root,pose.rightRay);let selected=null,panel=null;
   for(const candidate of [ui.wristPanel,ui.statusPanel]){if(!candidate)continue;const hit=hitPanel(this.rayWorld,candidate);if(hit&&(!selected||hit.distance<selected.distance)){selected=hit;panel=candidate;}}
-  if(!selected)return ui.wrist.guard?ui.blocker:null;
+  if(!selected)return ui.wrist.requested?ui.blocker:null;
   const origin={x:this.rayWorld[12]/WORLD_SCALE,y:this.rayWorld[14]/WORLD_SCALE,height:this.rayWorld[13]/WORLD_SCALE},direction={x:-this.rayWorld[8],y:-this.rayWorld[10],z:-this.rayWorld[9]},wall=traceEnvironment(game.level,origin,direction,selected.distance/WORLD_SCALE);
-  if(wall.distance*WORLD_SCALE<selected.distance-.04)return ui.wrist.guard?ui.blocker:null;
+  if(wall.distance*WORLD_SCALE<selected.distance-.04)return ui.wrist.requested?ui.blocker:null;
   const pointer=this.uiPointer??={from:new Float32Array(3),to:new Float32Array(3)};for(let i=0;i<3;i++){pointer.from[i]=this.rayWorld[12+i];pointer.to[i]=pointer.from[i]-this.rayWorld[8+i]*selected.distance;}rig.uiPointer=pointer;
   if(panel===ui.statusPanel)return ui.statusTarget;ui.cursor=selected;return ui.wrist.open>.8?(ui.targetAt(selected)||ui.blocker):ui.blocker;
  }
