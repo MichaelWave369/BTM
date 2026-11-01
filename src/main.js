@@ -18,6 +18,7 @@ import {PointerCapture,keyCode} from './controls.js';
 import {GamepadInput,ControllerMenu,ControllerRumble,CONTROLLER_DEFAULTS,controllerSettings,gameplayInput,controllerActions} from './gamepad.js';
 const $=id=>document.getElementById(id),canvas=$('game'),game=new Game(),renderer=new Renderer(canvas),audio=new AudioEngine(),communications=new Communications();
 const SAVE_KEY=ORIGINAL_SAVE_KEY,SETTINGS_KEY='mwave-ori-settings-v1';
+function updateSoundtrackCue(){audio.setScore({kind:game.campaign==='pit'?'pit':'original',stage:game.levelIndex,boss:!!game.level?.enemies?.some(e=>!e.dead&&(e.type==='warden'||e.pitBoss))});}
 const defaults={...IMMERSIVE_DEFAULTS,vrDistance:2.5,vrWidth:2.8,...CONTROLLER_DEFAULTS,sensitivity:1,music:.35,sfx:.65,muted:false,soundtrackMode:'album',soundtrackTrack:'auto',resolution:640,crt:true,controlMode:'auto',reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches};
 const controller=new GamepadInput(),rumble=new ControllerRumble();let inputMode='keyboard',desktopFrame=0,alertText='',alertTimer=0;
 let settings={...defaults,energyMode:'survival'},saved=null,pitSaved=null,screen='title-screen',returnScreen='title-screen',keys=new Set(),fire=false,mapOpen=false,dragging=false,lastMouseX=0,toastTimer=0,dialogueTimer=0,lastFrame=performance.now(),hudTime=0,fpsTime=0,fpsFrames=0,ambientTimer=8,touch=matchMedia('(pointer:coarse)').matches,altStart=0;
@@ -98,7 +99,7 @@ function showScreen(id){
   if(id==='title-screen'){$('dialogue').hidden=true;$('boss-bar').hidden=true;$('vision-tag').hidden=true;$('interaction').textContent='';$('header-sector').textContent='SIMULATION ONLINE';}updateCapture();
 }
 function lockMouse(){if(touch||vr.active||inputMode!=='keyboard'||settings.controlMode!=='auto')return;canvas.focus({preventScroll:true});void capture.capture();}
-function play(fresh=false){if(fresh){communications.reset();game.start({energyMode:settings.energyMode});mapOpen=false;}else game.mode='playing';showScreen('');audio.pitAct=game.campaign==='pit'?game.definition.act:null;audio.sector=game.levelIndex;audio.setScore({kind:game.campaign==='pit'?'pit':'original',stage:game.levelIndex,boss:false});audio.start();audio.pause(false);canvas.focus({preventScroll:true});lockMouse();processEvents();updateHUD();}
+function play(fresh=false){if(fresh){communications.reset();game.start({energyMode:settings.energyMode});mapOpen=false;}else game.mode='playing';showScreen('');audio.pitAct=game.campaign==='pit'?game.definition.act:null;audio.sector=game.levelIndex;updateSoundtrackCue();audio.start();audio.pause(false);canvas.focus({preventScroll:true});lockMouse();processEvents();updateHUD();}
 function pause(){if(game.mode!=='playing')return;game.mode='paused';audio.pause(true);showScreen('pause-screen');}
 function home(){if(game.phiwadCustom)leavePhiWadMission(game);else if(game.mode==='playing'||game.mode==='paused'){game.saveCheckpoint();saveCheckpoint();}game.mode='title';audio.pause(true);audio.setScore({kind:'title'});showScreen('title-screen');$('continue-btn').hidden=!saved;$('continue-pit-btn').hidden=!pitSaved;}
 function openSettings(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('settings-screen');}
@@ -155,7 +156,7 @@ function processEvents(){
     if(e.type==='pickup')showToast((e.item==='artifact'?'Φ ARTIFACT / ':'')+e.item.toUpperCase()+' ACQUIRED');
     if(e.type==='secret'){showToast('SECRET FOUND / CODE BROWN SUPPLY CLOSET');audio.play('free');}
     if(e.type==='pitTell'){alertText=e.text;alertTimer=2.3;}
-    if(e.type==='sector'){audio.sector=e.index;audio.pitAct=e.campaign==='pit'?game.definition.act:null;audio.setScore({kind:e.campaign==='pit'?'pit':'original',stage:e.index,boss:false});showToast((e.campaign==='pit'?'PIT / TRIAL ':'SECTOR ')+String(e.index+1).padStart(2,'0')+' / '+e.name);}
+    if(e.type==='sector'){audio.sector=e.index;audio.pitAct=e.campaign==='pit'?game.definition.act:null;updateSoundtrackCue();showToast((e.campaign==='pit'?'PIT / TRIAL ':'SECTOR ')+String(e.index+1).padStart(2,'0')+' / '+e.name);}
     if(e.type==='bass')audio.play('fire',2);if(e.type==='complete'){audio.setScore({kind:'ending'});}if(e.type==='complete'||e.type==='dead')result();
   }
 }
