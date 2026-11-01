@@ -4,6 +4,7 @@ import {EQUIPMENT_DEFAULTS,equipmentSettings} from './equipment-math.js';
 import {destinationFor} from './genewrist-bridge.js';
 import {Game,SECTORS,WEAPONS,CAMPAIGN_HOSTS,clamp,angleDiff} from './core.js';
 import {Renderer} from './renderer.js';
+import {textureSettings} from './texture-packs.js';
 import {enterPhiWadMission,leavePhiWadMission} from './phi-content/runtime.js';
 import {loadHostedMission} from './phi-content/hosted-missions.js';
 import {UI,WEAPON_UI,drawOri,drawWeaponIcon} from './arcade-ui.js';
@@ -28,7 +29,7 @@ if(titleCover){
   if(titleCover.complete)updateTitleCover();
 }
 function updateSoundtrackCue(){audio.setScore({kind:game.campaign==='pit'?'pit':'original',stage:game.levelIndex,boss:!!game.level?.enemies?.some(e=>!e.dead&&(e.type==='warden'||e.pitBoss))});}
-const defaults={...IMMERSIVE_DEFAULTS,vrDistance:2.5,vrWidth:2.8,...CONTROLLER_DEFAULTS,sensitivity:1,music:.35,sfx:.65,muted:false,soundtrackMode:'album',soundtrackTrack:'auto',resolution:640,crt:true,controlMode:'auto',reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches};
+const defaults={...IMMERSIVE_DEFAULTS,...textureSettings(),vrDistance:2.5,vrWidth:2.8,...CONTROLLER_DEFAULTS,sensitivity:1,music:.35,sfx:.65,muted:false,soundtrackMode:'album',soundtrackTrack:'auto',resolution:640,crt:true,controlMode:'auto',reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches};
 const controller=new GamepadInput(),rumble=new ControllerRumble();let inputMode='keyboard',desktopFrame=0,alertText='',alertTimer=0;
 let settings={...defaults,energyMode:'survival'},saved=null,pitSaved=null,screen='title-screen',returnScreen='title-screen',keys=new Set(),fire=false,mapOpen=false,dragging=false,lastMouseX=0,toastTimer=0,dialogueTimer=0,lastFrame=performance.now(),hudTime=0,fpsTime=0,fpsFrames=0,ambientTimer=8,touch=matchMedia('(pointer:coarse)').matches,altStart=0;
 try{
@@ -37,7 +38,7 @@ try{
     if(['legacy','survival'].includes(stored.energyMode))settings.energyMode=stored.energyMode;
     if(['album','procedural'].includes(stored.soundtrackMode))settings.soundtrackMode=stored.soundtrackMode;
     if(stored.soundtrackTrack==='auto'||stored.soundtrackTrack==='album'||/^(?:[1-9]|1[0-8])$/.test(String(stored.soundtrackTrack)))settings.soundtrackTrack=String(stored.soundtrackTrack);
-    Object.assign(settings,controllerSettings(stored),immersiveSettings(stored));
+    Object.assign(settings,controllerSettings(stored),immersiveSettings(stored),textureSettings(stored));
     for(const k of ['sensitivity','music','sfx'])if(Number.isFinite(stored[k]))settings[k]=clamp(stored[k],k==='sensitivity'?.3:0,k==='sensitivity'?3:1);
     for(const k of ['muted','crt','reducedMotion'])if(typeof stored[k]==='boolean')settings[k]=stored[k];
     if([480,640,960].includes(stored.resolution))settings.resolution=stored.resolution;
@@ -118,7 +119,7 @@ function applySettings(){
   communications.configure(settings);$('energyMode').value=settings.energyMode;$('dialogue').hidden=!settings.captions||dialogueTimer<=0;
   if(canvas.width!==settings.resolution)renderer.setResolution(settings.resolution);audio.configure(settings);$('scanlines').hidden=!settings.crt;document.body.classList.toggle('reduced-motion',settings.reducedMotion);
   $('mute-btn').setAttribute('aria-pressed',String(settings.muted));$('mute-btn').setAttribute('aria-label',settings.muted?'Unmute audio':'Mute audio');$('mute-btn').title=settings.muted?'Unmute [M]':'Mute [M]';
-  for(const id of ['sensitivity','music','sfx','resolution','controlMode','controllerSensitivity','controllerDeadzone','vrDistance','vrWidth','vrTurnMode','vrSnapAngle','vrMoveReference','vrMoveSpeed','vrTurnSpeed','vrVignetteStrength','vrEyeHeight','vrPosture','vrQuality'])$(id).value=settings[id];$('crt').checked=settings.crt;$('reducedMotion').checked=settings.reducedMotion;$('controllerRumble').checked=settings.controllerRumble;for(const id of ['vrVignette','vrAimLine','vrDiagnostics'])$(id).checked=settings[id];
+  for(const id of ['sensitivity','music','sfx','resolution','textureStyle','textureQuality','controlMode','controllerSensitivity','controllerDeadzone','vrDistance','vrWidth','vrTurnMode','vrSnapAngle','vrMoveReference','vrMoveSpeed','vrTurnSpeed','vrVignetteStrength','vrEyeHeight','vrPosture','vrQuality'])$(id).value=settings[id];$('crt').checked=settings.crt;$('reducedMotion').checked=settings.reducedMotion;$('controllerRumble').checked=settings.controllerRumble;for(const id of ['vrVignette','vrAimLine','vrDiagnostics'])$(id).checked=settings[id];
   $('controllerSensitivity-output').value=settings.controllerSensitivity.toFixed(1);$('controllerDeadzone-output').value=Math.round(settings.controllerDeadzone*100)+'%';
   $('sensitivity-output').value=settings.sensitivity.toFixed(1);$('music-output').value=Math.round(settings.music*100)+'%';$('sfx-output').value=Math.round(settings.sfx*100)+'%';updateCapture();
 }
@@ -249,7 +250,7 @@ $('controller-setup').addEventListener('click',()=>{openSettings();if(inputMode!
 for(const [id,mode]of [['vr-btn','arcade'],['immersive-btn','immersive']])$(id).addEventListener('click',()=>{audio.start();void vr.enter(mode).finally(()=>{for(const button of ['vr-btn','immersive-btn'])$(button).disabled=vr.active;});});$('vr-recenter').addEventListener('click',()=>vr.recenter());$('vr-exit').addEventListener('click',()=>void vr.exit());
 $('mute-btn').addEventListener('click',toggleMute);$('capture-btn').addEventListener('click',lockMouse);
 $('fullscreen-btn').addEventListener('click',()=>{const promise=document.fullscreenElement?document.exitFullscreen?.():$('app').requestFullscreen?.();promise?.catch(()=>showToast('FULLSCREEN UNAVAILABLE IN THIS BROWSER'));});
-for(const id of ['sensitivity','music','sfx','resolution','crt','reducedMotion','controlMode','controllerSensitivity','controllerDeadzone','controllerRumble','vrDistance','vrWidth','vrTurnMode','vrSnapAngle','vrMoveReference','vrMoveSpeed','vrTurnSpeed','vrVignetteStrength','vrEyeHeight','vrPosture','vrQuality','vrVignette','vrAimLine','vrDiagnostics'])$(id).addEventListener('input',()=>{settings[id]=['crt','reducedMotion','controllerRumble','vrVignette','vrAimLine','vrDiagnostics'].includes(id)?$(id).checked:['controlMode','vrTurnMode','vrMoveReference','vrPosture','vrQuality'].includes(id)?$(id).value:Number($(id).value);if(id==='vrPosture')settings.vrEyeHeight=settings.vrPosture==='standing'?1.75:1.65;applySettings();if(['vrDistance','vrWidth','vrEyeHeight','vrPosture'].includes(id))vr.recenter();if(id==='vrQuality'&&vr.active)showToast('QUALITY SCALE APPLIES NEXT VR SESSION / DETAIL CHANGED NOW');if(id==='controllerRumble'&&!settings.controllerRumble)rumble.stop();storeSettings();});
+for(const id of ['sensitivity','music','sfx','resolution','textureStyle','textureQuality','crt','reducedMotion','controlMode','controllerSensitivity','controllerDeadzone','controllerRumble','vrDistance','vrWidth','vrTurnMode','vrSnapAngle','vrMoveReference','vrMoveSpeed','vrTurnSpeed','vrVignetteStrength','vrEyeHeight','vrPosture','vrQuality','vrVignette','vrAimLine','vrDiagnostics'])$(id).addEventListener('input',()=>{settings[id]=['crt','reducedMotion','controllerRumble','vrVignette','vrAimLine','vrDiagnostics'].includes(id)?$(id).checked:['controlMode','textureStyle','textureQuality','vrTurnMode','vrMoveReference','vrPosture','vrQuality'].includes(id)?$(id).value:Number($(id).value);if(id==='vrPosture')settings.vrEyeHeight=settings.vrPosture==='standing'?1.75:1.65;applySettings();if(['vrDistance','vrWidth','vrEyeHeight','vrPosture'].includes(id))vr.recenter();if(id==='vrQuality'&&vr.active)showToast('QUALITY SCALE APPLIES NEXT VR SESSION / DETAIL CHANGED NOW');if(id==='controllerRumble'&&!settings.controllerRumble)rumble.stop();storeSettings();});
 const pressedActions={KeyE:()=>game.interact(),KeyQ:()=>game.oriAbility(),KeyF:()=>game.vision(),KeyR:()=>game.reload(),KeyB:()=>game.bassDrop(),Space:()=>game.dodge({left:keys.has('KeyA'),right:keys.has('KeyD'),back:keys.has('KeyS')})};
 document.addEventListener('keydown',e=>{
   if(e.isTrusted)communications.unlock();
