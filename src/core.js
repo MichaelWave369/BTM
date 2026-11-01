@@ -2,6 +2,7 @@ import {tileAt,solidAt,canOccupy,moveBody,castRay,lineOfSight,reachable,findRout
 export {tileAt,solidAt,canOccupy,moveBody,castRay,lineOfSight,reachable,findRoute} from './collision.js';
 import {validAim,traceEnvironment,traceTrackedShot,rayEntityDistance,entityHeight,WALL_HEIGHT} from './spatial.js';
 import {EXPANSION,decorateLevel} from './expansion.js';
+import {recordForSign} from './archive-ledger.js';
 import {GAUNTLET} from './gauntlet.js';
 import {PIT_STAGES,PIT_HOSTS,PIT_BOSSES} from './pit.js';
 import {updatePitBoss,updatePitEnvironment,pitDamageMultiplier,exposePitBoss} from './pit-combat.js';
@@ -143,7 +144,7 @@ export class Game {
       if(d.type===6&&!l.secretFound){l.secretFound=true;this.totalSecrets++;this.emit('secret');this.banter('secret',[['ORI','Unregistered storage. The simulation forgot to encrypt the cupboard.'],['WAVE','Code Brown, bro. Emergency bass supplies.']]);}
       if(!d.target){this.stats.doors++;this.lesson=Math.max(this.lesson,2);this.emit('doorOpened',{x:d.x,y:d.y});}d.target=1;this.nav=null;this.emit('sound',{name:'door',position:{x:d.x+.5,y:d.y+.5,height:.8}});return;
     }
-    const sign=l.signs?.find(s=>s.x===ray.x&&s.y===ray.y);if(sign&&ray.distance<1.8){sign.read=true;this.say(sign.text,'ARCHIVE',2);this.emit('story',{id:sign.id});return;}
+    const sign=l.signs?.find(s=>s.x===ray.x&&s.y===ray.y);if(sign&&ray.distance<1.8){const record=recordForSign(this.campaign,this.levelIndex,sign.id);sign.read=true;this.say(record?.excerpt||sign.text,'ARCHIVE',2);this.emit('story',{id:sign.id,archiveId:record?.id||null,sector:this.levelIndex,campaign:this.campaign});return;}
     if(distance(p,l.exit)<1.8){if(this.exitReady)this.complete();else this.emit('toast',{text:this.objective});return;}
     this.emit('toast',{text:'AIM AT A DOOR, RELAY, OR CAPTIVE · THEN E'});
   }
