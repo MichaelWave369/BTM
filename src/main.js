@@ -5,6 +5,7 @@ import {destinationFor} from './genewrist-bridge.js';
 import {Game,SECTORS,WEAPONS,CAMPAIGN_HOSTS,clamp,angleDiff} from './core.js';
 import {Renderer} from './renderer.js';
 import {textureSettings} from './texture-packs.js';
+import {ArchiveLedger} from './archive-ledger.js';
 import {enterPhiWadMission,leavePhiWadMission} from './phi-content/runtime.js';
 import {loadHostedMission} from './phi-content/hosted-missions.js';
 import {UI,WEAPON_UI,drawOri,drawWeaponIcon} from './arcade-ui.js';
@@ -19,6 +20,7 @@ import {PointerCapture,keyCode} from './controls.js';
 import {GamepadInput,ControllerMenu,ControllerRumble,CONTROLLER_DEFAULTS,controllerSettings,gameplayInput,controllerActions} from './gamepad.js';
 const $=id=>document.getElementById(id),canvas=$('game'),game=new Game(),renderer=new Renderer(canvas),audio=new AudioEngine(),communications=new Communications();
 const SAVE_KEY=ORIGINAL_SAVE_KEY,SETTINGS_KEY='mwave-ori-settings-v1';
+const archiveLedger=new ArchiveLedger((()=>{try{return localStorage;}catch{return null;}})());
 // Keep the original SVG title scene when the optional locally bundled album art is absent.
 // Once the image is added, use its complete cover without cropping the title or credits.
 const titleCover=$('title-cover-art');
@@ -54,9 +56,9 @@ try{
 }catch{$('storage-warning').hidden=false;}
 game.events=[];
 const capture=new PointerCapture({request:()=>{if(!canvas.requestPointerLock)throw Error('Unavailable');return canvas.requestPointerLock();},onState:()=>updateCapture(),onLost:()=>{if(game.mode==='playing')pause();}});
-function controllerBack(){if(screen==='settings-screen'||screen==='help-screen')showScreen(returnScreen);else if(screen==='pause-screen')play();else if(screen==='result-screen')home();}
+function controllerBack(){if(screen==='settings-screen'||screen==='help-screen'||screen==='archive-screen')showScreen(returnScreen);else if(screen==='pause-screen')play();else if(screen==='result-screen')home();}
 const controllerMenu=new ControllerMenu({root:()=>screen?$(screen):null,back:controllerBack,resume:()=>{if(screen==='pause-screen')play();else controllerBack();}});
-const vr=new VRArcade({settings:()=>settings,onStatus:message=>{$('vr-status').textContent=message;for(const id of ['vr-btn','immersive-btn'])$(id).disabled=vr.pending||vr.active;},onStart:()=>{if(desktopFrame)cancelAnimationFrame(desktopFrame);desktopFrame=0;clearInput();if(game.mode==='playing')pause();setInputMode('vr');$('vr-session-tools').hidden=false;showScreen(screen||'pause-screen');},onPause:()=>{clearInput();pause();},onEnd:()=>{clearInput();pause();$('vr-session-tools').hidden=true;setInputMode('keyboard');lastFrame=performance.now();if(!desktopFrame)desktopFrame=requestAnimationFrame(frame);audio.pause(true);for(const id of ['vr-btn','immersive-btn'])$(id).disabled=false;showToast('VR SESSION ENDED / GAME PRESERVED');},onFrame:(now,pad,spatial)=>tick(now,pad,spatial),data:()=>({game,scene:canvas,screen,assets:renderer.assets,settings,map:mapOpen,immersive:vr.immersive,items:screen?controllerMenu.items():[],focused:document.activeElement,communications:communications.log,alert:alertTimer>0?alertText:'',dialogue:dialogueTimer<=0?'':$('dialogue-name').textContent+': '+$('dialogue-text').textContent,toast:toastTimer>0?$('toast').textContent:'',activate:vrAction})});
+const vr=new VRArcade({settings:()=>settings,onStatus:message=>{$('vr-status').textContent=message;for(const id of ['vr-btn','immersive-btn'])$(id).disabled=vr.pending||vr.active;},onStart:()=>{if(desktopFrame)cancelAnimationFrame(desktopFrame);desktopFrame=0;clearInput();if(game.mode==='playing')pause();setInputMode('vr');$('vr-session-tools').hidden=false;showScreen(screen||'pause-screen');},onPause:()=>{clearInput();pause();},onEnd:()=>{clearInput();pause();$('vr-session-tools').hidden=true;setInputMode('keyboard');lastFrame=performance.now();if(!desktopFrame)desktopFrame=requestAnimationFrame(frame);audio.pause(true);for(const id of ['vr-btn','immersive-btn'])$(id).disabled=false;showToast('VR SESSION ENDED / GAME PRESERVED');},onFrame:(now,pad,spatial)=>tick(now,pad,spatial),data:()=>({game,scene:canvas,screen,assets:renderer.assets,settings,map:mapOpen,immersive:vr.immersive,items:screen?controllerMenu.items():[],archive:archiveLedger,focused:document.activeElement,communications:communications.log,alert:alertTimer>0?alertText:'',dialogue:dialogueTimer<=0?'':$('dialogue-name').textContent+': '+$('dialogue-text').textContent,toast:toastTimer>0?$('toast').textContent:'',activate:vrAction})});
 function vrAction(action,element){
  if(action==='genewrist-travel'){
   const destination=destinationFor(element);
@@ -102,7 +104,7 @@ function showDialogue(text,speaker='ORI',priority=1){communications.record(text,
 function showScreen(id){
   communications.cancel();controllerMenu.clear();clearInput();
   screen=id;if(id&&vr.active)$(id).append($('vr-session-tools'));$('overlay').hidden=!id;$('overlay').classList.toggle('title-overlay',id==='title-screen');
-  for(const n of ['title-screen','pause-screen','result-screen','settings-screen','help-screen'])$(n).hidden=n!==id;
+  for(const n of ['title-screen','pause-screen','result-screen','settings-screen','help-screen','archive-screen'])$(n).hidden=n!==id;
   $('view-top').hidden=!!id;$('touch-controls').hidden=!!id||!touch||inputMode!=='keyboard';$('onboarding').hidden=!!id||game.campaign==='pit'||game.levelIndex!==0||game.lesson>=3;
   document.body.classList.toggle('playing',!id);$('app').dataset.screen=id||'playing';
   if(id){capture.release();if(document.pointerLockElement)document.exitPointerLock();if(inputMode!=='keyboard')controllerMenu.focus(controllerMenu.items()[0]);}
@@ -114,6 +116,27 @@ function pause(){if(game.mode!=='playing')return;game.mode='paused';audio.pause(
 function home(){if(game.phiwadCustom)leavePhiWadMission(game);else if(game.mode==='playing'||game.mode==='paused'){game.saveCheckpoint();saveCheckpoint();}game.mode='title';audio.pause(true);audio.setScore({kind:'title'});showScreen('title-screen');$('continue-btn').hidden=!saved;$('continue-pit-btn').hidden=!pitSaved;}
 function openSettings(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('settings-screen');}
 function openHelp(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('help-screen');}
+
+function renderArchiveScreen(){
+ const entries=archiveLedger.list(),root=$('archive-catalog'),detail=$('archive-detail');
+ $('archive-progress').textContent=archiveLedger.count+' / '+archiveLedger.total+' RECOVERED RECORDS   ·   '+archiveLedger.unlocked.length+' / 3 DOSSIERS OPEN';
+ root.replaceChildren(...entries.map(entry=>{
+  const button=document.createElement('button');button.type='button';
+  button.textContent=(entry.type==='dossier'?'UNSEALED / ':'')+entry.title;
+  const small=document.createElement('small');small.textContent=entry.kind+' · '+entry.subject;button.append(small);
+  button.addEventListener('click',()=>{
+   const selected=archiveLedger.find(entry.id);
+   if(!selected)return;
+   detail.replaceChildren();
+   const heading=document.createElement('strong');heading.textContent=selected.title;
+   detail.append(heading,document.createTextNode('\n'+selected.kind+' / '+selected.subject+'\n\n'+selected.text));
+  });return button;
+ }));
+ if(!entries.length)detail.textContent='No recovered records yet. In the campaign, find a wall plaque, face it, and press USE to preserve its testimony.';
+ else detail.textContent='Select a recovered record to read the complete testimony. Only records you have found appear here.';
+}
+function openArchive(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();renderArchiveScreen();showScreen('archive-screen');}
+
 function applySettings(){
   for(const [id,value]of Object.entries(EQUIPMENT_DEFAULTS)){const element=$(id);if(typeof value==='boolean')element.checked=settings[id];else element.value=settings[id];}
   communications.configure(settings);$('energyMode').value=settings.energyMode;$('dialogue').hidden=!settings.captions||dialogueTimer<=0;
@@ -163,6 +186,12 @@ function processEvents(){
     renderer.event(e);vr.event(e,game);if(e.type==='sound'){if(vr.immersive&&e.position)audio.playAt(e.name,e.weapon,e.position);else audio.play(e.name,e.weapon);}if(e.type==='hit'&&e.source!=='ori')audio.play('hit');
     if(e.type==='dryFire'){alertText='DRY / RELOAD OR SLAP';alertTimer=2;}if(e.type==='shield'){alertText='DASH SHIELD / 18';alertTimer=.3;}if(e.type==='bash'){alertText='DASH BASH';alertTimer=.8;}
     if(e.type==='dialogue'){const critical=criticalMessage(e,game.player.health);if(critical){alertText=critical;alertTimer=3;}showDialogue(e.text,e.speaker,e.priority);}if(e.type==='toast'){communications.log.push({text:e.text,speaker:'FIELD',priority:1});if(communications.log.length>100)communications.log.shift();refreshCommunications();showToast(e.text);}if(e.type==='checkpoint')saveCheckpoint();
+    if(e.type==='story'&&e.archiveId&&!game.phiwadCustom){
+      const found=archiveLedger.collect(e.archiveId);
+      if(found.new){showToast('HUMAN LEDGER / '+archiveLedger.count+' RECOVERED');
+       for(const dossier of found.milestones)game.say('I recovered another sealed account: '+dossier.title+'. Their names are still in the signal.','ORI',3);
+      }
+    }
     if(e.type==='pickup')showToast((e.item==='artifact'?'Φ ARTIFACT / ':'')+e.item.toUpperCase()+' ACQUIRED');
     if(e.type==='secret'){showToast('SECRET FOUND / CODE BROWN SUPPLY CLOSET');audio.play('free');}
     if(e.type==='pitTell'){alertText=e.text;alertTimer=2.3;}
@@ -245,7 +274,7 @@ function refreshCommunications(){const entries=communications.log.slice(-30);$('
 $('energyMode').addEventListener('input',()=>{settings.energyMode=$('energyMode').value;storeSettings();});
 $('resume-btn').addEventListener('click',()=>play());$('save-btn').addEventListener('click',()=>{game.saveCheckpoint();saveCheckpoint();showToast('CHECKPOINT SAVED / YOUR SIGNAL IS YOURS');});$('quit-btn').addEventListener('click',home);$('result-home').addEventListener('click',home);
 $('result-btn').addEventListener('click',()=>{if(game.campaign==='pit'){if(game.mode==='dead')game.retry();else if(game.mode==='ending')game.startPit();else game.next();play();return;}if(game.phiwadCustom){if(game.mode==='dead'){game.retry();play();}else home();return;}if(game.mode==='dead'){game.retry();play();}else if(game.mode==='ending'&&game.levelIndex<SECTORS.length-1){game.continueCampaign()||game.continueBeyond();play();}else if(game.mode==='ending')play(true);else{game.next();play();}});
-$('title-settings').addEventListener('click',openSettings);$('map-toggle').addEventListener('click',()=>{if(game.mode==='playing'){mapOpen=!mapOpen;updateHUD();}});$('settings-btn').addEventListener('click',openSettings);$('pause-settings').addEventListener('click',openSettings);$('settings-back').addEventListener('click',()=>showScreen(returnScreen));$('howto-btn').addEventListener('click',openHelp);$('help-back').addEventListener('click',()=>showScreen(returnScreen));
+$('title-archive').addEventListener('click',openArchive);$('pause-archive').addEventListener('click',openArchive);$('archive-back').addEventListener('click',()=>showScreen(returnScreen));$('title-settings').addEventListener('click',openSettings);$('map-toggle').addEventListener('click',()=>{if(game.mode==='playing'){mapOpen=!mapOpen;updateHUD();}});$('settings-btn').addEventListener('click',openSettings);$('pause-settings').addEventListener('click',openSettings);$('settings-back').addEventListener('click',()=>showScreen(returnScreen));$('howto-btn').addEventListener('click',openHelp);$('help-back').addEventListener('click',()=>showScreen(returnScreen));
 $('controller-setup').addEventListener('click',()=>{openSettings();if(inputMode!=='keyboard')controllerMenu.focus($('controllerSensitivity'));else $('controller-section').scrollIntoView({block:'nearest'});});
 for(const [id,mode]of [['vr-btn','arcade'],['immersive-btn','immersive']])$(id).addEventListener('click',()=>{audio.start();void vr.enter(mode).finally(()=>{for(const button of ['vr-btn','immersive-btn'])$(button).disabled=vr.active;});});$('vr-recenter').addEventListener('click',()=>vr.recenter());$('vr-exit').addEventListener('click',()=>void vr.exit());
 $('mute-btn').addEventListener('click',toggleMute);$('capture-btn').addEventListener('click',lockMouse);
