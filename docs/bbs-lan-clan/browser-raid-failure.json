@@ -1,0 +1,78 @@
+{
+  "passed": false,
+  "error": "Expected values to be strictly equal:\n\n'wipe' !== 'ending'\n",
+  "stack": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\n'wipe' !== 'ending'\n\n    at file:///workspace/scratch/cb32add49277/BTM-lan/scripts/verify-raid-browser.mjs:19:9",
+  "phase": {
+    "phase": 2,
+    "state": "fracture",
+    "progress": 0,
+    "openUntil": 0,
+    "nextOpen": 0,
+    "attackAt": 160.19999999999365,
+    "waveAt": 168.86666666666045,
+    "wave": 12,
+    "sequence": 41,
+    "phaseTimes": [
+      0,
+      16.933333333333334
+    ],
+    "completed": false,
+    "pendingAttack": 0
+  },
+  "state": "wipe",
+  "phases": [
+    {
+      "phase": 1,
+      "time": 0.19999999999999998
+    },
+    {
+      "phase": 2,
+      "time": 17.000000000000004
+    }
+  ],
+  "errors": [],
+  "players": [
+    {
+      "id": "7d77537ac557",
+      "status": "downed",
+      "player": {
+        "x": 22.234083282335927,
+        "y": 13.876979798408637,
+        "a": -2.2001023876625543,
+        "health": 0,
+        "armor": 0,
+        "energy": 12,
+        "reserve": 0,
+        "ori": 100,
+        "vision": 100,
+        "key": true
+      }
+    },
+    {
+      "id": "d5f64ea69966",
+      "status": "downed",
+      "player": {
+        "x": 22.531529354102414,
+        "y": 14.645913324358112,
+        "a": -1.5987122840615826,
+        "health": 0,
+        "armor": 15.000000000000002,
+        "energy": 86,
+        "reserve": 70,
+        "ori": 100,
+        "vision": 100,
+        "key": true
+      }
+    }
+  ],
+  "clients": [
+    {
+      "log": "ORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: Michael! Critical health. Find cover. I am right here.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: Health is low. Break line of sight and find a medkit.\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: Health is low. Break line of sight and find a medkit.\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: Michael! Critical health. Find cover. I am right here.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: PRIME SHIELDED / COMPLETE THE SQUAD LINK\nORI: Incoming control signal. Break the loop.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: Michael! Critical health. Find cover. I am right here.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: Michael! Critical health. Find cover. I am right here.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: PRIME SHIELDED / COMPLETE THE SQUAD LINK\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: Michael! Critical health. Find cover. I am right here.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nDOWNED / d5f64ea69966\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: Health is low. Break line of sight and find a medkit.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: PRIME SHIELDED / COMPLETE THE SQUAD LINK\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR",
+      "status": "SIGNAL STALLED / CONTROLS HELD UNTIL RESUME"
+    },
+    {
+      "log": "ORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: Michael! Critical health. Find cover. I am right here.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: Health is low. Break line of sight and find a medkit.\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: Health is low. Break line of sight and find a medkit.\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: Michael! Critical health. Find cover. I am right here.\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: PRIME SHIELDED / COMPLETE THE SQUAD LINK\nORI: Incoming control signal. Break the loop.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: Michael! Critical health. Find cover. I am right here.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: Michael! Critical health. Find cover. I am right here.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: PRIME SHIELDED / COMPLETE THE SQUAD LINK\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: Michael! Critical health. Find cover. I am right here.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nDOWNED / d5f64ea69966\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: Health is low. Break line of sight and find a medkit.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: PRIME SHIELDED / COMPLETE THE SQUAD LINK\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nDOWNED / 7d77537ac557",
+      "status": "SIGNAL STALLED / CONTROLS HELD UNTIL RESUME"
+    }
+  ]
+}

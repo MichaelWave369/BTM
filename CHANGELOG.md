@@ -1,3 +1,13 @@
+# 0.10.0-rc.1 — BBS LAN CLAN candidate
+
+- Separate optional 30 Hz authoritative Node host, native WebSocket client, private ready lobbies, bounded validation, interpolation, input expiry, reconnect passes and atomic co-op saves.
+- Real Deathmatch, Team Deathmatch and elimination Clan Arena; NO CARRIER, SYSOP’S REVENGE and THE KILL SWITCH; six native weapons, timed supplies, server-confirmed scores and respawns.
+- Separate 2–4 player shared-world co-op adapter over the unchanged original/Pit registries, finite personal cell shares, down/revive, shared objectives, scaled encounters and individually reserved Nightmare supply caches. Legacy-era Nightmare HP inflation is reduced for co-op Survival; solo balance remains unchanged.
+- Unnumbered post-24 Demiurge Prime encounter: four pylons, partitioned complementary consoles, corrupted Ori repairs, synchronized core windows and a real team escape/ending.
+- Native desktop/controller/Arcade/immersive input paths, remote head/hand approximations, saved comfort preferences, peripheral communication and Gen.E.Wrist handoff.
+- Fix original coordinate-based Nightmare Warden objective lookup. Preserve solo save schemas, campaigns, hosted CODE BROWN and ΦWAD.
+- Real network and separate-browser evidence, full regression commands, optional Codespaces review configuration, self-hosting/WSS instructions and explicit physical Quest limits in `docs/bbs-lan-clan`.
+
 # 0.9.0-rc.1 — Pit of Despair candidate
 
 - Add a standalone twelve-trial menu campaign with four distinct authored acts and independent version-2 checkpoints; preserve original v1 saves and registries.

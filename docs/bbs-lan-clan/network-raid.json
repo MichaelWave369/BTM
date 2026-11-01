@@ -1,0 +1,252 @@
+{
+  "passed": true,
+  "phases": [
+    {
+      "phase": 1,
+      "time": 0.03333333333333333
+    },
+    {
+      "phase": 2,
+      "time": 9.566666666666643
+    },
+    {
+      "phase": 3,
+      "time": 11.633333333333303
+    },
+    {
+      "phase": 4,
+      "time": 16.03333333333329
+    }
+  ],
+  "steps": 3011,
+  "result": {
+    "winner": "SQUAD",
+    "ending": "THE SIGNAL IS FREE",
+    "phases": 4,
+    "escapeSeconds": 5.466666666666356
+  },
+  "distinctIds": [
+    "7d77537ac557",
+    "d5f64ea69966"
+  ],
+  "players": [
+    {
+      "id": "7d77537ac557",
+      "status": "alive",
+      "health": 22.79999999999999,
+      "charge": 71,
+      "reserve": 45,
+      "stats": {
+        "distance": 171.3799999999975,
+        "damageTaken": 106.60000000000002,
+        "damageDealt": 3758.2000000000003,
+        "shots": 162,
+        "doors": 0,
+        "pickups": 7,
+        "oriAssists": 11
+      }
+    },
+    {
+      "id": "d5f64ea69966",
+      "status": "alive",
+      "health": 66.45990399999998,
+      "charge": 98,
+      "reserve": 0,
+      "stats": {
+        "distance": 200.89999999999515,
+        "damageTaken": 135.540096,
+        "damageDealt": 3902.2000000000003,
+        "shots": 168,
+        "doors": 0,
+        "pickups": 11,
+        "oriAssists": 8
+      }
+    }
+  ],
+  "events": [
+    {
+      "phase": 1,
+      "kind": "marked-floor",
+      "type": "raidAttack",
+      "id": 259
+    },
+    {
+      "phase": 1,
+      "kind": "volley",
+      "type": "raidAttack",
+      "id": 547
+    },
+    {
+      "phase": 2,
+      "type": "raidPhase",
+      "id": 748
+    },
+    {
+      "phase": 2,
+      "kind": "marked-floor",
+      "type": "raidAttack",
+      "id": 817
+    },
+    {
+      "phase": 3,
+      "type": "raidPhase",
+      "id": 846
+    },
+    {
+      "phase": 3,
+      "kind": "volley",
+      "type": "raidAttack",
+      "id": 965
+    },
+    {
+      "phase": 4,
+      "type": "raidPhase",
+      "id": 1053
+    },
+    {
+      "phase": 4,
+      "kind": "marked-floor",
+      "type": "raidAttack",
+      "id": 1106
+    },
+    {
+      "type": "raidExposed",
+      "id": 1109
+    },
+    {
+      "phase": 4,
+      "kind": "volley",
+      "type": "raidAttack",
+      "id": 1256
+    },
+    {
+      "phase": 4,
+      "kind": "marked-floor",
+      "type": "raidAttack",
+      "id": 1355
+    },
+    {
+      "phase": 4,
+      "kind": "volley",
+      "type": "raidAttack",
+      "id": 1482
+    },
+    {
+      "type": "raidExposed",
+      "id": 1518
+    },
+    {
+      "phase": 4,
+      "kind": "marked-floor",
+      "type": "raidAttack",
+      "id": 1579
+    },
+    {
+      "phase": 4,
+      "kind": "volley",
+      "type": "raidAttack",
+      "id": 1724
+    },
+    {
+      "phase": 4,
+      "kind": "marked-floor",
+      "type": "raidAttack",
+      "id": 1739
+    },
+    {
+      "type": "raidExposed",
+      "id": 1766
+    },
+    {
+      "phase": 4,
+      "kind": "volley",
+      "type": "raidAttack",
+      "id": 1867
+    },
+    {
+      "phase": 4,
+      "kind": "marked-floor",
+      "type": "raidAttack",
+      "id": 2031
+    },
+    {
+      "phase": 4,
+      "kind": "volley",
+      "type": "raidAttack",
+      "id": 2109
+    },
+    {
+      "phase": 4,
+      "kind": "marked-floor",
+      "type": "raidAttack",
+      "id": 2268
+    },
+    {
+      "phase": 4,
+      "kind": "volley",
+      "type": "raidAttack",
+      "id": 2442
+    },
+    {
+      "type": "raidExposed",
+      "id": 2458
+    },
+    {
+      "phase": 4,
+      "kind": "marked-floor",
+      "type": "raidAttack",
+      "id": 2535
+    },
+    {
+      "phase": 4,
+      "kind": "volley",
+      "type": "raidAttack",
+      "id": 2678
+    },
+    {
+      "phase": 4,
+      "kind": "marked-floor",
+      "type": "raidAttack",
+      "id": 2763
+    },
+    {
+      "phase": 4,
+      "kind": "volley",
+      "type": "raidAttack",
+      "id": 2802
+    },
+    {
+      "phase": 4,
+      "kind": "marked-floor",
+      "type": "raidAttack",
+      "id": 2922
+    },
+    {
+      "phase": 4,
+      "kind": "volley",
+      "type": "raidAttack",
+      "id": 3045
+    },
+    {
+      "phase": 4,
+      "kind": "marked-floor",
+      "type": "raidAttack",
+      "id": 3208
+    },
+    {
+      "phase": 4,
+      "kind": "volley",
+      "type": "raidAttack",
+      "id": 3355
+    },
+    {
+      "type": "raidExposed",
+      "id": 3377
+    },
+    {
+      "type": "raidEscape",
+      "id": 3416
+    }
+  ],
+  "method": "Two actual WebSocket clients resume an unedited checkpoint produced by real traversal of all 24 cooperative stages, then complete all four raid phases and escape through normal inputs. Fixed 30 Hz test clock, no state mutation. Not headset acceptance."
+}

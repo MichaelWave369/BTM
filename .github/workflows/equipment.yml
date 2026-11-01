@@ -34,7 +34,7 @@ jobs:
           node "$RUNNER_TEMP/btm-browser/node_modules/playwright/cli.js" install --with-deps chromium
       - name: Production stereo equipment checks and comparisons
         env:
-          BTM_EQUIPMENT_BASELINE: 89d9dc0795fd73e71176940721202091706a61c0
+          BTM_EQUIPMENT_BASELINE: 2ca035e7c5e1dd02d70628b6fafa088f0db84681
           BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
           BTM_SOFTWARE_WEBGL: '1'
         run: node scripts/verify-equipment-browser.mjs

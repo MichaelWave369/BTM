@@ -8,3 +8,6 @@ dist/
 
 # Reproducible browser artifacts; selected captures/reports are curated in docs/equipment.
 docs/equipment/ci/
+
+# Private authoritative co-op saves and reconnect capabilities.
+server/data/

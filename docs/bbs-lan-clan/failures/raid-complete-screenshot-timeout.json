@@ -1,0 +1,90 @@
+{
+  "passed": false,
+  "error": "page.screenshot: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n",
+  "stack": "page.screenshot: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m    - disabled all CSS animations\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\n    at /workspace/scratch/cb32add49277/BTM-lan/scripts/verify-raid-browser.mjs:19:218",
+  "phase": {
+    "phase": 4,
+    "state": "escape",
+    "progress": 0,
+    "openUntil": 114.99999999999635,
+    "nextOpen": 118.49999999999635,
+    "attackAt": 113.79999999999626,
+    "waveAt": 112.7333333333303,
+    "wave": 8,
+    "sequence": 29,
+    "phaseTimes": [
+      0,
+      14.233333333333293,
+      18.600000000000083,
+      22.500000000000277
+    ],
+    "completed": true,
+    "escapeAt": 112.33333333332952,
+    "deadline": 157.3333333333295,
+    "pendingAttack": 0
+  },
+  "state": "ending",
+  "phases": [
+    {
+      "phase": 1,
+      "time": 0.19999999999999998
+    },
+    {
+      "phase": 2,
+      "time": 14.29999999999996
+    },
+    {
+      "phase": 3,
+      "time": 18.600000000000083
+    },
+    {
+      "phase": 4,
+      "time": 22.500000000000277
+    }
+  ],
+  "errors": [],
+  "players": [
+    {
+      "id": "7d77537ac557",
+      "status": "alive",
+      "player": {
+        "x": 14.625293571122674,
+        "y": 21.620142891000842,
+        "a": 1.7126933813990601,
+        "health": 43.39999999999998,
+        "armor": 17.4,
+        "energy": 66,
+        "reserve": 43,
+        "ori": 100,
+        "vision": 100,
+        "key": true
+      }
+    },
+    {
+      "id": "d5f64ea69966",
+      "status": "alive",
+      "player": {
+        "x": 14.691139387161853,
+        "y": 21.99565471683706,
+        "a": 1.9323385125743997,
+        "health": 35,
+        "armor": 0,
+        "energy": 64,
+        "reserve": 45,
+        "ori": 100,
+        "vision": 100,
+        "key": true
+      }
+    }
+  ],
+  "clients": [
+    {
+      "log": "ORI: PRIME SHIELDED / DESTROY THE FOUR PYLONS\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: Route marked. Cyan dots on the map, Michael. Try not to lick the terminals.\nORI: Route marked. Cyan dots on the map, Michael. Try not to lick the terminals.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: THE FRACTURE / hold both distant consoles with different teammates.\nRAIDPHASE / \nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: ORI LINK CORRUPTED / two repair dishes restore our signal.\nRAIDPHASE / \nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: FINAL FREQUENCY / two resonators together. Shoot the exposed core.\nRAIDPHASE / \nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: SQUAD IN SYNC / PRIME CORE OPEN\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: SQUAD IN SYNC / PRIME CORE OPEN\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: SQUAD IN SYNC / PRIME CORE OPEN\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: Health is low. Break line of sight and find a medkit.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: SQUAD IN SYNC / PRIME CORE OPEN\nDOWNED / d5f64ea69966\nORI: Warden staggered. Now, Michael!\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: Michael! Critical health. Find cover. I am right here.\nORI: SQUAD IN SYNC / PRIME CORE OPEN\nORI: Warden staggered. Now, Michael!\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nDOWNED / d5f64ea69966\nORI: CORE DOWN / SQUAD EXTRACT. South bridge. Forty-five seconds.\nRAIDESCAPE / \nREVIVED / d5f64ea69966\nRAIDCOMPLETE / The Final Frequency / all voices accounted for.",
+      "status": "SIGNAL STALLED / CONTROLS HELD UNTIL RESUME"
+    },
+    {
+      "log": "ORI: PRIME SHIELDED / DESTROY THE FOUR PYLONS\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: Route marked. Cyan dots on the map, Michael. Try not to lick the terminals.\nORI: Route marked. Cyan dots on the map, Michael. Try not to lick the terminals.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: THE FRACTURE / hold both distant consoles with different teammates.\nRAIDPHASE / \nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: ORI LINK CORRUPTED / two repair dishes restore our signal.\nRAIDPHASE / \nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: FINAL FREQUENCY / two resonators together. Shoot the exposed core.\nRAIDPHASE / \nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: SQUAD IN SYNC / PRIME CORE OPEN\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: SQUAD IN SYNC / PRIME CORE OPEN\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: SQUAD IN SYNC / PRIME CORE OPEN\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nORI: Health is low. Break line of sight and find a medkit.\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: SQUAD IN SYNC / PRIME CORE OPEN\nDOWNED / d5f64ea69966\nORI: Warden staggered. Now, Michael!\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME VOLLEY / BREAK THE LINE\nORI: Michael! Critical health. Find cover. I am right here.\nORI: SQUAD IN SYNC / PRIME CORE OPEN\nORI: Warden staggered. Now, Michael!\nORI: DEMIURGE PRIME / ATTACK CHARGING\nORI: PRIME MARK / MOVE OFF THE BRIGHT FLOOR\nDOWNED / d5f64ea69966\nORI: CORE DOWN / SQUAD EXTRACT. South bridge. Forty-five seconds.\nRAIDESCAPE / \nREVIVED / d5f64ea69966\nRAIDCOMPLETE / The Final Frequency / all voices accounted for.",
+      "status": "SIGNAL STALLED / CONTROLS HELD UNTIL RESUME"
+    }
+  ]
+}

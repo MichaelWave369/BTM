@@ -1,5 +1,14 @@
 # Michael Wave & Ori: Break the Matrix
 
+## BBS LAN CLAN — v0.10.0-rc.1 candidate
+
+Private native multiplayer: Deathmatch, Team Deathmatch, Clan Arena, three original arenas, and a separate 2–4 player cooperative progression through the existing twelve sectors and twelve Pit trials. Completing all 24 stages unlocks the unnumbered **THE FINAL FREQUENCY / DEMIURGE PRIME** raid and shared escape.
+
+Choose **BBS LAN CLAN** on the main menu. Multiplayer needs an optional self-hosted Node server; solo/offline needs none. No accounts, client packages, CDN or new engine. The server alone uses pinned `ws` for WebSocket framing, bounded payloads and heartbeat handling.
+
+Read the [browser review and hosting guide](docs/bbs-lan-clan/hosting.md), [implementation and exact evidence](docs/bbs-lan-clan/verification.md), and [physical Quest checklist](docs/bbs-lan-clan/quest3-acceptance.md). Custom multiplayer map import, full-body tracking and physical Quest validation are not part of this candidate. Existing solo ΦWAD import remains available.
+
+
 ## PIT OF DESPAIR — v0.9.0-rc.1 candidate
 
 A separate twelve-trial Survival campaign: four authored acts, four original phased guardians, timed environmental hazards and finite ammunition. Choose **PIT OF DESPAIR** to start or **CONTINUE THE DESCENT** to resume its independent checkpoint. Original campaigns, Legacy saves, Nightmare Run, CODE BROWN, ΦWAD and Gen.E.Wrist remain available.

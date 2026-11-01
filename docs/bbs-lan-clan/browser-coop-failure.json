@@ -1,0 +1,61 @@
+{
+  "passed": false,
+  "error": "page.waitForFunction: Timeout 30000ms exceeded.",
+  "stack": "page.waitForFunction: Timeout 30000ms exceeded.\n    at /workspace/scratch/cb32add49277/BTM-lan/scripts/verify-coop-browser.mjs:19:123",
+  "events": [
+    {
+      "event": "natural-downed",
+      "player": "898d43d16f41",
+      "time": 31.20000000000071,
+      "damage": 110.51999999999998
+    },
+    {
+      "event": "revived",
+      "player": "898d43d16f41",
+      "by": "3fedad250161",
+      "health": 35,
+      "time": 34.80000000000059
+    }
+  ],
+  "room": {
+    "state": "cleared",
+    "time": 91.19999999999739,
+    "actors": [
+      {
+        "id": "3fedad250161",
+        "status": "alive",
+        "player": {
+          "x": 25.259069002763713,
+          "y": 19.972775790446867,
+          "a": 1.142110618403272,
+          "health": 100,
+          "armor": 25,
+          "energy": 98,
+          "reserve": 89,
+          "ori": 87.96666666666704,
+          "vision": 100,
+          "key": true
+        }
+      },
+      {
+        "id": "898d43d16f41",
+        "status": "alive",
+        "player": {
+          "x": 25.47040768364981,
+          "y": 19.30030278172612,
+          "a": 1.5462278923833763,
+          "health": 100,
+          "armor": 45,
+          "energy": 70,
+          "reserve": 90,
+          "ori": 87.96666666666704,
+          "vision": 100,
+          "key": true
+        }
+      }
+    ]
+  },
+  "pageErrors": [
+    "Cannot set properties of null (setting 'disabled')"
+  ]
+}

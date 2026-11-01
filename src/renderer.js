@@ -1,3 +1,4 @@
+import {playerSprite,finaleSprite} from './net/presentation.js';
 import {castRay,distance,angleDiff,findRoute,SECTORS,WEAPONS,clamp} from './core.js';
 import {pitBossSprite,pitFloorState} from './pit-presentation.js';
 import {paintSignalSurface} from './neon-signal.js';
@@ -9,7 +10,7 @@ export class Renderer {
   event(e){if(['burst','liberation','hit','telegraph','impact','oriAssist'].includes(e.type)){const n=e.count??(e.type==='liberation'?30:e.type==='oriAssist'?18:10),color=e.color??(e.type==='liberation'?'#b9ff53':e.type==='oriAssist'?'#5df6ec':'#ffbc82');for(let i=0;i<n;i++){const a=i/n*Math.PI*2;this.particles.push({x:e.x,y:e.y,z:.25+(i%5)*.11,vx:Math.cos(a)*.8,vy:Math.sin(a)*.8,vz:.4+(i%3)*.5,life:e.type==='liberation'?1.1:.45,max:e.type==='liberation'?1.1:.45,color});}}if(e.type==='hit'&&e.source!=='ori'){this.hitMarker=.17;this.finisher=e.finisher?.3:0;}if(e.type==='liberation')this.ghosts.push({...e,life:.85});if(e.type==='beam')this.beams.push({...e,life:e.ori?.24:.12});if(e.type==='bass')this.bassFlash=.7;this.particles=this.particles.slice(-500);this.beams=this.beams.slice(-24);}
   draw(game,dt,settings,{demo=false,map=false}={}){
     const g=this.g,w=this.canvas.width,h=this.canvas.height,p=game.player,l=game.level;this.lastTime+=dt;this.finisher=Math.max(0,this.finisher-dt);this.reducedMotion=settings.reducedMotion;
-    if(this.drawLevel!==l){this.drawLevel=l;this.levelTextures=this.assets.textures;if(l.campaign==='pit')this.levelTextures=Object.fromEntries(Object.entries(this.assets.textures).map(([key,tex])=>{const i=Number(key);if(i<1||i>3)return [key,tex];const c=document.createElement('canvas');c.width=c.height=64;paintSignalSurface(c.getContext('2d'),'wall',l.palette,tex);return [key,c];}));this.signTextures=new Map((l.signs||[]).map(sign=>[`${sign.x},${sign.y}`,makeSign(sign,this.levelTextures[l.cells[sign.y][sign.x]]||this.levelTextures[1])]));this.particles=[];this.beams=[];this.ghosts=[];}
+    if(this.drawLevel!==l){this.drawLevel=l;this.levelTextures=this.assets.textures;if(l.palette)this.levelTextures=Object.fromEntries(Object.entries(this.assets.textures).map(([key,tex])=>{const i=Number(key);if(i<1||i>3)return [key,tex];const c=document.createElement('canvas');c.width=c.height=64;paintSignalSurface(c.getContext('2d'),'wall',l.palette,tex);return [key,c];}));this.signTextures=new Map((l.signs||[]).map(sign=>[`${sign.x},${sign.y}`,makeSign(sign,this.levelTextures[l.cells[sign.y][sign.x]]||this.levelTextures[1])]));this.particles=[];this.beams=[];this.ghosts=[];}
     if(demo){p.a=-Math.PI/2+Math.sin(this.lastTime*.12)*.15;}
     const bob=!settings.reducedMotion&&game.moving&&game.mode==='playing'?Math.sin(game.time*(game.sprinting?15:10))*h*.008:0,horizon=Math.floor(h*.46+bob),theme=game.definition.color;
     g.fillStyle=game.shift?'#0e1126':'#090f10';g.fillRect(0,0,w,horizon);g.fillStyle=game.shift?'#171323':'#19201e';g.fillRect(0,horizon,w,h-horizon);
@@ -41,10 +42,12 @@ export class Renderer {
     for(const captive of l.captives)if(!captive.freed)things.push({...captive,type:'captive',height:1});
     for(const relay of l.relays)things.push({...relay,type:relay.active?'relayOn':'relay',height:1});
     if(!l.key.taken)things.push({...l.key,type:'key',height:.48,bob:true});
-    things.push({...l.exit,type:'portal',height:1.6});
+    if(!game.networkCompetitive)things.push({...l.exit,type:'portal',height:1.6});
+    for(const a of game.remotePlayers||[])if(['alive','downed'].includes(a.status))things.push({x:a.renderX??a.x,y:a.renderY??a.y,type:'remote',remote:a,height:a.status==='downed'?.4:1.03});
     for(const b of game.projectiles)things.push({...b,type:'projectile',height:.18});
     things.sort((a,b)=>distance(b,p)-distance(a,p));
-    if(l.campaign==='pit'){for(const hazard of l.hazards)this.pitFloor(hazard,game,horizon,pitFloorState(hazard,game.time));for(const b of l.blasts)this.pitFloor(b,game,horizon,b.hit?'active':'warning');}
+    if(l.hazards){for(const hazard of l.hazards)this.pitFloor(hazard,game,horizon,pitFloorState(hazard,game.time));for(const b of l.blasts)this.pitFloor(b,game,horizon,b.hit?'active':'warning');}
+    for(const node of l.raidNodes||[])this.pitFloor({...node,radius:.65},game,horizon,'warning');
     for(const o of things)this.sprite(o,game,horizon);
     for(const ghost of this.ghosts){ghost.life-=dt;const pos=this.project(ghost,p);if(pos&&pos.depth<this.depth[clamp(Math.floor(pos.x),0,w-1)]){const height=h/pos.depth,width=height*.5;g.globalAlpha=Math.max(0,ghost.life)*.65;g.drawImage(this.assets.sprites.captive,pos.x-width/2,horizon-height*.55-(.85-ghost.life)*height*.5,width,height);g.globalAlpha=1;}}this.ghosts=this.ghosts.filter(s=>s.life>0);
     // World-space tracer endpoints and liberated-mind particles.
@@ -54,7 +57,7 @@ export class Renderer {
     if(!demo){
       this.weapon(game,settings,bob);
       // Ori lives in the player's near field; the floating eye is always visible.
-      const orb=this.assets.sprites.ori,os=w*(game.assistTime>0?.078:.063),projected=this.project(game.ori,p),ox=clamp(projected?.x||w*.82,w*.35,w*.89)-os/2,oy=h*.43+(settings.reducedMotion?0:Math.sin(this.lastTime*2.4)*h*.018);g.globalAlpha=game.player.ori<30?.5:1;g.drawImage(orb,ox,oy,os,os);g.globalAlpha=1;
+      const orb=this.assets.sprites.ori,os=w*(game.assistTime>0?.078:.063),projected=this.project(game.ori,p),ox=(game.netState?w*.84:clamp(projected?.x||w*.82,w*.35,w*.89))-os/2,oy=h*.43+(settings.reducedMotion?0:Math.sin(this.lastTime*2.4)*h*.018);g.globalAlpha=game.player.ori<30?.5:1;g.drawImage(orb,ox,oy,os,os);g.globalAlpha=1;
       g.fillStyle='#7ae6df';g.font=`${Math.max(6,w/100)}px monospace`;g.fillText(game.assistTime>0?'ORI / ASSIST':'ORI',ox,oy-4);
       if((game.assistTime>0||game.scanTime>0)&&!settings.reducedMotion){g.strokeStyle='#7af5da';g.globalAlpha=.6;g.beginPath();g.arc(ox+os/2,oy+os/2,os*(.5+(1-game.assistTime)*.4),0,Math.PI*2);g.stroke();g.globalAlpha=1;}
       // Precision crosshair.
@@ -75,16 +78,16 @@ export class Renderer {
   pitFloor(o,game,horizon,state){const p=this.project(o,game.player),g=this.g,w=this.canvas.width,h=this.canvas.height;if(!p||p.depth>=this.depth[clamp(Math.floor(p.x),0,w-1)]||p.x<0||p.x>w)return;const r=Math.min(w*.5,o.radius*w/(p.depth*1.4)),y=horizon+h/(2*p.depth),ry=Math.max(2,r*.22);g.strokeStyle=state==='warning'?'#ffce73':game.definition.color;g.fillStyle=state==='active'?game.definition.color:'#10131e';g.globalAlpha=state==='active'?.65:state==='warning'?.8:.3;g.beginPath();g.moveTo(p.x-r,y);g.lineTo(p.x,y-ry);g.lineTo(p.x+r,y);g.lineTo(p.x,y+ry);g.closePath();g.fill();g.stroke();g.globalAlpha=1;}
   project(o,p){const dx=o.x-p.x,dy=o.y-p.y,forward=dx*Math.cos(p.a)+dy*Math.sin(p.a);if(forward<=.12)return null;const side=-dx*Math.sin(p.a)+dy*Math.cos(p.a);return {x:this.canvas.width/2*(1+side/(forward*.70)),depth:forward,y:this.canvas.height*.46};}
   sprite(o,game,horizon){
-    const g=this.g,w=this.canvas.width,h=this.canvas.height,p=game.player,s=this.project(o,p);if(!s||s.x< -w||s.x>w*2)return;const height=Math.min(h*5,h/s.depth*o.height),width=o.type==='warden'?height:height*(o.type==='relay'||o.type==='relayOn'?.8:1),x=Math.floor(s.x-width/2),y=Math.floor(horizon+h/(2*s.depth)-height+(o.bob?Math.sin(this.lastTime*3+o.x)*h*.04/s.depth:0));
+    const g=this.g,w=this.canvas.width,h=this.canvas.height,p=game.player,s=this.project(o,p);if(!s||s.x< -w||s.x>w*2)return;const height=Math.min(h*5,h/s.depth*o.height),width=o.e?.raidRole==='core'?height*4:o.type==='warden'?height:height*(o.type==='relay'||o.type==='relayOn'?.8:1),x=Math.floor(s.x-width/2),y=Math.floor(horizon+h/(2*s.depth)-height+(o.bob?Math.sin(this.lastTime*3+o.x)*h*.04/s.depth:0));
     if(o.type==='portal'){
       for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++){if(s.depth>=this.depth[xx])continue;const f=(xx-x)/width-.5,curve=Math.sqrt(Math.max(0,1-4*f*f)),yy=height/2*curve;g.fillStyle=game.exitReady?'#64e8cd':'#614279';g.globalAlpha=.75;g.fillRect(xx,y+height/2-yy,1,yy*2);g.fillStyle='#091d25';g.globalAlpha=.8;g.fillRect(xx,y+height/2-yy*.82,1,yy*1.64);g.fillStyle=game.exitReady?'#b9ff53':'#bc89e8';g.globalAlpha=.4;for(let k=0;k<6;k++){const py=y+height/2-yy+((this.lastTime*.2+k/6)%1)*yy*2;g.fillRect(xx,py,1,1);}}g.globalAlpha=1;return;
     }
     if(o.type==='projectile'){if(s.depth<this.depth[clamp(Math.floor(s.x),0,w-1)]){g.fillStyle=o.color;g.fillRect(s.x-width/2,horizon-height/2,width,height);g.fillStyle='#fff9d5';g.fillRect(s.x-width/6,horizon-height/6,width/3,height/3);}return;}
-    let sprite=o.e?.pitBoss?pitBossSprite(o.e.pitBoss,o.e.exposed>0):o.e?.pain>0?this.assets.pain[o.type]:this.assets.sprites[o.type];if(Array.isArray(sprite))sprite=sprite[o.frame??0];if(!sprite)return;
+    let sprite=o.e?.raidRole?finaleSprite(o.e.raidRole,o.e.exposed>0):o.remote?playerSprite(o.remote.team,o.remote.status==='downed'):o.e?.pitBoss?pitBossSprite(o.e.pitBoss,o.e.exposed>0):o.e?.pain>0?this.assets.pain[o.type]:this.assets.sprites[o.type];if(Array.isArray(sprite))sprite=sprite[o.frame??0];if(!sprite)return;
     const recoil=this.reducedMotion?0:o.e?.recoil||0,lean=recoil*height*.3,tell=!this.reducedMotion&&o.e?.tell>0?Math.sin(this.lastTime*20)*height*.015:0;
     for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++)if(s.depth<this.depth[xx]){const tx=clamp(Math.floor((xx-x)/width*sprite.width),0,sprite.width-1);g.drawImage(sprite,tx,0,1,sprite.height,xx+tell,y+lean,1,height-lean);}
     // Telegraphs and health bars are drawn only when their world position is visible.
-    const center=clamp(Math.floor(s.x),0,w-1);if(o.e&&s.depth<this.depth[center]+.4){if(o.e.tell>0){g.fillStyle='#ffac7b';g.font=`bold ${clamp(height*.18,8,38)}px monospace`;g.textAlign='center';g.fillText('!',s.x,y-4);g.textAlign='left';}if(o.e.stun>0){g.fillStyle='#5df6ec';g.fillRect(s.x-7,y-6,14,2);}if(o.e.hp<o.e.maxHp&&s.depth<10){const bw=Math.min(40,height*.7);g.fillStyle='#17171a';g.fillRect(s.x-bw/2,y-12,bw,3);g.fillStyle=o.type==='warden'?'#ffb86b':'#b9ff53';g.fillRect(s.x-bw/2,y-12,bw*o.e.hp/o.e.maxHp,3);}if(o.e.flash>0){g.globalAlpha=.15;g.fillStyle='#e9ffc7';g.fillRect(s.x-width*.2,y+height*.2,width*.4,height*.5);g.globalAlpha=1;}}
+    const center=clamp(Math.floor(s.x),0,w-1);if(o.remote&&s.depth<this.depth[center]){g.fillStyle=o.remote.team==='pink'?'#ff718e':'#80e8d4';g.font=`${clamp(height*.12,7,12)}px monospace`;g.textAlign='center';g.fillText(o.remote.nickname.slice(0,20)+' / '+Math.ceil(o.remote.health),s.x,y-8);g.textAlign='left';if(o.remote.shotAnim>0){const size=clamp(height*.1,2,9);g.fillStyle=WEAPONS[o.remote.weapon].color;g.fillRect(s.x+width*.37,y+height*.61,size,size);}}if(o.e&&s.depth<this.depth[center]+.4){if(o.e.tell>0){g.fillStyle='#ffac7b';g.font=`bold ${clamp(height*.18,8,38)}px monospace`;g.textAlign='center';g.fillText('!',s.x,y-4);g.textAlign='left';}if(o.e.stun>0){g.fillStyle='#5df6ec';g.fillRect(s.x-7,y-6,14,2);}if(o.e.hp<o.e.maxHp&&s.depth<10){const bw=Math.min(40,height*.7);g.fillStyle='#17171a';g.fillRect(s.x-bw/2,y-12,bw,3);g.fillStyle=o.type==='warden'?'#ffb86b':'#b9ff53';g.fillRect(s.x-bw/2,y-12,bw*o.e.hp/o.e.maxHp,3);}if(o.e.flash>0){g.globalAlpha=.15;g.fillStyle='#e9ffc7';g.fillRect(s.x-width*.2,y+height*.2,width*.4,height*.5);g.globalAlpha=1;}}
   }
   weapon(game,settings,bob){
     const g=this.g,w=this.canvas.width,h=this.canvas.height,k=w/640,id=game.weapon,fire=game.shotAnim,color=WEAPONS[id].color;

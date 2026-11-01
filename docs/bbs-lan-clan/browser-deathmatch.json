@@ -1,0 +1,76 @@
+{
+  "passed": true,
+  "mode": "deathmatch",
+  "arena": "no-carrier",
+  "browser": "151.0.7922.34",
+  "twoSeparateBrowserContexts": true,
+  "distinctPlayerIds": [
+    "194a54145810",
+    "9a2d9ece3ee5"
+  ],
+  "events": [
+    {
+      "event": "first-frag",
+      "frags": 1,
+      "deaths": 1
+    },
+    {
+      "event": "respawn",
+      "health": 100
+    },
+    {
+      "event": "cell-reload",
+      "charge": 100,
+      "reserve": 168
+    },
+    {
+      "event": "reconnect",
+      "id": "194a54145810",
+      "energy": 100,
+      "reserve": 168,
+      "frags": 1
+    }
+  ],
+  "frags": 3,
+  "winner": "194a54145810",
+  "serverTick": 945,
+  "stereo": {
+    "glError": 0,
+    "leftHash": 933550351,
+    "rightHash": -478914569,
+    "lit": 25316,
+    "remotePlayers": 1,
+    "remotePoses": 0,
+    "wristOpen": false,
+    "stats": {
+      "drawCalls": 12,
+      "visibleChunks": 10,
+      "triangles": 10432,
+      "frameMs": 0.599999999627471,
+      "renderer": "native WebGL world",
+      "entities": {
+        "enemies": 0,
+        "objects": 9,
+        "particles": 0,
+        "projectiles": 0,
+        "vertices": 14058,
+        "dropped": 0,
+        "trails": 0,
+        "fixtures": 28
+      }
+    },
+    "method": "Live received multiplayer read model in native production WebGL; synthetic stereo/hand matrices, not physical Quest or headset frame-rate proof."
+  },
+  "originalSoloSlots": [
+    {
+      "original": null,
+      "pit": null
+    },
+    {
+      "original": null,
+      "pit": null
+    }
+  ],
+  "pageErrors": [],
+  "method": "Production BBS HTML/Canvas in two separate Chromium browser contexts, each with its own real native WebSocket. Real lobby ready/start, independently driven movement/fire, damage, death, timed respawn, cell pickup/reload, reconnect preserving resources, server frag limit/results, reciprocal real gameplay captures. Manual harness advances the same fixed 1/30-second server clock, accelerating wall time; no server/player/HP/ammo/objective/kill writes. No physical Quest claim."
+}

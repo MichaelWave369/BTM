@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "stages": [
+    {
+      "stage": 1,
+      "campaign": "original",
+      "index": 0,
+      "name": "THE WAKE-UP CALL",
+      "seconds": 63.29999999999897,
+      "relays": true,
+      "key": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "672a55e8079a",
+          "health": 100,
+          "charge": 60,
+          "reserve": 135,
+          "distance": 164.9345660129315,
+          "shots": 20
+        },
+        {
+          "id": "ffcb0d98c7c7",
+          "health": 100,
+          "charge": 62,
+          "reserve": 135,
+          "distance": 164.88527941858445,
+          "shots": 19
+        }
+      ]
+    }
+  ],
+  "steps": 1899,
+  "retries": 0,
+  "distinctIds": [
+    "672a55e8079a",
+    "ffcb0d98c7c7"
+  ],
+  "events": [
+    {
+      "stage": 1,
+      "type": "stageCleared",
+      "id": 662
+    }
+  ],
+  "method": "Two real independent Node WebSocket clients with input-only map/aim planners. One authoritative SharedWorld, 30 Hz fixed dt, accelerated manual test clock; no state, HP, ammo, enemy/objective mutation or direct completion/damage calls. Not browser or physical Quest validation."
+}
