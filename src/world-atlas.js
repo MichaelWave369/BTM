@@ -2,9 +2,10 @@ import {playerSprite,finaleSprite} from './net/presentation.js';
 import {pitBossSprite,paintHazardIcon} from './pit-presentation.js';
 import {makeAssets, makeSign} from './assets.js';
 import {MATERIALS} from './level-geometry.js';
-import {signalPalette, paintSignalSurface} from './neon-signal.js';
+import {signalPalette} from './neon-signal.js';
+import {paintPackSurface} from './texture-packs.js';
 
-export function createWorldAtlas(level, assets = makeAssets()) {
+export function createWorldAtlas(level, assets = makeAssets(), settings = {}) {
  const canvas = document.createElement('canvas');
  canvas.width = canvas.height = 1024;
  const g = canvas.getContext('2d'); g.imageSmoothingEnabled = false;
@@ -14,12 +15,10 @@ export function createWorldAtlas(level, assets = makeAssets()) {
   const t = c.getContext('2d'); t.imageSmoothingEnabled = false; draw(t); return c;
  }
  const walls = {};
- for (let i = 1; i <= 6; i++) walls[i] = tile(t => paintSignalSurface(t, 'wall',
-  i === 5 ? {...palette, primary: '#ffd078'} : i === 6 ? {...palette, primary: '#b48bff'} : palette,
-  assets.textures[i]));
+ for (let i = 1; i <= 6; i++) walls[i] = tile(t => paintPackSurface(t, 'wall'+i, level, settings, assets.textures[i]));
  const special = {
-  floor: tile(t => paintSignalSurface(t, 'floor', palette)),
-  ceiling: tile(t => paintSignalSurface(t, 'ceiling', palette)),
+  floor: tile(t => paintPackSurface(t, 'floor', level, settings)),
+  ceiling: tile(t => paintPackSurface(t, 'ceiling', level, settings)),
   white: tile(t => { t.fillStyle = '#fff'; t.fillRect(0, 0, 64, 64); }),
   portal: tile(t => {
    t.strokeStyle = palette.accent; t.lineWidth = 5; t.strokeRect(7, 3, 50, 58);
