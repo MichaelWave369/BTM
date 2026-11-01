@@ -7,10 +7,14 @@ permissions:
 concurrency:
   group: network-${{ github.ref }}
   cancel-in-progress: true
+
+# Keep the existing required check name "multiplayer" as the last gate.
+# Three independent groups run concurrently; no gameplay assertion is skipped.
 jobs:
-  multiplayer:
+  campaign_and_raid:
+    name: Campaign + earned raid proof
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 38
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,6 +36,38 @@ jobs:
         env:
           BTM_NETWORK_OUTPUT: docs/equipment/ci/network
         run: npm run playtest:raid
+      # Browser raid requires the real /tmp/btm-coop-completed.json produced by
+      # the 24-stage traversal. Keep it in this job, not an uploaded public pass.
+      - name: Install isolated browser tooling, outside game packages
+        run: |
+          npm install --prefix "$RUNNER_TEMP/btm-browser" --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          node "$RUNNER_TEMP/btm-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Two actual browsers complete Demiurge Prime and escape
+        env:
+          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
+          BTM_SOFTWARE_WEBGL: '1'
+          BTM_NETWORK_OUTPUT: docs/equipment/ci/network
+        run: node scripts/verify-raid-browser.mjs
+      - name: Preserve public campaign/raid reports and captures, never private passes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bbs-lan-clan-evidence
+          path: docs/equipment/ci/network
+          if-no-files-found: ignore
+
+  arena_browsers:
+    name: Arena browser modes + stereo proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install only the optional server dependency
+        run: npm ci --prefix server --ignore-scripts --no-fund
+      - run: npm run build
       - name: Install isolated browser tooling, outside game packages
         run: |
           npm install --prefix "$RUNNER_TEMP/btm-browser" --ignore-scripts --no-audit --no-fund playwright@1.64.1
@@ -47,22 +83,67 @@ jobs:
           BTM_ARENA_MODE=clan node scripts/verify-network-browser.mjs
           BTM_ARENA=sysops-revenge node scripts/verify-network-browser.mjs
           BTM_ARENA=kill-switch node scripts/verify-network-browser.mjs
+      - name: Preserve public arena reports and stereo captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bbs-lan-clan-arena-evidence
+          path: docs/equipment/ci/network
+          if-no-files-found: ignore
+
+  coop_browsers:
+    name: Co-op objectives + revive browser proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install only the optional server dependency
+        run: npm ci --prefix server --ignore-scripts --no-fund
+      - run: npm run build
+      - name: Install isolated browser tooling, outside game packages
+        run: |
+          npm install --prefix "$RUNNER_TEMP/btm-browser" --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          node "$RUNNER_TEMP/btm-browser/node_modules/playwright/cli.js" install --with-deps chromium
       - name: Shared sector objectives, natural down/revive, disk restart and untouched solo saves
         env:
           BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
           BTM_SOFTWARE_WEBGL: '1'
           BTM_NETWORK_OUTPUT: docs/equipment/ci/network
         run: node scripts/verify-coop-browser.mjs
-      - name: Two actual browsers complete Demiurge Prime and escape
-        env:
-          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
-          BTM_SOFTWARE_WEBGL: '1'
-          BTM_NETWORK_OUTPUT: docs/equipment/ci/network
-        run: node scripts/verify-raid-browser.mjs
-      - name: Preserve public reports and real captures, never private passes
+      - name: Preserve public co-op reports and captures
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: bbs-lan-clan-evidence
+          name: bbs-lan-clan-coop-evidence
           path: docs/equipment/ci/network
           if-no-files-found: ignore
+
+  multiplayer:
+    # This job ID and name retain the existing required status check so that
+    # the branch ruleset remains strict. A skipped, failed or canceled group
+    # fails the gate. Do not replace this gate with a no-op/conditional skip.
+    name: multiplayer
+    if: ${{ always() }}
+    needs: [campaign_and_raid, arena_browsers, coop_browsers]
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Confirm all authoritative proof groups succeeded
+        env:
+          CAMPAIGN: ${{ needs.campaign_and_raid.result }}
+          ARENA: ${{ needs.arena_browsers.result }}
+          COOP: ${{ needs.coop_browsers.result }}
+        run: |
+          printf 'Campaign/raid: %s\nArena browser: %s\nCo-op browser: %s\n' "$CAMPAIGN" "$ARENA" "$COOP"
+          {
+            echo '## Required multiplayer verification gate'
+            echo "| Campaign + raid | $CAMPAIGN |"
+            echo "| Arena browser | $ARENA |"
+            echo "| Co-op browser | $COOP |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          test "$CAMPAIGN" = 'success'
+          test "$ARENA" = 'success'
+          test "$COOP" = 'success'
