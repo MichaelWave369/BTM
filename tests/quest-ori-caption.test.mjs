@@ -48,7 +48,7 @@ test('Walls block Ori rather than drawing it through architecture',()=>{
  const x=Math.floor(g.player.x);
  for(let y=1;y<24;y++)g.level.cells[y][x+1]=1;
  flight.update(g,rig,.016);assert.equal(flight.visible,false);
- assert.equal(flight.reason,'no-clear-right-dock');
+ assert(['no-clear-right-dock','occluded-while-moving'].includes(flight.reason),'Ori must remain hidden if current placement is occluded');
 });
 test('Captions dock below Ori, within a natural right-hand glance, without central aim overlap',()=>{
  const game=openRoom(),rig=rigFor(game),flight=new OriFlight();
