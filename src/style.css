@@ -101,3 +101,13 @@ body[data-input=controller] #game,body[data-input=vr] #game{cursor:none}.reduced
   .title-screen.album-cover-ready .title-album{width:min(100%,280px);max-height:34svh}
   .title-screen.album-cover-ready .title-album img{max-height:34svh}
 }
+
+/* The Human Ledger: readable from pause/title without displacing combat UI. */
+.archive-modal{width:min(850px,94vw);max-height:88svh;overflow-y:auto}
+.archive-modal #archive-progress{color:var(--cyan);font-weight:700;letter-spacing:.055em}
+.archive-catalog{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:10px;margin:14px 0}
+.archive-catalog button{display:block;width:100%;text-align:left;background:#101c32;border:1px solid #4b718c;border-radius:9px;color:var(--paper);padding:14px;cursor:pointer;font:600 15px Oxanium,sans-serif;line-height:1.4}
+.archive-catalog button:hover,.archive-catalog button:focus-visible{border-color:var(--gold);background:#243049}
+.archive-catalog button small{display:block;color:var(--cyan);font-size:12px;padding-top:6px;opacity:.94}
+.archive-detail{min-height:72px;padding:16px;border:1px solid #3e657f;border-radius:8px;background:#0b1529;line-height:1.55;color:var(--paper);white-space:pre-wrap}
+.archive-detail strong{color:var(--gold)}
