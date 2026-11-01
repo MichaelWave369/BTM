@@ -69,7 +69,7 @@ export class WorldUI{
    if(speaker==='ORI')drawOri(g,22,91,100,motion?(now-this.captionSince)/1000:0,true);else{g.fillStyle=UI.cyan;g.font='600 52px '+UI_FONT;g.fillText(speaker==='WAVE'?'W':'!',49,175);}
    g.fillStyle=speaker==='ORI'?UI.cyan:UI.violet;g.font='600 28px '+UI_FONT;g.fillText(speaker+'  /  '+(speaker==='ORI'?'COMPANION LINK':speaker==='WAVE'?'MICHAEL WAVE':'SIGNAL CHANNEL'),151,48);g.font='500 '+font+'px '+UI_FONT;g.fillStyle=UI.text;rows.forEach((line,i)=>g.fillText(line,151,110+i*lineHeight));drawWave(g,24,301,94,20,motion?(now-this.captionSince)/1000:0,UI.cyan);if(pages>1){g.font='18px '+UI_FONT;g.fillStyle=UI.muted;g.fillText('PAGE '+(page+1)+' / '+pages,1090,337);}
   }
-  placeComfortCaption(this.captionAnchor,rig,{...s,level:data.game.level},this.wristPanel,Math.min(4,rows.length));this.captionPanel=this.captionAnchor.hidden?null:this.captionAnchor;this.captionPlacementMode='comfort';
+  placeComfortCaption(this.captionAnchor,rig,{...s,level:data.game.level,oriPosition:data.oriPosition,oriVisible:data.oriVisible},this.wristPanel,Math.min(4,rows.length));this.captionPanel=this.captionAnchor.hidden?null:this.captionAnchor;this.captionPlacementMode='comfort';
   if(motion&&this.captionPanel){const phase=this.captionLeaving>=0?Math.min(1,(now-this.captionLeaving)/180):1-Math.min(1,(now-this.captionSince)/180);this.captionPanel.center[1]-=phase*.018;}
  }
  paintLog(data){

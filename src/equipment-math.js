@@ -136,24 +136,44 @@ export function panelAngularBounds(panel,rig){
 export function panelsOverlap(a,b,rig,padding=.035){const x=panelAngularBounds(a,rig),y=panelAngularBounds(b,rig);return Math.abs(x.x-y.x)<x.w+y.w+padding&&Math.abs(x.y-y.y)<x.h+y.h+padding;}
 export function placeComfortCaption(out,rig,settings={},wrist=null,rows=2){
  const a=Number.isFinite(rig.headAngle)?rig.headAngle:-Math.PI/2,fx=Math.cos(a),fz=Math.sin(a),rx=-fz,rz=fx;
- out.width=settings.alertDock?.46:.68;out.height=settings.alertDock?.075:.20+Math.max(0,rows-2)*.025;
+ const alert=!!settings.alertDock;
+ out.width=alert ? .46 : .52;out.height=alert ? .075 : .20+Math.max(0,rows-2)*.025;
  out.right.splice(0,3,rx,0,rz);out.up.splice(0,3,0,1,0);out.normal.splice(0,3,-fx,0,-fz);
- // Compact lower-right dock: its inner edge stays outside the central 15°.
- for(const height of settings.alertDock?[.5,-.52,-.82]:[-.52,.54,-.82]){
-  out.center.splice(0,3,rig.eye[0]+fx*1.55+rx*.88,rig.eye[1]+height,rig.eye[2]+fz*1.55+rz*.88);
+ // Keep the original high-priority alert lane. Ordinary dialogue sits about
+ // 25 degrees to the right, ~1.5 meters away and BELOW eye height. Its inner
+ // edge stays out of the central aiming lane and Ori floats above it.
+ const docks=alert
+  ?[[1.55,.88,.50],[1.55,.88,-.52],[1.55,.88,-.82]]
+  :[[1.42,.68,-.36],[1.54,.72,-.46],[1.34,.63,-.58],
+    [1.55,.70,.28],[1.72,.79,-.50]];
+ for(const [forward,right,height]of docks){
+  out.center.splice(0,3,rig.eye[0]+fx*forward+rx*right,rig.eye[1]+height,rig.eye[2]+fz*forward+rz*right);
   let blocked=!!wrist&&panelsOverlap(out,wrist,rig,.07);
-  if(rig.aim?.direction){const d=rig.aim.direction,b=panelAngularBounds(out,rig),yaw=Math.atan2(-d.x*fz+d.y*fx,d.x*fx+d.y*fz),pitch=Math.atan2(d.z||0,Math.hypot(d.x,d.y));blocked ||= Math.abs(yaw-b.x)<b.w+.09&&Math.abs(pitch-b.y)<b.h+.09;}
+  if(rig.aim?.direction){
+   const d=rig.aim.direction,b=panelAngularBounds(out,rig),yaw=Math.atan2(-d.x*fz+d.y*fx,d.x*fx+d.y*fz),pitch=Math.atan2(d.z||0,Math.hypot(d.x,d.y));
+   blocked ||= Math.abs(yaw-b.x)<b.w+.09&&Math.abs(pitch-b.y)<b.h+.09;
+  }
+  // The original, bounded Ori body should never occupy the same binocular
+  // caption area, even if the regular preferred dock becomes obstructed.
+  if(!blocked&&settings.oriVisible&&settings.oriPosition?.length===3&&[...settings.oriPosition].every(Number.isFinite)){
+   const [x,y,z]=settings.oriPosition,dx=x-rig.eye[0],dz=z-rig.eye[2],d=Math.hypot(dx,dz);
+   if(d>.1){
+    const b=panelAngularBounds(out,rig),yaw=Math.atan2(-dx*fz+dz*fx,dx*fx+dz*fz),pitch=Math.atan2(y-rig.eye[1],d),radius=Math.atan2(.15,d);
+    blocked=Math.abs(yaw-b.x)<b.w+radius+.02&&Math.abs(pitch-b.y)<b.h+radius+.02;
+   }
+  }
   if(!blocked&&settings.level){
    const b=panelAngularBounds(out,rig),level=settings.level;
    for(const e of [...level.enemies.filter(e=>!e.dead),level.exit,...level.relays.filter(r=>!r.active),...level.captives.filter(c=>!c.freed)]){
     const dx=e.x*WORLD_SCALE-rig.eye[0],dz=e.y*WORLD_SCALE-rig.eye[2],d=Math.hypot(dx,dz),f=dx*fx+dz*fz;
     if(f<=0||d>10)continue;
-    const yaw=Math.atan2(-dx*fz+dz*fx,f),height=(e.type?entityHeight(e.type):1.3)*WORLD_SCALE,pitch=Math.atan2(height*.5-rig.eye[1],d),radius=Math.atan2(.35*WORLD_SCALE,d),half=Math.atan2(height*.5,d);
+    const yaw=Math.atan2(-dx*fz+dz*fx,f),h=(e.type?entityHeight(e.type):1.3)*WORLD_SCALE,pitch=Math.atan2(h*.5-rig.eye[1],d),radius=Math.atan2(.35*WORLD_SCALE,d),half=Math.atan2(h*.5,d);
     if(Math.abs(yaw-b.x)<b.w+radius&&Math.abs(pitch-b.y)<b.h+half){blocked=true;break;}
    }
   }
   if(!blocked){out.hidden=false;return out;}
  }
- // Aim takes precedence. The communication log retains a temporarily hidden line.
+ // Never cover genuine enemies, firing rays, critical alerts or the left wrist.
+ // The complete text remains available through COMMS LOG.
  out.hidden=true;return out;
 }
