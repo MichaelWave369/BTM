@@ -19,7 +19,7 @@ export const TRACKS=Object.freeze([
   [16,'We Are the Glitch','16-We Are the Glitch.mp3',177.4],
   [17,'The Final Frequency','17-The Final Frequency.mp3',207.0],
   [18,'System Collapse','18-System Collapse.mp3',172.7]
-].map(([id,title,file,duration])=>Object.freeze({id,title,file,duration,artist:'michaelwave369'}))));
+].map(([id,title,file,duration])=>Object.freeze({id,title,file,duration,artist:'michaelwave369'})));
 const ORIGINAL=[1,2,3,4,5,6,7,8,3,4,7,16];
 const PIT=[9,10,11,12,9,10,11,12,10,11,12,16];
 export function soundtrackCue(cue={}){
