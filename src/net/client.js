@@ -24,7 +24,7 @@ export class NetworkView extends Game{
  get objective(){return this.netObjective||'ENTER THE NODE';}
  get liberation(){return this.netLiberation||0;}
  get exitReady(){return !!this.netExitReady;}
- get objectiveTarget(){if(this.netState?.raid)return raidObjectiveTarget(this.level,this.player,{...this.netState.raid,time:this.time});return this.networkCompetitive?(this.remotePlayers.find(a=>a.status==='alive')||this.player):super.objectiveTarget;}
+ get objectiveTarget(){if(this.netState?.raid)return raidObjectiveTarget(this.level,this.player,{...this.netState.raid,time:this.time});if(this.netState?.control?.zone)return this.netState.control.zone;return this.networkCompetitive?(this.remotePlayers.find(a=>a.status==='alive')||this.player):super.objectiveTarget;}
  accept(m){
   if(m.type==='world'){
    if(!m.level||m.level.w!==29||m.level.h!==25||m.level.cells?.length!==25||m.level.cells.some(r=>r.length!==29)||!Array.isArray(m.level.enemies)||m.level.enemies.length>128||!m.definition)throw Error('Invalid world dimensions');
@@ -32,7 +32,7 @@ export class NetworkView extends Game{
   }
   if(m.type!=='snapshot'||m.revision!==this.revision)return;
   if(!Array.isArray(m.players)||m.players.length>8||!m.world||!Array.isArray(m.events)||m.events.length>96||m.world.enemies?.length>128||m.world.projectiles?.length>128)throw Error('Invalid snapshot');
-  const mine=m.players.find(p=>p.id===this.net.id);this.netState=m;this.oriCorrupted=m.raid?.phase===3&&m.raid.state!=='escape';this.time=m.time;this.netObjective=this.networkCompetitive?'FRAG LIMIT '+m.limit+' / '+m.state.toUpperCase():m.world.objective;this.netLiberation=m.world.liberation;this.netExitReady=m.world.exitReady;
+  const mine=m.players.find(p=>p.id===this.net.id);this.netState=m;this.oriCorrupted=m.raid?.phase===3&&m.raid.state!=='escape';this.time=m.time;this.netObjective=m.control?'CONTROL / '+(m.control.contested?'CONTESTED':m.control.holder?.toUpperCase()||'NEUTRAL')+' · CYAN '+m.teamScore.cyan+' / PINK '+m.teamScore.pink:this.networkCompetitive?'FRAG LIMIT '+m.limit+' / '+m.state.toUpperCase():m.world.objective;this.netLiberation=m.world.liberation;this.netExitReady=m.world.exitReady;
   const w=m.world;applyWorld(this.level,w);
   this.ori={...w.ori};this.projectiles=structuredClone(w.projectiles);this.bassCharge=w.bassCharge;this.totalFreed=w.totalFreed;this.totalArtifacts=w.totalArtifacts;
   this.previousRemote=this.remotePlayers;this.remotePlayers=m.players.filter(p=>p.id!==this.net.id).map(p=>({...p}));this.remoteStamp=now();

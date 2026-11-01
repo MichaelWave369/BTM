@@ -5,6 +5,7 @@ import {PIT_STAGES,PIT_HOSTS} from '../pit.js';
 import {safeTrackedAim,entityHeight,WALL_HEIGHT} from '../spatial.js';
 import {hazardState} from '../pit-combat.js';
 import {createArena} from './arenas.js';
+import {freshControlState,controlZone,controlSnapshot,advanceControl} from './control-zones.js';
 import {neutralInput,TICK_RATE} from './protocol.js';
 export const AVATAR_FIELDS=['damageDirection','weapon','cooldown','recharge','vent','shotAnim','hurt','shake','dodgeCooldown','dodgeFlash','shieldTime','shieldCharge','oriCooldown','objectiveTime','hitPulse','assistTime','scanTime','equipAnim','portraitTime','speechCooldown','muzzle','shift','charge','stats','playerMotion','combatPose','lessonDistance','footDistance','moving','sprinting','bufferedFire','nav','navTime'];
 const round=n=>Math.round(n*1000)/1000;
@@ -79,7 +80,7 @@ class SharedWorld extends Game{
 }
 export class Room{
  constructor({code,mode='deathmatch',arena='no-carrier',limit=10,capacity=2,finaleEnabled=true}){
-  this.finaleEnabled=finaleEnabled;this.raid=null;this.code=code;this.mode=mode;this.arena=arena;this.limit=limit;this.capacity=capacity;this.competitive=mode!=='coop';this.actors=new Map();this.owner=null;this.state='lobby';this.tick=0;this.elapsed=0;this.revision=0;this.eventId=0;this.events=[];this.stage=0;this.receipts=[];this.teamScore={cyan:0,pink:0};this.round=1;this.dirty=false;this.game=new SharedWorld(this);this.game.events=[];
+  this.finaleEnabled=finaleEnabled;this.raid=null;this.control=null;this.code=code;this.mode=mode;this.arena=arena;this.limit=limit;this.capacity=capacity;this.competitive=mode!=='coop';this.actors=new Map();this.owner=null;this.state='lobby';this.tick=0;this.elapsed=0;this.revision=0;this.eventId=0;this.events=[];this.stage=0;this.receipts=[];this.teamScore={cyan:0,pink:0};this.round=1;this.dirty=false;this.game=new SharedWorld(this);this.game.events=[];
  }
  add({id,nickname,token}){
   if(this.state!=='lobby'||!this.competitive&&this.started)throw Error('Campaign in progress; use your reconnect token');if(this.actors.size>=this.capacity)throw Error('Room full');
@@ -107,12 +108,12 @@ export class Room{
  }
  start(id){
   if(id!==this.owner||this.state!=='lobby')throw Error('Only the room owner can start from the lobby');for(const a of this.actors.values())if(!a.connected)this.remove(a.id);const connected=[...this.actors.values()].filter(a=>a.connected);if(connected.length<2||connected.some(a=>!a.ready))throw Error('At least two connected, ready players are required');
-  if(['team','clan'].includes(this.mode))connected.forEach((a,i)=>a.team=i%2?'pink':'cyan');
+  if(['team','clan','control'].includes(this.mode))connected.forEach((a,i)=>a.team=i%2?'pink':'cyan');
   this.started=true;this.raid=null;this.game.totalFreed=0;this.game.totalArtifacts=0;this.game.totalSecrets=0;this.game.campaignTime=0;this.game.rng=369;this.partySize=connected.length;this.stage=0;this.receipts=[];this.teamScore={cyan:0,pink:0};this.round=1;for(const a of this.actors.values()){a.frags=a.deaths=0;}this.load(false);this.event('started');
  }
  load(carry=true){
   const g=this.game;this.state='playing';this.result=null;this.revision++;g.events=[];g.projectiles=[];g.mode='playing';g.energyMode='survival';g.unlocked=6;g.totalArtifacts??=0;
-  if(this.competitive){const a=createArena(this.arena);this._definition=a.definition;g.campaign='original';g.levelIndex=0;g.level=a.level;g.time=0;this.spawns=a.spawns;}
+  if(this.competitive){const a=createArena(this.arena);this._definition=a.definition;g.campaign='original';g.levelIndex=0;g.level=a.level;g.time=0;this.spawns=a.spawns;this.control=this.mode==='control'?freshControlState(this.arena,g.level):null;if(this.control){const z=controlZone(this.control);g.level.raidNodes=[{x:z.x,y:z.y,active:false}];}}
   else{const d=STAGES[this.stage];this._definition=null;g.campaign=d.campaign;g.loadLevel(d.index,false);g.unlocked=6;g.level.items.forEach(i=>{if(i.type==='energy'){i.remaining=45*this.partySize;i.claims={};}});for(const e of g.level.enemies){e.hp=e.maxHp=Math.round(e.maxHp*(1+.45*(this.partySize-1))/Math.sqrt(d.campaign==='original'&&d.index>=6?g.definition.difficulty||1:1));e.damage*=1+.12*(this.partySize-1);}if(d.campaign==='original'&&d.index>=6)this.addSquadCaches();this.spawns=this.coopSpawns(g.definition.spawn);}
   let i=0;for(const a of this.actors.values())this.spawn(a,i++,carry&&!this.competitive);
   g.player=this.actors.values().next().value.player;g.resetFeel();g.mode='playing';g.events=[];this.stageStart=this.checkpoint(false);this.dirty=true;
@@ -154,7 +155,7 @@ export class Room{
  hurt(a,amount,killer){
   if(!a||a.status!=='alive'||a.invulnerable>this.game.time||!killer||a.id===killer.id||this.mode!=='deathmatch'&&a.team===killer.team)return;
   this.withActor(a,()=>{const g=this.game;g.damagePlayer(amount,killer.player);});
-  if(a.status!=='alive'&&killer.id!==a.id){killer.frags++;if(this.mode==='team')this.teamScore[killer.team]++;this.event('frag',{killer:killer.id,victim:a.id});if(this.mode!=='clan'&&(this.mode==='team'?this.teamScore[killer.team]:killer.frags)>=this.limit){this.state='results';this.result={winner:this.mode==='team'?killer.team:killer.id,reason:'frag-limit'};}}
+  if(a.status!=='alive'&&killer.id!==a.id){killer.frags++;if(this.mode==='team')this.teamScore[killer.team]++;this.event('frag',{killer:killer.id,victim:a.id});if(['deathmatch','team'].includes(this.mode)&&(this.mode==='team'?this.teamScore[killer.team]:killer.frags)>=this.limit){this.state='results';this.result={winner:this.mode==='team'?killer.team:killer.id,reason:'frag-limit'};}}
  }
  defeat(a){
   if(a.status!=='alive')return;a.player.health=0;a.input=neutralInput();a.actions=[];a.deaths++;
@@ -204,7 +205,14 @@ export class Room{
   if(primary)this.withActor(primary,()=>{g.updateShared(dt);if(this.competitive){g.updateEnvironment(dt);g.updateProjectiles(dt);}else{const auto=g.oriAuto;if(this.raid?.corrupted)g.oriAuto=1e9;g.updateWorld(dt);if(this.raid?.corrupted)g.oriAuto=auto;}});
   if(this.state!=='playing'){this.flushEvents();return;}
   if(this.competitive){for(const item of g.level.items){if(item.taken&&item.respawnAt===undefined)item.respawnAt=g.time+(item.type==='energy'?10:15);if(item.taken&&g.time>=item.respawnAt){item.taken=false;delete item.remaining;delete item.respawnAt;}}
-   if(this.mode==='clan'){const teams=new Set(this.live().map(a=>a.team));if(teams.size<2){const winner=[...teams][0]||null;if(winner)this.teamScore[winner]++;this.state='round';this.result={winner,reason:'elimination'};this.nextRound=g.time+3;}}
+   if(this.mode==='control'&&this.control){
+     const change=advanceControl(this.control,this.actors.values(),g.level,g.time,dt,this.teamScore,this.limit);
+     const zone=controlZone(this.control);g.level.raidNodes=[{x:zone.x,y:zone.y,active:!!this.control.holder&&!this.control.contested}];
+     if(change.rotated)this.event('controlZone',{index:this.control.index,x:zone.x,y:zone.y});
+     if(change.point)this.event('controlScore',{cyan:this.teamScore.cyan,pink:this.teamScore.pink,holder:this.control.holder});
+     if(change.winner){this.state='results';this.result={winner:change.winner,reason:'control-limit'};}
+    }
+    if(this.mode==='clan'){const teams=new Set(this.live().map(a=>a.team));if(teams.size<2){const winner=[...teams][0]||null;if(winner)this.teamScore[winner]++;this.state='round';this.result={winner,reason:'elimination'};this.nextRound=g.time+3;}}
   }else if(!this.live().filter(a=>a.connected).length||this.raid&&[...this.actors.values()].filter(a=>['alive','downed'].includes(a.status)).length<2){this.state='wipe';this.event('wipe',{text:this.raid?'TWO SURVIVING SIGNALS REQUIRED / RETRY RAID CHECKPOINT':'SQUAD DOWN'});}
   this.flushEvents();
  }
@@ -216,7 +224,7 @@ export class Room{
  snapshot(a){
   const g=this.game,events=this.events.filter(e=>e.id>a.lastEvent);a.lastEvent=this.eventId;
   const players=[...this.actors.values()].filter(a=>a.player).map(a=>({id:a.id,nickname:a.nickname,team:a.team,connected:a.connected,status:a.status,frags:a.frags,deaths:a.deaths,seq:a.lastSeq,revive:round(a.revive||0),respawn:round(Math.max(0,(a.respawnAt||0)-g.time)),...Object.fromEntries(Object.entries(a.player).map(([k,v])=>[k,typeof v==='number'?round(v):v])),pose:a.feel.combatPose?{eye:a.feel.combatPose.head.height,right:{x:round(a.feel.combatPose.aim.origin.x-a.player.x),y:round(a.feel.combatPose.aim.origin.y-a.player.y),height:round(a.feel.combatPose.aim.origin.height),dx:round(a.feel.combatPose.aim.direction.x),dy:round(a.feel.combatPose.aim.direction.y),dz:round(a.feel.combatPose.aim.direction.z)}}:null,weapon:a.feel.weapon,cooldown:round(a.feel.cooldown||0),recharge:round(a.feel.recharge||0),oriCooldown:round(a.feel.oriCooldown||0),dodgeCooldown:round(a.feel.dodgeCooldown||0),stats:a.feel.stats,hurt:round(a.feel.hurt||0),hitPulse:round(a.feel.hitPulse||0),assistTime:round(a.feel.assistTime||0),scanTime:round(a.feel.scanTime||0),damageDirection:a.feel.damageDirection??null,vent:round(a.feel.vent||0),shield:round(a.feel.shieldTime||0),shieldCharge:a.feel.shieldCharge||0,shotAnim:round(a.feel.shotAnim||0)}));
-  return{type:'snapshot',tick:this.tick,time:round(g.time),revision:this.revision,code:this.code,owner:this.owner,mode:this.mode,arena:this.arena,limit:this.limit,capacity:this.capacity,state:this.state,stage:this.stage,completed:this.receipts.length,raid:this.raid?.snapshot()||null,finaleAvailable:this.finaleEnabled&&this.receipts.length===24&&!this.raid,round:this.round,teamScore:this.teamScore,result:this.result,roster:this.roster(),players,world:packWorld(g,a.id),events};
+  return{type:'snapshot',tick:this.tick,time:round(g.time),revision:this.revision,code:this.code,owner:this.owner,mode:this.mode,arena:this.arena,limit:this.limit,capacity:this.capacity,state:this.state,stage:this.stage,completed:this.receipts.length,raid:this.raid?.snapshot()||null,control:this.control?controlSnapshot(this.control,this.teamScore):null,finaleAvailable:this.finaleEnabled&&this.receipts.length===24&&!this.raid,round:this.round,teamScore:this.teamScore,result:this.result,roster:this.roster(),players,world:packWorld(g,a.id),events};
  }
  checkpoint(includeEntry=true){
   if(this.competitive)return null;const g=this.game,state=this.state==='suspended'?this.resumeState:this.state;g.pitRecord=this.receipts.filter(r=>r.campaign==='pit').map(r=>({...r,stage:r.index+1}));

@@ -18,7 +18,16 @@ try{
   // never becomes a stable element on some CI runners. Preserve PNG evidence.
   for(let i=0;i<2;i++){
    const shot=out+'/screenshots/coop-sector1-client-'+i+'.png';
-   await pages[i].screenshot({path:shot,fullPage:true,animations:'disabled',timeout:60000});
+   // Capture genuine rendered Chromium compositor pixels. Playwright's
+   // page.screenshot waits for a stability/layout readiness barrier which can
+   // deadlock even after the live canvas stops receiving movement.
+   const cdp=await pages[i].context().newCDPSession(pages[i]);
+   const response=await cdp.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});
+   const png=Buffer.from(response.data||'','base64');
+   assert(png.length>2048&&png.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])),
+    'Chromium compositor screenshot missing or invalid for co-op client '+i);
+   await writeFile(shot,png);
+   await cdp.detach();
    assert((await stat(shot)).size>2048,'Co-op page screenshot missing or empty for client '+i);
   }
  const before=[...room.actors.values()].map(a=>({id:a.id,health:a.player.health,energy:a.player.energy,reserve:a.player.reserve}));await pages[0].evaluate(()=>document.getElementById('save-btn').click());await pages[0].waitForFunction(()=>document.querySelector('#log').textContent.includes('CO-OP CHECKPOINT SAVED'));await server.close();server=await createServer({port,saveDir:dir,manual:true});
