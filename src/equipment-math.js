@@ -79,7 +79,7 @@ export class WristComputer{
   const aligned=this.watchFacing>Math.max(.57,s.vrWristSensitivity+.12);
   const eligible=!this.suppressAutoUntilLower&&s.vrWristActivation!=='manual'&&
    inRange&&this.watchRaised&&aligned&&
-   (s.vrWristActivation==='raised'||this.watchGaze>.78);
+   (s.vrWristActivation==='raised'||this.watchGaze>.60);
   if(eligible){if(this.attentionSince<0)this.attentionSince=now;this.lostSince=-1;}
   else{this.attentionSince=-1;if(this.lostSince<0)this.lostSince=now;}
   const previous=this.requested;
