@@ -36,11 +36,11 @@ export async function createServer({host='127.0.0.1',port=8787,origins=[],saveDi
  function welcome(c,a,reconnected=false){send(c,{type:'welcome',protocol:PROTOCOL,id:a.id,code:c.room.code,token:a.token,seq:a.lastSeq,reconnected});world(c);send(c,c.room.snapshot(a));}
  function attach(c,room,a,reconnected=false){for(const other of clients)if(other!==c&&other.room===room&&other.actor===a){other.room=null;other.actor=null;other.ws.close(4001,'Session resumed elsewhere');}c.room=room;c.actor=a;welcome(c,a,reconnected);}
  function detach(c,explicit=false){if(!c.room)return;const room=c.room,a=c.actor;if(explicit&&room.state==='lobby')room.remove(a.id);else room.disconnect(a.id);c.room=c.actor=null;}
- async function resume(c,m){const code=roomCode(m.code);let room=rooms.get(code);if(room){const a=[...room.actors.values()].find(a=>equal(a.token,m.token));if(!a)throw Error('Invalid resume token');attach(c,room,room.reconnect(a),true);return;}
+ async function resume(c,m){const code=roomCode(m.code);let room=rooms.get(code);if(room){const a=[...room.actors.values()].find(a=>!a.bot&&equal(a.token,m.token));if(!a)throw Error('Invalid resume token');attach(c,room,room.reconnect(a),true);return;}
   if(pendingResumes.has(code)){await pendingResumes.get(code);return resume(c,m);}
   let finish;const gate=new Promise(resolve=>finish=resolve);pendingResumes.set(code,gate);
   try{
-  const savedFile=path.join(saveDir,code+'.json');if((await stat(savedFile)).size>2*1024*1024)throw Error('Save too large');const bytes=await readFile(savedFile,'utf8');if(bytes.length>2*1024*1024)throw Error('Save too large');const s=JSON.parse(bytes),a=s.actors?.find(a=>equal(a.token,m.token));if(!a)throw Error('Saved squad pass required');if(rooms.size>=maxRooms)throw Error('Server room capacity reached');room=new Room({code,mode:'coop',arena:'no-carrier',limit:10,capacity:4,finaleEnabled});room.restore(s);room.owner=a.id;rooms.set(code,room);const actor=room.actors.get(a.id);actor.nickname=nickname(m.nickname);attach(c,room,room.reconnect(actor),true);
+  const savedFile=path.join(saveDir,code+'.json');if((await stat(savedFile)).size>2*1024*1024)throw Error('Save too large');const bytes=await readFile(savedFile,'utf8');if(bytes.length>2*1024*1024)throw Error('Save too large');const s=JSON.parse(bytes),a=s.actors?.find(a=>!a.bot&&equal(a.token,m.token));if(!a)throw Error('Saved squad pass required');if(rooms.size>=maxRooms)throw Error('Server room capacity reached');room=new Room({code,mode:'coop',arena:'no-carrier',limit:10,capacity:4,finaleEnabled});room.restore(s);room.owner=a.id;rooms.set(code,room);const actor=room.actors.get(a.id);actor.nickname=nickname(m.nickname);attach(c,room,room.reconnect(actor),true);
   }finally{pendingResumes.delete(code);finish();}
  }
  wss.on('connection',ws=>{
@@ -51,8 +51,8 @@ export async function createServer({host='127.0.0.1',port=8787,origins=[],saveDi
    try{const m=validateMessage(bytes.toString('utf8'));
     if(m.type==='ping'){send(c,{type:'pong',id:m.id});return;}
     if(m.type==='leave'){detach(c,true);send(c,{type:'left'});return;}
-    if(m.type==='create'){if(c.room)throw Error('Leave the current room first');if(rooms.size>=maxRooms)throw Error('Server room capacity reached');let code;do{code=newCode();}while(rooms.has(code));const room=new Room({...m,code,finaleEnabled});rooms.set(code,room);attach(c,room,room.add({id:secret().slice(0,12),nickname:nickname(m.nickname),token:secret()}));return;}
-    if(m.type==='join'){if(c.room)throw Error('Leave the current room first');const room=rooms.get(roomCode(m.code));if(!room)throw Error('Room not found');const a=m.token?[...room.actors.values()].find(a=>equal(a.token,m.token)):null;if(m.token&&!a)throw Error('Reconnect token not recognized');attach(c,room,a?room.reconnect(a):room.add({id:secret().slice(0,12),nickname:nickname(m.nickname),token:secret()}),!!a);return;}
+    if(m.type==='create'){if(c.room)throw Error('Leave the current room first');if(rooms.size>=maxRooms)throw Error('Server room capacity reached');let code;do{code=newCode();}while(rooms.has(code));const room=new Room({...m,code,finaleEnabled});rooms.set(code,room);const owner=room.add({id:secret().slice(0,12),nickname:nickname(m.nickname),token:secret()});for(let i=0;i<(m.bots||0);i++)room.addBot(secret());attach(c,room,owner);return;}
+    if(m.type==='join'){if(c.room)throw Error('Leave the current room first');const room=rooms.get(roomCode(m.code));if(!room)throw Error('Room not found');const a=m.token?[...room.actors.values()].find(a=>!a.bot&&equal(a.token,m.token)):null;if(m.token&&!a)throw Error('Reconnect token not recognized');attach(c,room,a?room.reconnect(a):room.add({id:secret().slice(0,12),nickname:nickname(m.nickname),token:secret()}),!!a);return;}
     if(m.type==='resume'){if(c.room)throw Error('Leave the current room first');c.busy=true;try{await resume(c,m);}finally{c.busy=false;}return;}
     if(!c.room||!c.actor)throw Error('Join a room first');if(m.type==='input'){if(!c.room.input(c.actor,m)){c.lastReject={seq:m.seq,last:c.actor.lastSeq,queue:c.actor.actions.length,status:c.actor.status};c.bad++;if(c.bad>12)ws.close(1008,'Stale/overflow input');}else c.bad=Math.max(0,c.bad-.25);return;}
     if(m.type==='lobby'&&!c.room.competitive)await saveRoom(c.room);
@@ -82,7 +82,7 @@ export async function createServer({host='127.0.0.1',port=8787,origins=[],saveDi
  let last=performance.now(),acc=0,lastSnapshot=0,saveClock=0;
  function step(){simClock+=1/TICK_RATE;for(const room of rooms.values()){room.step(1/TICK_RATE);room.advanceIntermission(1/TICK_RATE);}if(++lastSnapshot>=TICK_RATE/SNAPSHOT_RATE){lastSnapshot=0;broadcast();}
   if(++saveClock>=TICK_RATE*5){saveClock=0;for(const room of rooms.values())if(room.dirty){room.dirty=false;autosave(room);}}
-  for(const [code,room]of rooms)if(![...room.actors.values()].some(a=>a.connected)&&room.elapsed-Math.max(0,...[...room.actors.values()].map(a=>a.disconnectedAt||0))>120){autosave(room);rooms.delete(code);}
+  for(const [code,room]of rooms)if(![...room.actors.values()].some(a=>a.connected&&!a.bot)&&room.elapsed-Math.max(0,...[...room.actors.values()].map(a=>a.disconnectedAt||0))>120){autosave(room);rooms.delete(code);}
  }
  const timer=manual?null:setInterval(()=>{const now=performance.now();acc+=Math.min(.25,(now-last)/1000);last=now;let n=0;while(acc>=1/TICK_RATE&&n++<8){step();acc-=1/TICK_RATE;}},1000/TICK_RATE/2);
  const heartbeat=setInterval(()=>{for(const c of clients){if(!c.alive){c.ws.terminate();continue;}c.alive=false;c.ws.ping();}const now=performance.now()/1000;for(const [ip,v]of ipLimits)if(now-v.last>180)ipLimits.delete(ip);},15000);heartbeat.unref();
