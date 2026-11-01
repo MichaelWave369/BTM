@@ -1,3 +1,4 @@
+import {pitFloorState} from './pit-presentation.js';
 import {weaponMesh,appendEquipment} from './equipment-meshes.js';
 import {SignalPresentation} from './signal-presentation.js';
 import {SIGNAL_QUALITY} from './neon-signal.js';
@@ -21,13 +22,19 @@ export class WorldScene {
  update(game,rig,dt,settings={}){
   this.ensureLevel(game.level);const b=this.batch,p=game.player,l=game.level,s=WORLD_SCALE,q=QUALITY[settings.vrQuality]||QUALITY.balanced,eye=rig.eye,visible=(x,y)=>Math.hypot(x*s-eye[0],y*s-eye[2])<q.distance;b.reset();this.clock+=dt;this.counts.enemies=this.counts.objects=this.counts.particles=this.counts.projectiles=this.counts.trails=0;
   for(const {door:d,shape:v}of this.doors){if(d.open>.995||!visible(d.x,d.y))continue;v.center[1]=v.size[1]*(.5+d.open);b.box(v.center,v.size,v.material,d.type===6&&game.shift?PURPLE:WHITE);}
-  for(const e of l.enemies){if(e.dead||!visible(e.x,e.y))continue;const h=entityHeight(e.type)*s,frame=Math.floor(e.walk||0)%4;b.billboard(e.x*s,0,e.y*s,h,h,(e.pain>0?'pain:':'enemy:')+e.type+':'+frame,eye,e.stun>0?STUN:WHITE);this.counts.enemies++;if(e.tell>0)b.floor(e.x*s,.025,e.y*s,.7,'marker',TELL);}
+  for(const e of l.enemies){if(e.dead||!visible(e.x,e.y))continue;const h=entityHeight(e.type)*s,frame=Math.floor(e.walk||0)%4;b.billboard(e.x*s,0,e.y*s,h,h,e.pitBoss?'pitboss:'+e.pitBoss+(e.exposed>0?':open':''):(e.pain>0?'pain:':'enemy:')+e.type+':'+frame,eye,e.stun>0?STUN:WHITE);this.counts.enemies++;if(e.tell>0)b.floor(e.x*s,.025,e.y*s,.7,'marker',TELL);}
   for(const i of l.items)if(!i.taken&&visible(i.x,i.y)){b.billboard(i.x*s,.04,i.y*s,.85,.85,'item:'+i.type,eye);this.counts.objects++;}
   if(!l.key.taken){b.billboard(l.key.x*s,.12,l.key.y*s,.75,.75,'item:key',eye);this.counts.objects++;}
   for(const r of l.relays){b.billboard(r.x*s,0,r.y*s,.9,1.15,r.active?'relay:on':'relay:off',eye);this.counts.objects++;}
   for(const c of l.captives)if(!c.freed){b.billboard(c.x*s,0,c.y*s,1.3,1.65,'captive',eye);this.counts.objects++;}
   for(const prop of l.props||[])if(visible(prop.x,prop.y)){const h=prop.height*s;b.billboard(prop.x*s,0,prop.y*s,h*.8,h,'prop:'+prop.type,eye);this.counts.objects++;}
   b.billboard(l.exit.x*s,.05,l.exit.y*s,1.55,2.15,'portal',eye,game.exitReady?WHITE:[.35,.45,.55,1]);
+  if(l.campaign==='pit'){
+   const primary=colorRGB(game.definition.color);
+   for(const h of l.hazards){if(!visible(h.x,h.y))continue;const state=pitFloorState(h,game.time),gain=state==='active'?1:state==='warning'?.7:.18,color=state==='warning'?[1,.66,.23,1]:[primary[0]*gain,primary[1]*gain,primary[2]*gain,1];b.floor(h.x*s,.025,h.y*s,h.radius*2*s,'hazard:'+h.kind,color);}
+   for(const blast of l.blasts)if(visible(blast.x,blast.y))b.floor(blast.x*s,.03,blast.y*s,blast.radius*2*s,'hazard:arc',blast.hit?[1,.25,.3,1]:[1,.7,.25,1]);
+   for(const e of l.enemies)if(e.pitBoss==='mirror'&&!e.dead&&visible(e.x,e.y)){const h=entityHeight(e.type)*s;for(const side of [-1,1])b.billboard((e.x+side*.65)*s,.15,e.y*s,h*.6,h*.8,'pitboss:mirror',eye,[.18,.12,.25,1]);}
+  }
   this.presentation.update(b,game,rig,dt,settings,q);this.counts.fixtures=this.presentation.fixtureCount;
   if(game.objectiveTime>0){const t=game.objectiveTarget;b.billboard(t.x*s,1.8,t.y*s,.3,.3,'marker',eye,CYAN);for(const n of this.route)b.floor(n.x*s,.025,n.y*s,.13,'marker',CYAN);}
   if(game.shift)for(const {door:d}of this.doors)if(d.type===6&&d.open<.84)b.billboard((d.x+.5)*s,.8,(d.y+.5)*s,.45,.45,'marker',eye,PURPLE);

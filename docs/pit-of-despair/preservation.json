@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "baseline": "89d9dc0795fd73e71176940721202091706a61c0",
+  "baselineTree": "9489bd9ccad1d976a15f8414b53778ea3148400c",
+  "comparisonCheckout": "PR #10 head a0902d9448dceb55d7ab6e1a727cb2c8b590f928 has the identical tree to merged main",
+  "originalSectorDefinitionsUnchanged": true,
+  "originalDefinitionsSha256": "80f2079c2de2ae5be404ce5a2bda16c80b5641acf8a68d9d05be442ecb9b300c",
+  "originalSectorCount": 12,
+  "originalHostCount": 123,
+  "weaponsUnchanged": true,
+  "serializedInitialLegacyCheckpointIdenticalExceptRelease": true,
+  "oldSaveWithoutModeRestoresLegacy": true,
+  "byteIdenticalFiles": [
+    "src/genewrist-ui.js",
+    "src/genewrist-bridge.js",
+    "src/genewrist/catalog.js",
+    "src/genewrist/worlds.js",
+    "src/equipment-math.js",
+    "src/equipment-meshes.js",
+    "src/left-hand-pose.js",
+    "src/ori-comfort.js",
+    "src/vr-input.js",
+    "src/gamepad.js",
+    "src/controls.js",
+    "src/phi-content/phiwad/mission.js",
+    "src/phi-content/phiwad/level.js",
+    "src/phi-content/phipack/core.js",
+    "public/missions/code-brown-signal-breakout.json"
+  ],
+  "method": "Node deep equality of sector and weapon registries against the verified baseline checkout; actual JSON-serialized v1 legacy checkpoint and old-save restore, plus byte comparison of untouched equipment/input/Gen.E/ΦWAD/CODE BROWN files. No assertion of physical device acceptance."
+}

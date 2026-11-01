@@ -1,5 +1,11 @@
 # Michael Wave & Ori: Break the Matrix
 
+## PIT OF DESPAIR — v0.9.0-rc.1 candidate
+
+A separate twelve-trial Survival campaign: four authored acts, four original phased guardians, timed environmental hazards and finite ammunition. Choose **PIT OF DESPAIR** to start or **CONTINUE THE DESCENT** to resume its independent checkpoint. Original campaigns, Legacy saves, Nightmare Run, CODE BROWN, ΦWAD and Gen.E.Wrist remain available.
+
+All twelve trials clear through actual Classic and synthetic immersive simulation, with checkpoint restore between stages. Production browser/offline evidence and real gameplay captures are in [the campaign handoff](docs/pit-of-despair/README.md). Physical Quest 3 acceptance and human difficulty tuning remain pending. No merge or deployment is automatic.
+
 ## Quest 3 First-Contact Comfort Patch — v0.7.1-rc.1 candidate
 
 Based on actual Quest 3 playtesting, this focused upgrade makes **smooth turn the default for new preferences**, with optional snap turn (and a shorter snap fade). Existing user-saved turn choices are honored; select **Settings → Immersive VR → Turning → SMOOTH** if your previous default remains SNAP.

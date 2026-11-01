@@ -13,6 +13,7 @@ const PALETTES = [
   fog: Object.freeze(rgb(primary).slice(0, 3).map(v => v * .025))}));
 
 export function signalPalette(index = 0) {
+  if(index&&typeof index==='object'){if(index.campaign==='pit'&&index.palette)return index.palette;index=index.index||0;}
   return PALETTES[((index % 12) + 12) % 12] || PALETTES[0];
 }
 

@@ -32,7 +32,7 @@ const THEMES=[
   {rooms:['LAST AIRLOCK','THE CHARGING HALL','CROWN RELAY A','CROWN RELAY B','THE ASCENT','THE NULL THRONE','OPEN FREQUENCY','THE ORIGINAL MIX'],signs:[[3,17,'ASCEND ↑','NULL CROWN','NO GODS. NO ADMINS. PLEASE MIND THE CABLES.'],[4,1,'RELAY A','CROWN CONTROL','A throne is just a chair with a marketing department.'],[16,2,'RELAY B','FINAL SIGNAL','The master mix survived. So can you.'],[20,18,'THRONE →','FINAL WARDEN','That crown is running on borrowed electricity.']],props:[['speaker',2.5,11.5],['speaker',18.5,3.5],['console',12.5,22.5],['lamp',26.5,17.5]]}
 ];
 export function decorateLevel(level,def,index){
-  const theme=THEMES[index]||def.theme;
+  const theme=def.campaign==='pit'?def.theme:THEMES[index]||def.theme;
   level.regions=def.rooms.map((r,i)=>({bounds:r,name:theme.rooms[i]||'MAINTENANCE'}));
   level.signs=theme.signs.map(([x,y,title,subtitle,text],id)=>({id,x,y,title,subtitle,text,read:false})).filter(s=>level.cells[s.y]?.[s.x]>0);
   level.props=theme.props.map(([type,x,y])=>({type,x,y,height:type==='lamp'?1.35:type==='pod'?1.2:.85})).filter(p=>level.cells[Math.floor(p.y)]?.[Math.floor(p.x)]===0);

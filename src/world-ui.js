@@ -23,7 +23,7 @@ export class WorldUI{
  paintPanel(data,s,now){
   const {game,activate=()=>{},map=false}=data,p=game.player,g=this.g,key=[map,game.weapon,game.unlocked,this.wrist.pinned,s.vrHologramBrightness,this.field.open,this.field.page,this.field.ring,this.field.app,this.field.pending?.id,this.logOpen,this.logPage,data.communications?.length].join(':');
   if(now-this.lastPaint<100&&key===this.panelKey)return;if(!this.wristPanel&&this.lastPaint!==-Infinity&&key===this.panelKey)return;this.lastPaint=now;this.panelKey=key;this.targets=[];
-  g.fillStyle='#07121f';g.fillRect(0,0,768,512);drawPanel(g,3,3,762,506,accent(UI.cyan,s.vrHologramBrightness),'#0a1725');g.fillStyle=UI.cyan;g.font='600 17px '+UI_FONT;g.fillText('GEN.E.WRIST  /  FIELDLINK',20,30);g.fillStyle=UI.muted;g.font='14px '+UI_FONT;g.fillText(game.phiwadCustom?'CUSTOM SIGNAL':'SECTOR '+String(game.levelIndex+1).padStart(2,'0')+' / 12',580,30);
+  g.fillStyle='#07121f';g.fillRect(0,0,768,512);drawPanel(g,3,3,762,506,accent(UI.cyan,s.vrHologramBrightness),'#0a1725');g.fillStyle=UI.cyan;g.font='600 17px '+UI_FONT;g.fillText('GEN.E.WRIST  /  FIELDLINK',20,30);g.fillStyle=UI.muted;g.font='14px '+UI_FONT;g.fillText(game.campaign==='pit'?'PIT / TRIAL '+(game.levelIndex+1):game.phiwadCustom?'CUSTOM SIGNAL':'SECTOR '+String(game.levelIndex+1).padStart(2,'0')+' / 12',580,30);
   if(this.logOpen){this.paintLog(data);return;}
   if(this.field.open){paintGenEWristView(this,data);if(this.cursor){g.strokeStyle=UI.gold;g.lineWidth=2;g.beginPath();g.arc(this.cursor.u*768,this.cursor.v*512,7,0,Math.PI*2);g.stroke();}return;}
   this.button(365,6,195,34,'GEN.E',()=>{this.field.toggle();this.lastPaint=-Infinity;},{icon:'Φ'});

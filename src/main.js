@@ -1,3 +1,5 @@
+import {ORIGINAL_SAVE_KEY,PIT_SAVE_KEY,writeCampaignCheckpoint} from './campaign-storage.js';
+import {PIT_ACTS,PIT_BOSSES} from './pit.js';
 import {EQUIPMENT_DEFAULTS,equipmentSettings} from './equipment-math.js';
 import {destinationFor} from './genewrist-bridge.js';
 import {Game,SECTORS,WEAPONS,CAMPAIGN_HOSTS,clamp,angleDiff} from './core.js';
@@ -14,10 +16,10 @@ import {stepImmersive} from './immersive-play.js';
 import {PointerCapture,keyCode} from './controls.js';
 import {GamepadInput,ControllerMenu,ControllerRumble,CONTROLLER_DEFAULTS,controllerSettings,gameplayInput,controllerActions} from './gamepad.js';
 const $=id=>document.getElementById(id),canvas=$('game'),game=new Game(),renderer=new Renderer(canvas),audio=new AudioEngine(),communications=new Communications();
-const SAVE_KEY='mwave-ori-checkpoint-v1',SETTINGS_KEY='mwave-ori-settings-v1';
+const SAVE_KEY=ORIGINAL_SAVE_KEY,SETTINGS_KEY='mwave-ori-settings-v1';
 const defaults={...IMMERSIVE_DEFAULTS,vrDistance:2.5,vrWidth:2.8,...CONTROLLER_DEFAULTS,sensitivity:1,music:.35,sfx:.65,muted:false,resolution:640,crt:true,controlMode:'auto',reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches};
 const controller=new GamepadInput(),rumble=new ControllerRumble();let inputMode='keyboard',desktopFrame=0,alertText='',alertTimer=0;
-let settings={...defaults,energyMode:'survival'},saved=null,screen='title-screen',returnScreen='title-screen',keys=new Set(),fire=false,mapOpen=false,dragging=false,lastMouseX=0,toastTimer=0,dialogueTimer=0,lastFrame=performance.now(),hudTime=0,fpsTime=0,fpsFrames=0,ambientTimer=8,touch=matchMedia('(pointer:coarse)').matches,altStart=0;
+let settings={...defaults,energyMode:'survival'},saved=null,pitSaved=null,screen='title-screen',returnScreen='title-screen',keys=new Set(),fire=false,mapOpen=false,dragging=false,lastMouseX=0,toastTimer=0,dialogueTimer=0,lastFrame=performance.now(),hudTime=0,fpsTime=0,fpsFrames=0,ambientTimer=8,touch=matchMedia('(pointer:coarse)').matches,altStart=0;
 try{
   const stored=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null');
   if(stored&&typeof stored==='object'){
@@ -29,7 +31,12 @@ try{
     if(['auto','drag','keyboard'].includes(stored.controlMode))settings.controlMode=stored.controlMode;
     if([2,2.5,3.2].includes(stored.vrDistance))settings.vrDistance=stored.vrDistance;if([2.4,2.8,3.4].includes(stored.vrWidth))settings.vrWidth=stored.vrWidth;
   }
-  const raw=localStorage.getItem(SAVE_KEY);if(raw){const candidate=JSON.parse(raw),check=new Game();check.restore(candidate);saved=candidate;}
+}catch{$('storage-warning').hidden=false;}
+try{
+  const raw=localStorage.getItem(SAVE_KEY);if(raw){const candidate=JSON.parse(raw),check=new Game();check.restore(candidate,{campaign:'original'});saved=candidate;}
+}catch{$('storage-warning').hidden=false;}
+try{
+  const pitRaw=localStorage.getItem(PIT_SAVE_KEY);if(pitRaw){const candidate=JSON.parse(pitRaw),check=new Game();check.restore(candidate,{campaign:'pit'});pitSaved=candidate;}
 }catch{$('storage-warning').hidden=false;}
 game.events=[];
 const capture=new PointerCapture({request:()=>{if(!canvas.requestPointerLock)throw Error('Unavailable');return canvas.requestPointerLock();},onState:()=>updateCapture(),onLost:()=>{if(game.mode==='playing')pause();}});
@@ -75,22 +82,22 @@ function updateCapture(){
 }
 function clearInput(){game.clearCombatPose();keys.clear();fire=false;dragging=false;altStart=0;game.charge=0;game.bufferedFire=null;controller.reset();vr.input.reset();rumble.stop();}
 function storeSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch{$('storage-warning').hidden=false;}}
-function saveCheckpoint(){if(game.phiwadCustom)return;if(game.player.health<=0)return;try{const data=game.checkpoint||game.snapshot();localStorage.setItem(SAVE_KEY,JSON.stringify(data));saved=data;$('continue-btn').hidden=false;}catch{$('storage-warning').hidden=false;}}
+function saveCheckpoint(){if(game.phiwadCustom||game.player.health<=0)return;try{const data=writeCampaignCheckpoint(localStorage,game);if(game.campaign==='pit'){pitSaved=data;$('continue-pit-btn').hidden=false;}else{saved=data;$('continue-btn').hidden=false;}}catch{$('storage-warning').hidden=false;}}
 function showToast(text){$('toast').textContent=text;$('toast').classList.add('visible');toastTimer=2.7;}
 function showDialogue(text,speaker='ORI',priority=1){communications.record(text,speaker,priority);refreshCommunications();if(speaker==='WAVE'&&!game.hurt){game.portraitMood='GRIN';game.portraitTime=1.1;}$('dialogue-text').textContent=text;$('dialogue-name').textContent=speaker;$('dialogue-channel').textContent=speaker==='WAVE'?'MICHAEL WAVE':speaker==='ARCHIVE'?'RECOVERED LOG':'COMPANION LINK';$('dialogue').dataset.speaker=speaker;$('dialogue').classList.toggle('urgent',priority>=3);$('dialogue').hidden=!settings.captions;dialogueTimer=Math.max(3.6,text.length*.04)*(vr.immersive?settings.vrSubtitleDuration:1);}
 function showScreen(id){
   communications.cancel();controllerMenu.clear();clearInput();
   screen=id;if(id&&vr.active)$(id).append($('vr-session-tools'));$('overlay').hidden=!id;$('overlay').classList.toggle('title-overlay',id==='title-screen');
   for(const n of ['title-screen','pause-screen','result-screen','settings-screen','help-screen'])$(n).hidden=n!==id;
-  $('view-top').hidden=!!id;$('touch-controls').hidden=!!id||!touch||inputMode!=='keyboard';$('onboarding').hidden=!!id||game.levelIndex!==0||game.lesson>=3;
+  $('view-top').hidden=!!id;$('touch-controls').hidden=!!id||!touch||inputMode!=='keyboard';$('onboarding').hidden=!!id||game.campaign==='pit'||game.levelIndex!==0||game.lesson>=3;
   document.body.classList.toggle('playing',!id);$('app').dataset.screen=id||'playing';
   if(id){capture.release();if(document.pointerLockElement)document.exitPointerLock();if(inputMode!=='keyboard')controllerMenu.focus(controllerMenu.items()[0]);}
   if(id==='title-screen'){$('dialogue').hidden=true;$('boss-bar').hidden=true;$('vision-tag').hidden=true;$('interaction').textContent='';$('header-sector').textContent='SIMULATION ONLINE';}updateCapture();
 }
 function lockMouse(){if(touch||vr.active||inputMode!=='keyboard'||settings.controlMode!=='auto')return;canvas.focus({preventScroll:true});void capture.capture();}
-function play(fresh=false){if(fresh){communications.reset();game.start({energyMode:settings.energyMode});mapOpen=false;}else game.mode='playing';showScreen('');audio.start();audio.pause(false);canvas.focus({preventScroll:true});lockMouse();processEvents();updateHUD();}
+function play(fresh=false){if(fresh){communications.reset();game.start({energyMode:settings.energyMode});mapOpen=false;}else game.mode='playing';showScreen('');audio.pitAct=game.campaign==='pit'?game.definition.act:null;audio.sector=game.levelIndex;audio.start();audio.pause(false);canvas.focus({preventScroll:true});lockMouse();processEvents();updateHUD();}
 function pause(){if(game.mode!=='playing')return;game.mode='paused';audio.pause(true);showScreen('pause-screen');}
-function home(){if(game.phiwadCustom)leavePhiWadMission(game);else if(game.mode==='playing'||game.mode==='paused'){game.saveCheckpoint();saveCheckpoint();}game.mode='title';audio.pause(true);showScreen('title-screen');$('continue-btn').hidden=!saved;}
+function home(){if(game.phiwadCustom)leavePhiWadMission(game);else if(game.mode==='playing'||game.mode==='paused'){game.saveCheckpoint();saveCheckpoint();}game.mode='title';audio.pause(true);showScreen('title-screen');$('continue-btn').hidden=!saved;$('continue-pit-btn').hidden=!pitSaved;}
 function openSettings(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('settings-screen');}
 function openHelp(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('help-screen');}
 function applySettings(){
@@ -119,11 +126,19 @@ function result(){
     $('result-btn').textContent=dead?'RETRY CUSTOM MISSION':'RETURN TO ARCADE';
     showScreen('result-screen');return;
   }
+  if(game.campaign==='pit'){
+    const dead=game.mode==='dead',ending=game.mode==='ending',act=PIT_ACTS[game.definition.act];audio.pause(true);audio.play(dead?'hurt':'complete');$('result-screen').classList.toggle('dead',dead);
+    $('result-eyebrow').textContent=dead?'PIT / CHECKPOINT HELD':ending?'THE TWELVE TRIALS / COMPLETE':(game.levelIndex+1)%3===0?'ACT COMPLETE / '+act.name:'PIT / TRIAL '+(game.levelIndex+1)+' CLEARED';
+    $('result-title').innerHTML=dead?'THE PIT<br><em>CAN WAIT.</em>':ending?'YOU KEPT<br><em>YOUR SIGNAL.</em>':'ONE TRIAL<br><em>BEHIND YOU.</em>';
+    $('result-copy').textContent=dead?'Cells, enemies and objectives return together at the checkpoint. Study the warning, change your rhythm and use Ori.':ending?'Twelve trials. Four guardians. Every cell was yours to spend. Ori kept the light; you found the way out.':game.definition.name+' is behind you. Charge and reserve carry forward. '+((game.levelIndex+1)%3===0?'A harsher act waits below.':'Read the floor. Punish recovery. Keep moving.');
+    const stats=[['TRIAL',String(game.levelIndex+1)+' / 12'],['CLEARED',String(game.pitRecord.length)+' / 12'],['GUARDIANS',String(game.pitRecord.filter(r=>r.boss).length)+' / 4'],['RESERVE',String(Math.floor(game.player.reserve))]];
+    $('result-stats').replaceChildren(...stats.map(([label,value])=>{const d=document.createElement('div');d.textContent=label;const b=document.createElement('b');b.textContent=value;d.append(b);return d;}));$('result-btn').textContent=dead?'RETRY PIT CHECKPOINT':ending?'START ANOTHER PIT RUN':'DESCEND / TRIAL '+(game.levelIndex+2);showScreen('result-screen');return;
+  }
   const dead=game.mode==='dead',ending=game.mode==='ending',continuation=ending&&game.levelIndex<SECTORS.length-1,act=['I','II','III','IV'][Math.floor(game.levelIndex/3)];
   audio.pause(true);audio.play(dead?'hurt':'complete');$('result-screen').classList.toggle('dead',dead);
   $('result-eyebrow').textContent=dead?'CONNECTION INTERRUPTED':continuation?'ACT '+act+' COMPLETE / THE SIGNAL CONTINUES':ending?'FOUR ACTS COMPLETE / TWELVE SECTORS LIBERATED':'SECTOR '+String(game.levelIndex+1).padStart(2,'0')+' LIBERATED';
   $('result-title').innerHTML=dead?'SIGNAL<br><em>LOST.</em>':ending?'YOU ARE<br><em>UNPLUGGED.</em>':'SIGNAL<br><em>RECLAIMED.</em>';
-  $('result-copy').textContent=dead?'Ori kept your checkpoint. Break your movement rhythm, use Ori to stun, and reload from reserve, and scavenge energy cells. Slap and Dash Bash still work when empty. Your frequency is still yours.':continuation?(game.levelIndex===2?'The original Warden falls. Follow Ori into Act II.':game.levelIndex===5?'The Null Crown breaks. Six nightmare sectors are listening. Predictive fire punishes constant circles. Take cover, change direction, and keep Ori close.':'The backup Warden falls. The last three sectors are the hardest. “Bro. They have run out of polite warnings.” — Michael Wave'):ending?'Twelve sectors liberated. Four acts unplugged. “Ledger above ego. Frequency above fear. Turn it UP.” — Michael Wave':SECTORS[game.levelIndex].name+' is offline. One less system deciding who people get to be.';
+  $('result-copy').textContent=dead?'Ori kept your checkpoint. Break your movement rhythm, use Ori to stun, and reload from reserve, and scavenge energy cells. Slap and Dash Bash still work when empty. Your frequency is still yours.':continuation?(game.levelIndex===2?'The original Warden falls. Follow Ori into Act II.':game.levelIndex===5?'The Null Crown breaks. Six nightmare sectors are listening. Predictive fire punishes constant circles. Take cover, change direction, and keep Ori close.':'The backup Warden falls. The last three sectors are the hardest. “Bro. They have run out of polite warnings.” — Michael Wave'):ending?'Twelve sectors liberated. Four acts unplugged. “Ledger above ego. Frequency above fear. Turn it UP.” — Michael Wave':game.definition.name+' is offline. One less system deciding who people get to be.';
   const stats=dead?[['CHECKPOINT','PRESERVED'],['MINDS FREED',String(game.levelFreed)],['TIME IN SECTOR',minutes(game.time)],['FREQUENCY','STILL YOURS']]:[['MINDS FREED',ending?game.totalFreed+' / '+CAMPAIGN_HOSTS:String(game.levelFreed)],['SECTOR TIME',minutes(game.time)],['SECRETS',ending?game.totalSecrets+' / '+SECTORS.length:(game.level.secretFound?1:0)+' / 1'],['LIBERATION',game.liberation+'%']];
   $('result-stats').replaceChildren(...stats.map(([label,value])=>{const d=document.createElement('div');d.textContent=label;const b=document.createElement('b');b.textContent=value;d.append(b);return d;}));
   $('result-btn').innerHTML=(dead?'RETRY CHECKPOINT':continuation?(game.levelIndex===2?'FOLLOW THE ECHO / ACT II':game.levelIndex===5?'ENTER NIGHTMARE / ACT III':'ENTER THE IMPOSSIBLE / ACT IV'):ending?'PLAY AGAIN':'ENTER SECTOR '+String(game.levelIndex+2).padStart(2,'0'))+' <b>→</b>';showScreen('result-screen');
@@ -136,7 +151,8 @@ function processEvents(){
     if(e.type==='dialogue'){const critical=criticalMessage(e,game.player.health);if(critical){alertText=critical;alertTimer=3;}showDialogue(e.text,e.speaker,e.priority);}if(e.type==='toast'){communications.log.push({text:e.text,speaker:'FIELD',priority:1});if(communications.log.length>100)communications.log.shift();refreshCommunications();showToast(e.text);}if(e.type==='checkpoint')saveCheckpoint();
     if(e.type==='pickup')showToast((e.item==='artifact'?'Φ ARTIFACT / ':'')+e.item.toUpperCase()+' ACQUIRED');
     if(e.type==='secret'){showToast('SECRET FOUND / CODE BROWN SUPPLY CLOSET');audio.play('free');}
-    if(e.type==='sector'){audio.sector=e.index;showToast('SECTOR '+String(e.index+1).padStart(2,'0')+' / '+e.name);}
+    if(e.type==='pitTell'){alertText=e.text;alertTimer=2.3;}
+    if(e.type==='sector'){audio.sector=e.index;audio.pitAct=e.campaign==='pit'?game.definition.act:null;showToast((e.campaign==='pit'?'PIT / TRIAL ':'SECTOR ')+String(e.index+1).padStart(2,'0')+' / '+e.name);}
     if(e.type==='bass')audio.play('fire',2);if(e.type==='complete'||e.type==='dead')result();
   }
 }
@@ -155,15 +171,15 @@ function updateHUD(){
   $('ori-energy').innerHTML=Math.floor(p.ori)+'<small>%</small>';$('ori-meter').style.width=p.ori+'%';$('ori-status').textContent=game.assistTime>0?'ASSISTING MICHAEL':p.ori>=30?'COMPANION ONLINE':'RECHARGING';
   const liberation=game.phiwadCustom?Math.min(100,Math.round(game.levelFreed/Math.max(1,game.level.captives.length+game.level.enemies.filter(e=>e.human).length)*100)):game.liberation;
   $('liberation').textContent=liberation;$('liberation-meter').style.width=liberation+'%';$('freed-count').textContent=String(game.totalFreed).padStart(2,'0')+' MINDS FREED';$('key-icon').classList.toggle('acquired',p.key);$('key-label').textContent=p.key?'GOLD KEY':'NO KEY';$('artifacts').textContent=String(game.totalArtifacts).padStart(2,'0')+' ARTIFACTS';
-  $('bass-meter').style.width=game.bassCharge+'%';$('bass-label').innerHTML=(game.bassCharge>=100?'DROP THE BASS':'BASS DROP')+' <kbd>'+(vrMode?'BAR':padMode?'D↓':'B')+'</kbd>';$('secret-counter').textContent='SECRETS '+(game.level.secretFound?'01':'00')+' / 01';$('bottom-level').textContent=SECTORS[game.levelIndex].name;$('objective').textContent=game.objective;$('room-label').textContent=game.region||SECTORS[game.levelIndex].tag;
+  $('bass-meter').style.width=game.bassCharge+'%';$('bass-label').innerHTML=(game.bassCharge>=100?'DROP THE BASS':'BASS DROP')+' <kbd>'+(vrMode?'BAR':padMode?'D↓':'B')+'</kbd>';$('secret-counter').textContent=game.campaign==='pit'?'TRIALS '+game.pitRecord.length+' / 12':'SECRETS '+(game.level.secretFound?'01':'00')+' / 01';$('bottom-level').textContent=game.definition.name;$('objective').textContent=game.objective;$('room-label').textContent=game.region||game.definition.tag;
   const t=game.objectiveTarget,a=angleDiff(Math.atan2(t.y-p.y,t.x-p.x),p.a);$('objective-bearing').textContent=(a<-1?'←':a>1?'→':a<-.25?'↖':a>.25?'↗':'↑')+' '+(t.label||'WARDEN')+' / '+Math.round(Math.hypot(t.x-p.x,t.y-p.y))+'m';
-  if(game.mode!=='title')$('header-sector').textContent=game.phiwadCustom?'ΦWAD / CUSTOM MISSION':'ACT '+['I','II','III','IV'][Math.floor(game.levelIndex/3)]+' / SECTOR '+String(game.levelIndex+1).padStart(2,'0')+' OF 12';
+  if(game.mode!=='title')$('header-sector').textContent=game.campaign==='pit'?'PIT / '+PIT_ACTS[game.definition.act].name+' / TRIAL '+(game.levelIndex+1)+' OF 12':game.phiwadCustom?'ΦWAD / CUSTOM MISSION':'ACT '+['I','II','III','IV'][Math.floor(game.levelIndex/3)]+' / SECTOR '+String(game.levelIndex+1).padStart(2,'0')+' OF 12';
   $('interaction').textContent=playing?game.interactionHint().replace('[ E ]',vrMode?'[ R GRIP ]':padMode?'[ A ]':'[ E ]'):'';$('vision-tag').hidden=!playing||!game.shift;$('vision-value').textContent=Math.floor(p.vision);
-  const bossVisible=playing&&alive&&Math.hypot(alive.x-p.x,alive.y-p.y)<11;$('boss-bar').hidden=!bossVisible;if(bossVisible){$('boss-hp').style.width=alive.hp/alive.maxHp*100+'%';$('boss-phase').textContent='PHASE '+alive.phase;}
+  const bossVisible=playing&&alive&&Math.hypot(alive.x-p.x,alive.y-p.y)<11;$('boss-bar').hidden=!bossVisible;if(bossVisible){$('boss-hp').style.width=alive.hp/alive.maxHp*100+'%';$('boss-name').textContent=alive.pitBoss?PIT_BOSSES[alive.pitBoss].name:'THE WARDEN';$('boss-phase').textContent='PHASE '+alive.phase+(alive.pitBoss?(alive.exposed>0?' / CORE OPEN':' / GUARDED'):'');}
   for(const b of $('weapon-slots').children){const n=Number(b.dataset.weapon);b.classList.toggle('active',n===game.weapon);b.disabled=n>=game.unlocked;b.setAttribute('aria-pressed',String(n===game.weapon));const enabled=n<game.unlocked;if(b.dataset.enabled!==String(enabled)){const iconContext=b.querySelector('canvas').getContext('2d');iconContext.clearRect(0,0,80,44);drawWeaponIcon(iconContext,n,0,0,80,44,enabled);b.querySelector('.weapon-lock').hidden=enabled;b.dataset.enabled=enabled;}b.title=(n>=game.unlocked?'LOCKED / ':'')+WEAPONS[n].name;}
-  $('portrait-mood').textContent=game.portraitMood;$('onboarding').hidden=!!screen||game.levelIndex!==0||game.lesson>=3;
+  $('portrait-mood').textContent=game.portraitMood;$('onboarding').hidden=!!screen||game.campaign==='pit'||game.levelIndex!==0||game.lesson>=3;
   $('onboarding-text').textContent=(vrMode?['LEFT STICK TO MOVE / RIGHT STICK TO TURN','FACE THE STRIPED DOOR / RIGHT GRIP TO OPEN','R TRIGGER FIRE / L GRIP ORI / X OR WRIST RELOAD']:padMode?['LEFT STICK TO MOVE / RIGHT STICK TO TURN','FACE THE STRIPED DOOR / A TO OPEN','RT TO FIRE / Y FOR ORI / X TO RELOAD']:['WASD TO MOVE / MOUSE OR ← → TO TURN','FACE THE STRIPED DOOR / E TO OPEN','CLICK OR Z TO FIRE / Q FOR ORI / R TO RELOAD'])[Math.min(2,game.lesson)];
-  $('hud-sector').textContent=game.phiwadCustom?'ΦWAD / CUSTOM':'SECTOR '+String(game.levelIndex+1).padStart(2,'0')+' / 12';$('hud-sector-name').textContent=SECTORS[game.levelIndex].name;
+  $('hud-sector').textContent=game.campaign==='pit'?'PIT / TRIAL '+(game.levelIndex+1)+' / 12':game.phiwadCustom?'ΦWAD / CUSTOM':'SECTOR '+String(game.levelIndex+1).padStart(2,'0')+' / 12';$('hud-sector-name').textContent=game.definition.name;
   const relays=game.level.relays.filter(r=>r.active).length,rescues=game.level.captives.filter(c=>c.freed).length;
   const summary=[['RELAYS '+relays+'/'+game.level.relays.length,relays===game.level.relays.length],['RESCUES '+rescues+'/'+game.level.captives.length,rescues===game.level.captives.length],['KEY '+(p.key?'ACQUIRED':'NEEDED'),p.key]];
   const objectiveKey=summary.map(r=>r.join(':')).join('|');if($('objective-list').dataset.value!==objectiveKey){$('objective-list').replaceChildren(...summary.map(([text,done])=>{const item=document.createElement('span');item.textContent=text;item.classList.toggle('done',done);return item;}));$('objective-list').dataset.value=objectiveKey;}
@@ -208,11 +224,13 @@ $('phiwad-input').addEventListener('change',async event=>{
   finally{input.value='';}
 });
 $('start-btn').addEventListener('click',()=>play(true));$('nightmare-btn').addEventListener('click',()=>{communications.reset();game.startNightmare({energyMode:settings.energyMode});mapOpen=false;play();});$('continue-btn').hidden=!saved;
-$('continue-btn').addEventListener('click',()=>{try{game.restore(saved);play();showDialogue('Welcome back, Michael. I saved your place in the rebellion.');}catch(e){showToast(e.message);saved=null;$('continue-btn').hidden=true;}});
+$('pit-btn').addEventListener('click',()=>{communications.reset();game.startPit();mapOpen=false;play();});$('continue-pit-btn').hidden=!pitSaved;
+$('continue-pit-btn').addEventListener('click',()=>{try{game.restore(pitSaved,{campaign:'pit'});mapOpen=false;if(game.mode==='playing')play();else result();}catch(e){showToast(e.message);pitSaved=null;$('continue-pit-btn').hidden=true;}});
+$('continue-btn').addEventListener('click',()=>{try{game.restore(saved,{campaign:'original'});play();showDialogue('Welcome back, Michael. I saved your place in the rebellion.');}catch(e){showToast(e.message);saved=null;$('continue-btn').hidden=true;}});
 function refreshCommunications(){const entries=communications.log.slice(-30);$('communication-log').textContent=entries.map(e=>e.speaker+': '+e.text).join('\n')||'No transmissions yet.';}
 $('energyMode').addEventListener('input',()=>{settings.energyMode=$('energyMode').value;storeSettings();});
 $('resume-btn').addEventListener('click',()=>play());$('save-btn').addEventListener('click',()=>{game.saveCheckpoint();saveCheckpoint();showToast('CHECKPOINT SAVED / YOUR SIGNAL IS YOURS');});$('quit-btn').addEventListener('click',home);$('result-home').addEventListener('click',home);
-$('result-btn').addEventListener('click',()=>{if(game.phiwadCustom){if(game.mode==='dead'){game.retry();play();}else home();return;}if(game.mode==='dead'){game.retry();play();}else if(game.mode==='ending'&&game.levelIndex<SECTORS.length-1){game.continueCampaign()||game.continueBeyond();play();}else if(game.mode==='ending')play(true);else{game.next();play();}});
+$('result-btn').addEventListener('click',()=>{if(game.campaign==='pit'){if(game.mode==='dead')game.retry();else if(game.mode==='ending')game.startPit();else game.next();play();return;}if(game.phiwadCustom){if(game.mode==='dead'){game.retry();play();}else home();return;}if(game.mode==='dead'){game.retry();play();}else if(game.mode==='ending'&&game.levelIndex<SECTORS.length-1){game.continueCampaign()||game.continueBeyond();play();}else if(game.mode==='ending')play(true);else{game.next();play();}});
 $('title-settings').addEventListener('click',openSettings);$('map-toggle').addEventListener('click',()=>{if(game.mode==='playing'){mapOpen=!mapOpen;updateHUD();}});$('settings-btn').addEventListener('click',openSettings);$('pause-settings').addEventListener('click',openSettings);$('settings-back').addEventListener('click',()=>showScreen(returnScreen));$('howto-btn').addEventListener('click',openHelp);$('help-back').addEventListener('click',()=>showScreen(returnScreen));
 $('controller-setup').addEventListener('click',()=>{openSettings();if(inputMode!=='keyboard')controllerMenu.focus($('controllerSensitivity'));else $('controller-section').scrollIntoView({block:'nearest'});});
 for(const [id,mode]of [['vr-btn','arcade'],['immersive-btn','immersive']])$(id).addEventListener('click',()=>{audio.start();void vr.enter(mode).finally(()=>{for(const button of ['vr-btn','immersive-btn'])$(button).disabled=vr.active;});});$('vr-recenter').addEventListener('click',()=>vr.recenter());$('vr-exit').addEventListener('click',()=>void vr.exit());
