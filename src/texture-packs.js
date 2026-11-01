@@ -39,6 +39,43 @@ export function validateTextureManifest(manifest,style){
  }
  return Object.freeze(assets);
 }
+// Original 256×256 authored image tiles are shipped in public/texture-packs.
+// Retro intentionally stays byte-for-byte the existing original procedural look.
+const authoredSurfaceFiles=Object.freeze(Object.fromEntries(SURFACE_MATERIALS.map(id=>[id,id+'.png'])));
+export const AUTHORED_TEXTURE_MANIFESTS=Object.freeze(Object.fromEntries(
+ ['industrial','matrix-facility'].map(style=>[style,Object.freeze({schema:'btm.texture-pack/1',style,surfaces:authoredSurfaceFiles})])
+));
+export function textureTileSize(settings={},maxTextureSize=4096){
+ const tier=textureSettings(settings).textureQuality;
+ let target=tier==='retro'?64:tier==='ultra'?256:128;
+ if(settings?.vrQuality==='performance')target=Math.min(target,64);
+ if(settings?.vrQuality==='balanced')target=Math.min(target,128);
+ const limit=Number.isFinite(maxTextureSize)?maxTextureSize:2048;
+ return limit>=4096?target:limit>=2048?Math.min(target,128):64;
+}
+export function browserLoadTextureImage(url){
+ // Same-origin paths are supplied exclusively by validated first-party manifests.
+ return new Promise(resolve=>{
+  const image=new Image();
+  image.onload=()=>resolve(image.naturalWidth===256&&image.naturalHeight===256?image:null);
+  image.onerror=()=>resolve(null);
+  image.decoding='async';
+  image.src=url;
+ });
+}
+export async function loadAuthoredTexturePack(style,loadImage=browserLoadTextureImage){
+ const manifest=AUTHORED_TEXTURE_MANIFESTS[style];
+ if(!manifest)return Object.freeze({});
+ const sources=validateTextureManifest(manifest,style);
+ const result=await Promise.all(Object.entries(sources).map(async ([material,url])=>{
+  try{
+   const image=await loadImage(url);
+   if(!image||image.naturalWidth!==256||image.naturalHeight!==256)return null;
+   return [material,image];
+  }catch{return null;}
+ }));
+ return Object.freeze(Object.fromEntries(result.filter(Boolean)));
+}
 const mix=(hex,white=.10)=>{
  const v=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
  return '#'+v.map(n=>Math.min(255,Math.round(n+(255-n)*white)).toString(16).padStart(2,'0')).join('');

@@ -80,10 +80,10 @@ test('all six styles paint distinct wall, floor and ceiling tiles at each tier',
 test('both renderers and Picture settings are wired to style switching without modifying simulation',async()=>{
  const file=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
  const [atlas,vr,classic,main,index,build]=await Promise.all(['src/world-atlas.js','src/vr-world-renderer.js','src/renderer.js','src/main.js','index.html','scripts/build.mjs'].map(file));
- assert.match(atlas,/paintPackSurface\(t, 'wall'\+i/);
- assert.match(atlas,/paintPackSurface\(t, 'floor'/);
- assert.match(atlas,/paintPackSurface\(t, 'ceiling'/);
- assert.match(vr,/textureKey!==textureSignature\(game.level,data.settings\)/);
+ assert.match(atlas,/surface\('wall'\+i/);
+ assert.match(atlas,/floor: surface\('floor'\)/);
+ assert.match(atlas,/ceiling: surface\('ceiling'\)/);
+ assert.match(vr,/this\.textureKey!==key/);
  assert.match(vr,/this\.level!==level/);
  assert.match(classic,/currentTextureKey!==textureSignature/);
  assert.match(index,/id="textureStyle"/);assert.match(index,/id="textureQuality"/);
