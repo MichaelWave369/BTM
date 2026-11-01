@@ -13,7 +13,7 @@ export function stepImmersive(game, spatial, pad, settings, dt, {map = () => {},
  const {rig, pose} = spatial, playing = game.mode === 'playing';
  let target = null, captured = false;
  const input = rig.prepare(game, pose, pad, settings, dt, playing, () => {
-  target = playing ? spatial.pointerTarget?.() : null;
+  target = playing ? spatial.pointerTarget?.(pad) : null;
   rig.uiCaptured = !!target || !!rig.uiCaptured && !immersivePadNeutral(pad);
   captured = rig.uiCaptured;
   return captured;
