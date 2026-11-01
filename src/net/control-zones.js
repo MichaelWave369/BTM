@@ -26,7 +26,7 @@ export function controlSnapshot(state,score){
   occupancy:{...state.occupancy},rotationIn:Math.max(0,Math.round(state.nextRotation*10)/10),
   score:{cyan:score.cyan,pink:score.pink},zones:state.zones.length};
 }
-export function advanceControl(state,actors,level,dt,score,limit){
+export function advanceControl(state,actors,level,now,dt,score,limit){
  if(!Number.isFinite(dt)||dt<0||dt>.1)throw Error('Invalid control tick');
  state.nextRotation-=dt;
  if(state.nextRotation<=0){
@@ -36,7 +36,7 @@ export function advanceControl(state,actors,level,dt,score,limit){
  }
  const zone=controlZone(state),counts={cyan:0,pink:0};
  for(const a of actors){
-  if(!a.connected||a.status!=='alive'||a.invulnerable>level.time)continue;
+  if(!a.connected||a.status!=='alive'||a.invulnerable>now)continue;
   if(a.team!=='cyan'&&a.team!=='pink')continue;
   if(Math.hypot(a.player.x-zone.x,a.player.y-zone.y)<=zone.radius&&lineOfSight(level,a.player,zone))counts[a.team]++;
  }
