@@ -83,8 +83,9 @@ export class WristComputer{
   if(eligible){if(this.attentionSince<0)this.attentionSince=now;this.lostSince=-1;}
   else{this.attentionSince=-1;if(this.lostSince<0)this.lostSince=now;}
   const previous=this.requested;
-  const auto=eligible&&now-this.attentionSince>=350||
-   previous&&!this.pinned&&this.lostSince>=0&&now-this.lostSince<280;
+  const auto=!this.suppressAutoUntilLower&&s.vrWristActivation!=='manual'&&
+   (eligible&&now-this.attentionSince>=350||
+   previous&&!this.pinned&&this.lostSince>=0&&now-this.lostSince<280);
   this.requested=this.pinned||auto;
   if(this.requested&&!previous)this.guardUntil=now+260;
   this.guard=this.requested&&now<this.guardUntil;
@@ -103,7 +104,7 @@ export class WristComputer{
    // Accessible fallback: a pinned menu remains comfortably in view even
    // after lowering the watch, rather than drifting outside the frustum.
    for(let i=0;i<3;i++)
-    p.center[i]=eye[i]-head[8+i]*.78-head[i]*.18-head[4+i]*.09;
+    p.center[i]=eye[i]-head[8+i]*.78-head[i]*.18+head[4+i]*.13;
   }else{
    // The expanded hologram grows from above/in front of the left cuff.
    // Keep a predictable small wrist offset; never compute a huge "lift" that
