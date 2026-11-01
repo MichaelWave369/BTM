@@ -17,6 +17,15 @@ import {PointerCapture,keyCode} from './controls.js';
 import {GamepadInput,ControllerMenu,ControllerRumble,CONTROLLER_DEFAULTS,controllerSettings,gameplayInput,controllerActions} from './gamepad.js';
 const $=id=>document.getElementById(id),canvas=$('game'),game=new Game(),renderer=new Renderer(canvas),audio=new AudioEngine(),communications=new Communications();
 const SAVE_KEY=ORIGINAL_SAVE_KEY,SETTINGS_KEY='mwave-ori-settings-v1';
+// Keep the original SVG title scene when the optional locally bundled album art is absent.
+// Once the image is added, use its complete cover without cropping the title or credits.
+const titleCover=$('title-cover-art');
+if(titleCover){
+  const updateTitleCover=()=>{$('title-screen').classList.toggle('album-cover-ready',titleCover.naturalWidth>0);};
+  titleCover.addEventListener('load',updateTitleCover);
+  titleCover.addEventListener('error',updateTitleCover);
+  if(titleCover.complete)updateTitleCover();
+}
 const defaults={...IMMERSIVE_DEFAULTS,vrDistance:2.5,vrWidth:2.8,...CONTROLLER_DEFAULTS,sensitivity:1,music:.35,sfx:.65,muted:false,resolution:640,crt:true,controlMode:'auto',reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches};
 const controller=new GamepadInput(),rumble=new ControllerRumble();let inputMode='keyboard',desktopFrame=0,alertText='',alertTimer=0;
 let settings={...defaults,energyMode:'survival'},saved=null,pitSaved=null,screen='title-screen',returnScreen='title-screen',keys=new Set(),fire=false,mapOpen=false,dragging=false,lastMouseX=0,toastTimer=0,dialogueTimer=0,lastFrame=performance.now(),hudTime=0,fpsTime=0,fpsFrames=0,ambientTimer=8,touch=matchMedia('(pointer:coarse)').matches,altStart=0;
