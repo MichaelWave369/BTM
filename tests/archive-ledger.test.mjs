@@ -2,20 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {Game,createLevel} from '../src/core.js';
-import {ARCHIVE_RECORDS,ARCHIVE_DOSSIERS,ARCHIVE_SCHEMA,ARCHIVE_STORAGE_KEY,ArchiveLedger,recordForSign,recordById} from '../src/archive-ledger.js';
+import {ARCHIVE_RECORDS,ARCHIVE_DOSSIERS,ARCHIVE_SCHEMA,ARCHIVE_STORAGE_KEY,ArchiveLedger,recordForSign,recordById,ARCHIVE_EVIDENCE_CASES} from '../src/archive-ledger.js';
 
 function storage(){
  const values=new Map();
  return {values,getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,value)};
 }
-test('first 12 Human Ledger records are unique, authored, tied to original-sector wall plaques',()=>{
- assert.equal(ARCHIVE_RECORDS.length,12);
+test('all 48 Human Ledger records are unique, authored, tied to 12 original-sector wall plaques',()=>{
+ assert.equal(ARCHIVE_RECORDS.length,48);
  assert.deepEqual(ARCHIVE_DOSSIERS.map(d=>d.threshold),[3,6,9]);
  assert.equal(new Set(ARCHIVE_RECORDS.map(r=>r.id)).size,12);
  assert.ok(ARCHIVE_RECORDS.some(r=>r.kind.includes('PLUGGED')));
  assert.ok(ARCHIVE_RECORDS.some(r=>r.kind.includes('REPEATER')));
  assert.ok(ARCHIVE_RECORDS.some(r=>r.kind.includes('WARDEN')));
- for(let sector=0;sector<3;sector++){
+ for(let sector=0;sector<12;sector++){
   const level=createLevel(sector);
   assert.equal(level.signs.length,4);
   for(let plaque=0;plaque<4;plaque++){
@@ -27,7 +27,7 @@ test('first 12 Human Ledger records are unique, authored, tied to original-secto
   }
  }
  assert.equal(recordForSign('pit',0,0),null);
- assert.equal(recordForSign('original',8,0),null);
+ assert.equal(recordForSign('original',12,0),null);
  assert.equal(recordById('unknown'),null);
 });
 test('3/6/9 dossiers unlock once from unique readings; no unrecovered content leaks',()=>{
