@@ -5,20 +5,28 @@ import {MATERIALS} from './level-geometry.js';
 import {signalPalette} from './neon-signal.js';
 import {paintPackSurface} from './texture-packs.js';
 
-export function createWorldAtlas(level, assets = makeAssets(), settings = {}) {
+export function createWorldAtlas(level, assets = makeAssets(), settings = {}, options = {}) {
+ const tileSize = [64,128,256].includes(options.tileSize) ? options.tileSize : 64;
+ const authored = options.images || {};
  const canvas = document.createElement('canvas');
- canvas.width = canvas.height = 1024;
+ canvas.width = canvas.height = 16 * tileSize;
  const g = canvas.getContext('2d'); g.imageSmoothingEnabled = false;
  const palette = signalPalette(level);
  function tile(draw) {
-  const c = document.createElement('canvas'); c.width = c.height = 64;
-  const t = c.getContext('2d'); t.imageSmoothingEnabled = false; draw(t); return c;
+  const c = document.createElement('canvas'); c.width = c.height = tileSize;
+  const t = c.getContext('2d'); t.imageSmoothingEnabled = false;
+  t.scale(tileSize / 64, tileSize / 64); draw(t); return c;
+ }
+ function surface(material,base=null) {
+  const image=authored[material];
+  if(image)return tile(t=>{t.imageSmoothingEnabled=true;t.drawImage(image,0,0,64,64);});
+  return tile(t=>paintPackSurface(t,material,level,settings,base));
  }
  const walls = {};
- for (let i = 1; i <= 6; i++) walls[i] = tile(t => paintPackSurface(t, 'wall'+i, level, settings, assets.textures[i]));
+ for (let i = 1; i <= 6; i++) walls[i] = surface('wall'+i, assets.textures[i]);
  const special = {
-  floor: tile(t => paintPackSurface(t, 'floor', level, settings)),
-  ceiling: tile(t => paintPackSurface(t, 'ceiling', level, settings)),
+  floor: surface('floor'),
+  ceiling: surface('ceiling'),
   white: tile(t => { t.fillStyle = '#fff'; t.fillRect(0, 0, 64, 64); }),
   portal: tile(t => {
    t.strokeStyle = palette.accent; t.lineWidth = 5; t.strokeRect(7, 3, 50, 58);
@@ -55,7 +63,10 @@ export function createWorldAtlas(level, assets = makeAssets(), settings = {}) {
    const sign = level.signs[Number(name.slice(5))];
    if (sign) image = makeSign(sign, walls[level.cells[sign.y][sign.x]]);
   }
-  if (image) g.drawImage(image, i % 16 * 64 + 2, Math.floor(i / 16) * 64 + 2, 60, 60);
+  if (image) {
+   const scale=tileSize/64;
+   g.drawImage(image, i % 16 * tileSize + 2*scale, Math.floor(i/16)*tileSize+2*scale, 60*scale, 60*scale);
+  }
  });
  return canvas;
 }
