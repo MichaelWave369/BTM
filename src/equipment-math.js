@@ -137,7 +137,7 @@ export function panelsOverlap(a,b,rig,padding=.035){const x=panelAngularBounds(a
 export function placeComfortCaption(out,rig,settings={},wrist=null,rows=2){
  const a=Number.isFinite(rig.headAngle)?rig.headAngle:-Math.PI/2,fx=Math.cos(a),fz=Math.sin(a),rx=-fz,rz=fx;
  const alert=!!settings.alertDock;
- out.width=alert?.46:.52;out.height=alert?.075:.20+Math.max(0,rows-2)*.025;
+ out.width=alert ? .46 : .52;out.height=alert ? .075 : .20+Math.max(0,rows-2)*.025;
  out.right.splice(0,3,rx,0,rz);out.up.splice(0,3,0,1,0);out.normal.splice(0,3,-fx,0,-fz);
  // Keep the original high-priority alert lane. Ordinary dialogue sits about
  // 25 degrees to the right, ~1.5 meters away and BELOW eye height. Its inner
