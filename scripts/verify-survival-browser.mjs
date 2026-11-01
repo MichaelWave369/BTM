@@ -17,6 +17,9 @@ try{
  const initial=Number(await page.locator('#energy').textContent());assert.equal(initial,100);assert.match(await page.locator('#reserve').textContent(),/RES 45\/180/);
  // Fire real energy shots, then walk to/open the first door and engage the host.
  await page.keyboard.down('KeyZ');await page.waitForTimeout(1800);await page.keyboard.up('KeyZ');
+ // Wait past the 150ms buffered-shot lifetime and the 80ms HUD refresh before
+ // measuring idle energy; an in-flight final shot is not passive regeneration.
+ await page.waitForTimeout(350);
  const spent=Number(await page.locator('#energy').textContent());assert(spent<initial);
  await page.waitForTimeout(500);assert.equal(Number(await page.locator('#energy').textContent()),spent,'passive energy refill');
  await page.keyboard.press('KeyR');await page.waitForTimeout(1100);
