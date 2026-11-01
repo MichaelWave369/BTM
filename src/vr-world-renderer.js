@@ -32,7 +32,6 @@ export class VRWorldRenderer {
   }
   // A visible menu owns gameplay input, even if the right ray briefly misses
   // a tiny button or leaves the panel. No accidental shots behind the menu.
-  if(ui.wrist.guard)return ui.blocker;
   if(!pose.rightRay)return ui.wrist.requested?ui.blocker:null;
   matMultiply(this.rayWorld,rig.root,pose.rightRay);let selected=null,panel=null;
   for(const candidate of [ui.wristPanel,ui.statusPanel]){if(!candidate)continue;const hit=hitPanel(this.rayWorld,candidate);if(hit&&(!selected||hit.distance<selected.distance)){selected=hit;panel=candidate;}}
@@ -40,7 +39,12 @@ export class VRWorldRenderer {
   const origin={x:this.rayWorld[12]/WORLD_SCALE,y:this.rayWorld[14]/WORLD_SCALE,height:this.rayWorld[13]/WORLD_SCALE},direction={x:-this.rayWorld[8],y:-this.rayWorld[10],z:-this.rayWorld[9]},wall=traceEnvironment(game.level,origin,direction,selected.distance/WORLD_SCALE);
   if(wall.distance*WORLD_SCALE<selected.distance-.04)return ui.wrist.requested?ui.blocker:null;
   const pointer=this.uiPointer??={from:new Float32Array(3),to:new Float32Array(3)};for(let i=0;i<3;i++){pointer.from[i]=this.rayWorld[12+i];pointer.to[i]=pointer.from[i]-this.rayWorld[8+i]*selected.distance;}rig.uiPointer=pointer;
-  if(panel===ui.statusPanel)return ui.statusTarget;ui.cursor=selected;return ui.wrist.open>.8?(ui.targetAt(selected)||ui.blocker):ui.blocker;
+  ui.cursor=selected;
+  // Show the ray/cursor while the menu is animating, but block a click until
+  // the opening safety guard expires. This preserves aim feedback in both eyes.
+  if(ui.wrist.guard)return ui.blocker;
+  if(panel===ui.statusPanel)return ui.statusTarget;
+  return ui.wrist.open>.8?(ui.targetAt(selected)||ui.blocker):ui.blocker;
  }
  renderWorld(views,game,rig,dt,data,framebuffer=null){
   const start=performance.now(),g=this.gl,q=QUALITY[data.settings?.vrQuality]||QUALITY.balanced;this.ensureTexturePack(game.level,data.settings);const atlasPixels=textureTileSize(data.settings,g.getParameter?g.getParameter(g.MAX_TEXTURE_SIZE):2048),key=textureSignature(game.level,data.settings)+'/'+atlasPixels+'/'+this.imageRevision;if(this.level!==game.level||this.textureKey!==key)this.setLevel(game.level,data.settings,key,atlasPixels);const dynamic=this.scene.update(game,rig,dt,data.settings),theme=signalPalette(game.level).fog,fog=this.fogUniform;if(game.shift){fog[0]=.045;fog[1]=.025;fog[2]=.075;}else for(let i=0;i<3;i++)fog[i]=theme[i];this.diagnostics.drawCalls=this.diagnostics.visibleChunks=this.diagnostics.triangles=0;
