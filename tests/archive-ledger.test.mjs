@@ -61,7 +61,7 @@ test('discovered archive persists independently across new runs, retries and rel
  g.retry();
  g.start();
  assert.equal(new ArchiveLedger(store).find(ARCHIVE_RECORDS[0].id)?.subject,'Mara Venn');
- assert.notEqual(JSON.stringify(g.snapshot()),before,'gameplay may proceed independently');
+ assert.equal(JSON.stringify(g.snapshot()),before,'restarting a new campaign must preserve its original deterministic initial state');
  const g2=new Game();g2.restore(JSON.parse(before));
  assert.equal(g2.levelIndex,0);
  assert.equal(g2.snapshot().version,1);
