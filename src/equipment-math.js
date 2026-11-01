@@ -1,7 +1,7 @@
 import {WORLD_SCALE,entityHeight} from './spatial.js';
 // Meter-based equipment layout and sanitized optional settings. No simulation writes.
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-export const EQUIPMENT_DEFAULTS=Object.freeze({captions:true,spokenDialogue:false,speechVolume:.7,vrHandStyle:'combat',vrWristSize:.32,vrWristOffset:.065,vrWristActivation:'gaze',vrWristSensitivity:.4,vrHudVisible:true,vrHologramBrightness:.85,vrSubtitleSize:1,vrSubtitleMode:'comfort',vrSubtitleDuration:1,vrGripX:0,vrGripY:0,vrGripZ:0,vrLeftHandPitch:20,vrLeftHandYaw:0,vrLeftHandRoll:0,vrWristTopOffset:.03,vrOriScale:.65,vrOriPeripheral:true,vrInterfaceMotion:true});
+export const EQUIPMENT_DEFAULTS=Object.freeze({captions:true,spokenDialogue:false,speechVolume:.7,vrHandStyle:'combat',vrWristSize:.36,vrWristOffset:.065,vrWristActivation:'gaze',vrWristSensitivity:.4,vrHudVisible:true,vrHologramBrightness:.85,vrSubtitleSize:1,vrSubtitleMode:'comfort',vrSubtitleDuration:1,vrGripX:0,vrGripY:0,vrGripZ:0,vrLeftHandPitch:20,vrLeftHandYaw:0,vrLeftHandRoll:0,vrWristTopOffset:.03,vrOriScale:.65,vrOriPeripheral:true,vrInterfaceMotion:true});
 export function equipmentSettings(s={}){
  const out={...EQUIPMENT_DEFAULTS};
  for(const [key,options]of Object.entries({vrHandStyle:['combat','neon','tactical'],vrWristActivation:['gaze','raised','manual'],vrSubtitleMode:['comfort','ori']}))if(options.includes(s[key]))out[key]=s[key];
@@ -13,48 +13,115 @@ function normal(v){const n=Math.hypot(v[0],v[1],v[2])||1;for(let i=0;i<3;i++)v[i
 export function equipmentPanel(width=.32,height=width/1.5){return{center:[0,0,0],right:[1,0,0],up:[0,1,0],normal:[0,0,1],width,height};}
 function at(out,m,x,y,z){for(let i=0;i<3;i++)out[i]=m[12+i]+m[i]*x+m[4+i]*y+m[8+i]*z;}
 export class WristComputer{
- constructor(){this.status=equipmentPanel(.064,.028);this.panel=equipmentPanel();this.toEye=[0,0,0];this.open=0;this.pinned=false;this.last=-1;this.attentionSince=-1;this.lostSince=-1;this.guardUntil=0;this.requested=false;this.guard=false;this.visible=false;this.statusVisible=false;}
- togglePin(){this.pinned=!this.pinned;this.attentionSince=-1;}
- reset(){this.open=0;this.pinned=false;this.last=-1;this.attentionSince=this.lostSince=-1;this.requested=this.guard=this.visible=this.statusVisible=false;}
+ constructor(){
+  this.status=equipmentPanel(.064,.028);this.panel=equipmentPanel();this.toEye=[0,0,0];
+  this.open=0;this.pinned=false;this.last=-1;this.attentionSince=-1;this.lostSince=-1;
+  this.guardUntil=0;this.requested=false;this.guard=false;this.visible=false;this.statusVisible=false;
+  this.suppressAutoUntilLower=false;this.watchFacing=0;this.watchGaze=0;this.watchDistance=0;
+  this.watchRaised=false;this.watchReady=false;
+ }
+ // A tap on the cuff, or a left grip with the wrist raised in front of the
+ // headset, deliberately pins/unpins the expanded menu. Unpinning must not
+ // immediately re-trigger a saved automatic-gaze preference.
+ togglePin(){
+  this.pinned=!this.pinned;
+  this.suppressAutoUntilLower=!this.pinned;
+  this.attentionSince=this.lostSince=-1;
+  this.last=-1;
+  return this.pinned;
+ }
+ canToggle(rig,settings={}){
+  return !!(rig?.hasLeft&&equipmentSettings(settings).vrHudVisible&&
+   (this.pinned||this.watchReady));
+ }
+ reset(){
+  this.open=0;this.pinned=false;this.last=-1;
+  this.attentionSince=this.lostSince=-1;this.guardUntil=0;
+  this.requested=this.guard=this.visible=this.statusVisible=false;
+  this.suppressAutoUntilLower=false;this.watchReady=this.watchRaised=false;
+  this.watchFacing=this.watchGaze=this.watchDistance=0;
+ }
  update(rig,settings={},now=0){
-  const s=equipmentSettings(settings),dt=this.last<0?0:clamp((now-this.last)/1000,0,.05);this.last=now;
-  // Visual calibration never alters controller tracking, aim, or interaction rays.
-  const m=rig.hasVisualLeft?rig.leftVisualWorld:rig.leftWorld,eye=rig.eye;
-  if(!rig.hasLeft||!m||!s.vrHudVisible){this.open=0;this.visible=this.statusVisible=this.requested=this.guard=false;this.pinned=false;this.attentionSince=-1;return this;}
-  const status=this.status;at(status.center,m,0,.0415+s.vrWristTopOffset,.115);
-  for(let i=0;i<3;i++){status.right[i]=m[i];status.up[i]=-m[8+i];status.normal[i]=m[4+i];this.toEye[i]=eye[i]-status.center[i];}
-  const distance=Math.hypot(...this.toEye);normal(this.toEye);this.statusVisible=distance>.28&&distance<1.05;
-  const facing=dot(status.normal,this.toEye),head=rig.headWorld;
-  const view=head?head[8]*this.toEye[0]+head[9]*this.toEye[1]+head[10]*this.toEye[2]:1;
-  const inRange=distance>=.36&&distance<=.95,height=status.center[1]>=eye[1]-(this.requested?.50:.42),threshold=s.vrWristSensitivity-(this.requested?.16:0);
-  const attentive=inRange&&height&&facing>threshold&&(s.vrWristActivation==='raised'||view>(this.requested?.42:.60)),eligible=s.vrWristActivation!=='manual'&&attentive;
-  if(eligible){if(this.attentionSince<0)this.attentionSince=now;this.lostSince=-1;}else{this.attentionSince=-1;if(this.lostSince<0)this.lostSince=now;}
-  let requested=inRange&&(this.pinned||eligible&&now-this.attentionSince>=160||this.requested&&now-this.lostSince<220);if(!inRange)requested=false;
-  if(requested&&!this.requested)this.guardUntil=now+240;this.requested=requested;this.guard=requested&&now<this.guardUntil;
-  const motion=s.vrInterfaceMotion&&!settings.reducedMotion;this.open=motion?this.open+((requested?1:0)-this.open)*(1-Math.exp(-dt*15)):(requested?1:0);this.visible=inRange&&this.open>.08;
-  // The grip's local +Y can point DOWN after a real Touch wrist roll. Keep the
-  // hardware on the calibrated cuff, but project the hologram from the glove's
-  // upper silhouette in viewer-up space. Its entire lower edge clears the hand.
-  const p=this.panel;for(let i=0;i<3;i++)p.normal[i]=this.toEye[i];normal(p.normal);
-  for(let i=0;i<3;i++)p.right[i]=(head?head[i]:i===0?1:0)*.85+status.right[i]*.15;
-  const project=dot(p.right,p.normal);for(let i=0;i<3;i++)p.right[i]-=p.normal[i]*project;normal(p.right);
-  const n=p.normal,r=p.right;p.up[0]=n[1]*r[2]-n[2]*r[1];p.up[1]=n[2]*r[0]-n[0]*r[2];p.up[2]=n[0]*r[1]-n[1]*r[0];normal(p.up);
-  // Prevent the panel from flipping upside down as the wrist rotates.
-  const upward=head?[head[4],head[5],head[6]]:[0,1,0];if(dot(p.up,upward)<0){for(let i=0;i<3;i++){p.up[i]*=-1;p.right[i]*=-1;}}
-  p.width=s.vrWristSize*(.92+.08*this.open);p.height=p.width/1.5;
-  at(p.center,m,0,.015,.07);
-  let top=-Infinity;
-  // Conservative bounds of the existing glove, fingers and forearm, in meters.
-  for(const x of [-.06,.06])for(const y of [-.06,.045])for(const z of [-.11,.16]){
-   const corner=[m[12]+m[0]*x+m[4]*y+m[8]*z,m[13]+m[1]*x+m[5]*y+m[9]*z,m[14]+m[2]*x+m[6]*y+m[10]*z];
-   top=Math.max(top,dot(corner,upward));
+  const s=equipmentSettings(settings),dt=this.last<0?0:clamp((now-this.last)/1000,0,.05);
+  this.last=now;
+  const eye=rig.eye,head=rig.headWorld,tracked=rig.leftWorld;
+  const visual=rig.hasVisualLeft?rig.leftVisualWorld:tracked;
+  if(!rig.hasLeft||!tracked||!head||!s.vrHudVisible){
+   this.reset();return this;
   }
-  for(let i=0;i<3;i++)p.center[i]+=p.normal[i]*s.vrWristOffset;
-  const lift=(top+s.vrWristTopOffset+.012+p.height*.5*Math.abs(dot(p.up,upward))+p.width*.5*Math.abs(dot(p.right,upward))-dot(p.center,upward))/Math.max(.25,dot(p.up,upward));
-  for(let i=0;i<3;i++)p.center[i]+=p.up[i]*Math.max(0,lift);
-  const px=p.center[0]-eye[0],py=p.center[1]-eye[1],pz=p.center[2]-eye[2],range=Math.hypot(px,py,pz)||1;if(range<.6){p.center[0]=eye[0]+px/range*.6;p.center[1]=eye[1]+py/range*.6;p.center[2]=eye[2]+pz/range*.6;}
-  // Conservatively fit all four corners, including a 64mm binocular eye span.
-  if(head){let depth=0;for(const x of [-.5,.5])for(const y of [-.5,.5]){const dx=p.center[0]-eye[0]+p.right[0]*p.width*x+p.up[0]*p.height*y,dy=p.center[1]-eye[1]+p.right[1]*p.width*x+p.up[1]*p.height*y,dz=p.center[2]-eye[2]+p.right[2]*p.width*x+p.up[2]*p.height*y,side=dx*head[0]+dy*head[1]+dz*head[2],up=dx*head[4]+dy*head[5]+dz*head[6],forward=-(dx*head[8]+dy*head[9]+dz*head[10]);depth=Math.max(depth,(Math.abs(side)+.032)/.82-forward,Math.abs(up)/.92-forward);}if(depth>.2){this.visible=false;this.guard=false;}else for(let i=0;i<3;i++)p.center[i]-=head[8+i]*depth;}return this;
+  // Physical glove calibration is presentation-only. Detect watch rotation
+  // from the REAL tracked left controller, never leftVisualWorld.
+  const status=this.status;
+  at(status.center,visual,0,.0415+s.vrWristTopOffset,.115);
+  for(let i=0;i<3;i++){
+   status.right[i]=visual[i];
+   status.up[i]=-visual[8+i];
+   status.normal[i]=visual[4+i];
+   this.toEye[i]=eye[i]-status.center[i];
+  }
+  const d=Math.hypot(...this.toEye)||1;
+  this.watchDistance=d;
+  normal(this.toEye);
+  this.statusVisible=d>.25&&d<1.15;
+  const forward=[-head[8],-head[9],-head[10]];
+  const toward=[status.center[0]-eye[0],status.center[1]-eye[1],status.center[2]-eye[2]];
+  normal(toward);
+  this.watchGaze=dot(forward,toward);
+  // Wrist-facing measurement uses the tracked grip's local +Y, NOT the
+  // cosmetic left-hand glove yaw/pitch/roll. A relaxed grip alone will not
+  // activate the screen, even if the hand is near the headset.
+  this.watchFacing=dot([tracked[4],tracked[5],tracked[6]],this.toEye);
+  const wristY=tracked[13];
+  this.watchRaised=wristY>=eye[1]-.33;
+  const inRange=d>=.32&&d<=.98;
+  this.watchReady=inRange&&wristY>=eye[1]-.39&&this.watchGaze>.57;
+  if(wristY<eye[1]-.47)this.suppressAutoUntilLower=false;
+  const aligned=this.watchFacing>Math.max(.57,s.vrWristSensitivity+.12);
+  const eligible=!this.suppressAutoUntilLower&&s.vrWristActivation!=='manual'&&
+   inRange&&this.watchRaised&&aligned&&
+   (s.vrWristActivation==='raised'||this.watchGaze>.60);
+  if(eligible){if(this.attentionSince<0)this.attentionSince=now;this.lostSince=-1;}
+  else{this.attentionSince=-1;if(this.lostSince<0)this.lostSince=now;}
+  const previous=this.requested;
+  const auto=!this.suppressAutoUntilLower&&s.vrWristActivation!=='manual'&&
+   (eligible&&now-this.attentionSince>=350||
+   previous&&!this.pinned&&this.lostSince>=0&&now-this.lostSince<280);
+  this.requested=this.pinned||auto;
+  if(this.requested&&!previous)this.guardUntil=now+260;
+  this.guard=this.requested&&now<this.guardUntil;
+  const motion=s.vrInterfaceMotion&&!settings.reducedMotion;
+  this.open=motion?this.open+((this.requested?1:0)-this.open)*(1-Math.exp(-dt*17)):(this.requested?1:0);
+  this.visible=this.open>.11;
+  const p=this.panel;
+  // Screen faces the headset. Unlike grip-local up, headset up never flips
+  // upside down when a Touch controller is rolled.
+  for(let i=0;i<3;i++){
+   p.right[i]=head[i];p.up[i]=head[4+i];p.normal[i]=head[8+i];
+  }
+  p.width=s.vrWristSize*(.96+.04*this.open);
+  p.height=p.width/1.45;
+  if(this.pinned){
+   // Accessible fallback: a pinned menu remains comfortably in view even
+   // after lowering the watch, rather than drifting outside the frustum.
+   for(let i=0;i<3;i++)
+    p.center[i]=eye[i]-head[8+i]*.78-head[i]*.18+head[4+i]*.13;
+  }else{
+   // The expanded hologram grows from above/in front of the left cuff.
+   // Keep a predictable small wrist offset; never compute a huge "lift" that
+   // ejects the display above the player's view on different Touch poses.
+   for(let i=0;i<3;i++)
+    p.center[i]=status.center[i]-head[8+i]*.065+
+     head[4+i]*(.11+p.height*.5+s.vrWristTopOffset);
+   // Fit the *whole* screen into binocular view by clamping angular offsets
+   // rather than hiding it when a corner leaves one eye's frustum.
+   const dx=[p.center[0]-eye[0],p.center[1]-eye[1],p.center[2]-eye[2]];
+   const depth=Math.max(.68,-dot(dx,[head[8],head[9],head[10]]));
+   const side=clamp(dot(dx,[head[0],head[1],head[2]]),-depth*.32,depth*.32);
+   const vertical=clamp(dot(dx,[head[4],head[5],head[6]]),-depth*.25,depth*.23);
+   for(let i=0;i<3;i++)
+    p.center[i]=eye[i]-head[8+i]*depth+head[i]*side+head[4+i]*vertical;
+  }
+  return this;
  }
 }
 export function attachWeapon(out,ray,grip,settings={}){

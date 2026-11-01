@@ -37,7 +37,7 @@ export class VRArcade {
     if(this.mode==='arcade'||before.screen){if(!this.placement)this.placement=panelPlacement(pose.transform.matrix,Number(settings.vrDistance)||2.5,Number(settings.vrWidth)||2.8);cursor=ray?hitPanel(ray,this.placement):null;target=this.panel.targetAt(cursor);}
     if(target){state.fire=false;state.firePressed=false;state.alternate=null;state.menu.confirm=false;if(state.pointerPressed){target.action();this.input.reset();state.ready=false;state.active=false;}}
     if(this.session!==session)return;
-    const spatial=this.mode==='immersive'?{rig:this.rig,pose:{head:pose.transform.matrix,rightRay:ray||null,rightGrip:get(right?.gripSpace)||ray||null,leftRay:get(left?.targetRaySpace)||null,leftGrip:get(left?.gripSpace)||get(left?.targetRaySpace)||null},pointerTarget:()=>this.presenter.interfaceTarget?.(spatial.pose,this.rig,this.data().game)}:null;
+    const spatial=this.mode==='immersive'?{rig:this.rig,pose:{head:pose.transform.matrix,rightRay:ray||null,rightGrip:get(right?.gripSpace)||ray||null,leftRay:get(left?.targetRaySpace)||null,leftGrip:get(left?.gripSpace)||get(left?.targetRaySpace)||null},pointerTarget:pad=>this.presenter.interfaceTarget?.(spatial.pose,this.rig,this.data().game,performance.now(),pad)}:null;
     if(spatial&&!ray&&before.game?.mode==='playing'){this.input.reset();this.onPause();state.ready=false;state.fire=false;}
     this.onFrame(now,state,spatial);if(this.session!==session)return;
     const data=this.data(),views=pose.views.map(v=>({projectionMatrix:v.projectionMatrix,transform:v.transform,viewport:this.layer.getViewport(v)}));

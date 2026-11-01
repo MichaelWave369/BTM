@@ -8,7 +8,21 @@ function linesFor(g,text,width){const lines=[];let row='';for(const word of Stri
 function accent(hex,brightness){const gain=Math.max(.5,Math.min(1.1,brightness));return '#'+[1,3,5].map(i=>Math.min(255,Math.round(parseInt(hex.slice(i,i+2),16)*gain)).toString(16).padStart(2,'0')).join('');}
 export class WorldUI{
  constructor(){this.canvas=canvas(768,512);this.status=canvas(320,140);this.caption=canvas(1280,360);this.alert=canvas(768,128);this.alertG=this.alert.getContext('2d',{alpha:false});this.alertAnchor=equipmentPanel(.46,.075);this.alertPanel=null;this.alertChanged=false;this.logOpen=false;this.logPage=0;this.archiveOpen=false;this.archivePage=0;this.archiveSelected=null;this.archiveDetailPage=0;this.g=this.canvas.getContext('2d',{alpha:false});this.statusG=this.status.getContext('2d',{alpha:false});this.captionG=this.caption.getContext('2d',{alpha:false});this.wrist=new WristComputer();this.field=new FieldNavigator();this.targets=[];this.lastPaint=this.lastStatus=this.lastCaptionPaint=-Infinity;this.captionMessage='';this.captionKey='';this.captionSince=0;this.captionLeaving=-1;this.captionPanel=null;this.wristPanel=null;this.statusPanel=null;this.cursor=null;this.captionChanged=this.statusChanged=false;this.blocker={action:()=>{}};this.statusTarget={action:()=>{this.wrist.togglePin();this.lastPaint=-Infinity;}};this.captionAnchor=equipmentPanel(1.12,.28);this.link={from:new Float32Array(3),left:new Float32Array(3),right:new Float32Array(3)};}
- targetAt(hit){return hit&&this.targets.find(t=>hit.u*this.canvas.width>=t.x&&hit.u*this.canvas.width<=t.x+t.w&&hit.v*this.canvas.height>=t.y&&hit.v*this.canvas.height<=t.y+t.h);}
+ targetAt(hit){
+  if(!hit)return null;
+  const x=hit.u*this.canvas.width,y=hit.v*this.canvas.height;
+  const inside=t=>x>=t.x&&x<=t.x+t.w&&y>=t.y&&y<=t.y+t.h;
+  const direct=this.targets.find(inside);
+  if(direct)return direct;
+  // A small pointer tolerance makes Quest 3/3S buttons easier to hit
+  // without changing their visual layout or merging adjacent actions.
+  const pad=9,near=this.targets.filter(t=>x>=t.x-pad&&x<=t.x+t.w+pad&&y>=t.y-pad&&y<=t.y+t.h+pad);
+  return near.sort((a,b)=>{
+   const da=(x-a.x-a.w/2)**2+(y-a.y-a.h/2)**2;
+   const db=(x-b.x-b.w/2)**2+(y-b.y-b.h/2)**2;
+   return da-db;
+  })[0]||null;
+ }
  placeWrist(rig,settings=rig.settings||{},now=performance.now()){if(this.epoch!==rig.equipmentEpoch){this.epoch=rig.equipmentEpoch;this.wrist.reset();this.field.reset();this.logOpen=false;this.logPage=0;this.archiveOpen=false;this.archivePage=0;this.archiveSelected=null;this.archiveDetailPage=0;}this.wrist.update(rig,settings,now);this.wristPanel=this.wrist.visible?this.wrist.panel:null;this.statusPanel=this.wrist.statusVisible?this.wrist.status:null;rig.equipmentLink=null;if(this.wristPanel){this.link.from.set(this.wrist.status.center);for(let i=0;i<3;i++){this.link.left[i]=this.wristPanel.center[i]-this.wristPanel.right[i]*this.wristPanel.width*.42-this.wristPanel.up[i]*this.wristPanel.height*.5;this.link.right[i]=this.wristPanel.center[i]+this.wristPanel.right[i]*this.wristPanel.width*.42-this.wristPanel.up[i]*this.wristPanel.height*.5;}rig.equipmentLink=this.link;}return this.wristPanel;}
  button(x,y,w,h,label,action,{enabled=true,selected=false,weapon=-1,icon=''}={}){
   const g=this.g,cursor=this.cursor,hover=cursor&&cursor.u*768>=x&&cursor.u*768<=x+w&&cursor.v*512>=y&&cursor.v*512<=y+h;
