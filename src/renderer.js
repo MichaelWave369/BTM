@@ -2,16 +2,26 @@ import {playerSprite,finaleSprite} from './net/presentation.js';
 import {castRay,distance,angleDiff,findRoute,SECTORS,WEAPONS,clamp} from './core.js';
 import {pitBossSprite,pitFloorState} from './pit-presentation.js';
 import {paintSignalSurface} from './neon-signal.js';
-import {textureSignature,textureStyleFor,TEXTURE_PACKS,paintPackSurface} from './texture-packs.js';
+import {textureSignature,textureStyleFor,TEXTURE_PACKS,paintPackSurface,AUTHORED_TEXTURE_MANIFESTS,loadAuthoredTexturePack} from './texture-packs.js';
 import {UI,UI_FONT} from './arcade-ui.js';
 import {makeAssets,makeSign} from './assets.js';
 export class Renderer {
-  constructor(canvas){this.canvas=canvas;this.g=canvas.getContext('2d',{alpha:false});this.assets=makeAssets();this.setResolution(640);this.particles=[];this.beams=[];this.ghosts=[];this.hitMarker=0;this.finisher=0;this.bassFlash=0;this.damageFlash=0;this.lastTime=0;this.signTextures=new Map();}
+  constructor(canvas){this.canvas=canvas;this.g=canvas.getContext('2d',{alpha:false});this.assets=makeAssets();this.setResolution(640);this.particles=[];this.beams=[];this.ghosts=[];this.hitMarker=0;this.finisher=0;this.bassFlash=0;this.damageFlash=0;this.lastTime=0;this.signTextures=new Map();this.packCache=new Map();this.activePackStyle=null;this.packImages=null;this.packRevision=0;}
   setResolution(width){this.canvas.width=width;this.canvas.height=Math.round(width*9/16);this.depth=new Float32Array(width);this.g.imageSmoothingEnabled=false;}
   event(e){if(['burst','liberation','hit','telegraph','impact','oriAssist'].includes(e.type)){const n=e.count??(e.type==='liberation'?30:e.type==='oriAssist'?18:10),color=e.color??(e.type==='liberation'?'#b9ff53':e.type==='oriAssist'?'#5df6ec':'#ffbc82');for(let i=0;i<n;i++){const a=i/n*Math.PI*2;this.particles.push({x:e.x,y:e.y,z:.25+(i%5)*.11,vx:Math.cos(a)*.8,vy:Math.sin(a)*.8,vz:.4+(i%3)*.5,life:e.type==='liberation'?1.1:.45,max:e.type==='liberation'?1.1:.45,color});}}if(e.type==='hit'&&e.source!=='ori'){this.hitMarker=.17;this.finisher=e.finisher?.3:0;}if(e.type==='liberation')this.ghosts.push({...e,life:.85});if(e.type==='beam')this.beams.push({...e,life:e.ori?.24:.12});if(e.type==='bass')this.bassFlash=.7;this.particles=this.particles.slice(-500);this.beams=this.beams.slice(-24);}
+  ensureTexturePack(level,settings={}){
+    const style=textureStyleFor(level,settings);
+    if(style===this.activePackStyle)return;
+    this.activePackStyle=style;this.packImages=this.packCache.get(style)||null;
+    if(this.packImages||!AUTHORED_TEXTURE_MANIFESTS[style])return;
+    void loadAuthoredTexturePack(style).then(images=>{
+      this.packCache.set(style,images);
+      if(this.activePackStyle===style){this.packImages=images;this.packRevision++;this.currentTextureKey=null;}
+    }).catch(()=>{});
+  }
   draw(game,dt,settings,{demo=false,map=false}={}){
-    const g=this.g,w=this.canvas.width,h=this.canvas.height,p=game.player,l=game.level;this.lastTime+=dt;this.finisher=Math.max(0,this.finisher-dt);this.reducedMotion=settings.reducedMotion;
-    if(this.drawLevel!==l||this.currentTextureKey!==textureSignature(l,settings)){this.drawLevel=l;this.currentTextureKey=textureSignature(l,settings);this.levelTextures=this.assets.textures;if(l.palette)this.levelTextures=Object.fromEntries(Object.entries(this.assets.textures).map(([key,tex])=>{const i=Number(key);if(i<1||i>3)return [key,tex];const c=document.createElement('canvas');c.width=c.height=64;paintSignalSurface(c.getContext('2d'),'wall',l.palette,tex);return [key,c];}));if(textureStyleFor(l,settings)!=='retro'){this.levelTextures={...this.levelTextures};for(let i=1;i<=6;i++){const tile=document.createElement('canvas');tile.width=tile.height=64;paintPackSurface(tile.getContext('2d'),'wall'+i,l,settings,this.assets.textures[i]);this.levelTextures[i]=tile;}}this.signTextures=new Map((l.signs||[]).map(sign=>[`${sign.x},${sign.y}`,makeSign(sign,this.levelTextures[l.cells[sign.y][sign.x]]||this.levelTextures[1])]));this.particles=[];this.beams=[];this.ghosts=[];}
+    const g=this.g,w=this.canvas.width,h=this.canvas.height,p=game.player,l=game.level;this.lastTime+=dt;this.finisher=Math.max(0,this.finisher-dt);this.reducedMotion=settings.reducedMotion;this.ensureTexturePack(l,settings);
+    if(this.drawLevel!==l||this.currentTextureKey!==textureSignature(l,settings)+'/'+this.packRevision){this.drawLevel=l;this.currentTextureKey=textureSignature(l,settings)+'/'+this.packRevision;this.levelTextures=this.assets.textures;if(l.palette)this.levelTextures=Object.fromEntries(Object.entries(this.assets.textures).map(([key,tex])=>{const i=Number(key);if(i<1||i>3)return [key,tex];const c=document.createElement('canvas');c.width=c.height=64;paintSignalSurface(c.getContext('2d'),'wall',l.palette,tex);return [key,c];}));if(textureStyleFor(l,settings)!=='retro'){this.levelTextures={...this.levelTextures};for(let i=1;i<=6;i++){const tile=document.createElement('canvas');tile.width=tile.height=64;const ctx=tile.getContext('2d');const authored=this.packImages?.['wall'+i];if(authored){ctx.imageSmoothingEnabled=true;ctx.drawImage(authored,0,0,64,64);}else paintPackSurface(ctx,'wall'+i,l,settings,this.assets.textures[i]);this.levelTextures[i]=tile;}}this.signTextures=new Map((l.signs||[]).map(sign=>[`${sign.x},${sign.y}`,makeSign(sign,this.levelTextures[l.cells[sign.y][sign.x]]||this.levelTextures[1])]));this.particles=[];this.beams=[];this.ghosts=[];}
     if(demo){p.a=-Math.PI/2+Math.sin(this.lastTime*.12)*.15;}
     const bob=!settings.reducedMotion&&game.moving&&game.mode==='playing'?Math.sin(game.time*(game.sprinting?15:10))*h*.008:0,horizon=Math.floor(h*.46+bob),theme=game.definition.color;
     g.fillStyle=game.shift?'#0e1126':'#090f10';g.fillRect(0,0,w,horizon);g.fillStyle=game.shift?'#171323':'#19201e';g.fillRect(0,horizon,w,h-horizon);
