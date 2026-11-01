@@ -143,6 +143,7 @@ export class Room{
   g.setCombatPose({head,aim});
  }
  input(a,m){
+  if(a.bot)return false; // only the host's fixed-step bot pilot controls this actor
   if(m.seq<=a.lastSeq||m.seq>a.lastSeq+120)return false;if(a.actions.length+m.actions.length>8)return false;
   a.lastSeq=m.seq;a.lastInput=this.elapsed;a.input={...m,actions:[]};a.actions.push(...m.actions);return true;
  }
@@ -248,7 +249,7 @@ export class Room{
   return structuredClone({schema:'btm.coop/1',code:this.code,owner:this.owner,stage:this.stage,state,partySize:this.partySize,finale:this.raid?.snapshot()||null,receipts:structuredClone(this.receipts),world,actors:[...this.actors.values()].map(a=>({id:a.id,nickname:a.nickname,bot:!!a.bot,botIndex:a.botIndex||0,token:a.token,team:a.team,player:a.player,status:a.status,invulnerable:a.invulnerable,bleedAt:a.bleedAt,frags:a.frags,deaths:a.deaths,lastSeq:a.lastSeq,feel:Object.fromEntries(AVATAR_FIELDS.filter(k=>!['nav','combatPose','bufferedFire'].includes(k)).map(k=>[k,a.feel[k]]))})),...(includeEntry?{entry:this.stageStart}:{} )});
  }
  restore(s){
-  if(!s||s.schema!=='btm.coop/1'||!Number.isInteger(s.stage)||s.stage<0||s.stage>23||!Array.isArray(s.receipts)||s.receipts.length!==(s.finale?24:s.stage+(['cleared','campaign-complete'].includes(s.state)?1:0))||s.receipts.some((r,i)=>r.stage!==i+1)||!Array.isArray(s.actors)||s.actors.length<2||s.actors.length>4)throw Error('Invalid cooperative checkpoint');
+  if(!s||s.schema!=='btm.coop/1'||!Number.isInteger(s.stage)||s.stage<0||s.stage>23||!Array.isArray(s.receipts)||s.receipts.length!==(s.finale?24:s.stage+(['cleared','campaign-complete'].includes(s.state)?1:0))||s.receipts.some((r,i)=>r.stage!==i+1)||!Array.isArray(s.actors)||s.actors.length<2||s.actors.length>4||s.actors.every(a=>a.bot))throw Error('Invalid cooperative checkpoint');
   const descriptor=STAGES[s.stage],states=['playing','cleared','ending'];
   if(s.code!==this.code||!states.includes(s.state)||s.state==='ending'&&!s.finale||!Number.isInteger(s.partySize)||s.partySize<2||s.partySize>4||s.partySize!==s.actors.length||!s.actors.some(a=>a.id===s.owner)||!Number.isFinite(s.world?.time)||s.world.time<0||s.world.time>86400||s.entry?.entry)throw Error('Invalid cooperative session metadata');
   const template=s.finale?createRaidLevel(s.partySize):createLevel(descriptor.index,descriptor.campaign),l=s.world.level;
