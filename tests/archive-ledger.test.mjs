@@ -110,3 +110,40 @@ test('the readable archive UI works offline in Classic and Quest, while gameplay
  assert.match(core,/recordForSign\(this\.campaign,this\.levelIndex,sign\.id\)/);
  assert.match(build,/src\/archive-ledger\.js/);
 });
+
+
+test('four cross-sector evidence cases unlock only from their complete distinct witness chains',()=>{
+ assert.equal(ARCHIVE_EVIDENCE_CASES.length,4);
+ const allIds=new Set(ARCHIVE_RECORDS.map(r=>r.id));
+ for(const c of ARCHIVE_EVIDENCE_CASES){
+  assert(c.requires.length>=3);
+  assert(c.requires.every(id=>allIds.has(id)));
+  assert.equal(new Set(c.requires).size,c.requires.length);
+  const store=storage(),ledger=new ArchiveLedger(store);
+  assert.equal(ledger.find(c.id),null,'unearned evidence must not leak '+c.id);
+  for(const id of c.requires.slice(0,-1))ledger.collect(id);
+  assert.equal(ledger.find(c.id),null,'partial evidence must remain secret '+c.id);
+  assert(!ledger.list().some(item=>item.id===c.id));
+  const last=c.requires.at(-1),awarded=ledger.collect(last);
+  assert(awarded.new);
+  assert.equal(ledger.find(c.id)?.title,c.title);
+  assert.equal(ledger.list().filter(item=>item.id===c.id).length,1);
+  assert.equal(ledger.collect(last).new,false);
+  assert.equal(new ArchiveLedger(store).find(c.id)?.id,c.id,'case must reconstruct after reload');
+ }
+});
+test('the full 48-record archive remains optional and safe to import through existing browser saves',()=>{
+ const store=storage(),ledger=new ArchiveLedger(store),before=JSON.stringify(new Game().snapshot());
+ for(const record of ARCHIVE_RECORDS){
+  assert(record.text.length>150&&record.excerpt.length>30,record.id);
+  assert.equal(ledger.collect(record.id).new,true);
+ }
+ assert.equal(ledger.count,48);
+ assert.equal(ledger.total,48);
+ assert.equal(ledger.unlocked.length,3,'the original 3/6/9 dossiers remain in place');
+ assert.equal(ledger.evidence.length,4);
+ assert.equal(ledger.list().length,55,'48 records, 3 original dossiers and 4 evidence cases');
+ assert.equal(new ArchiveLedger(store).count,48);
+ assert.equal(JSON.stringify(new Game().snapshot()),before,'collectibles cannot mutate campaign state');
+ assert.equal(recordForSign('pit',8,2),null,'Pit campaign keeps a separate story mapping');
+});
