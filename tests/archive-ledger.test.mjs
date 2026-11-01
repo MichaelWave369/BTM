@@ -11,7 +11,7 @@ function storage(){
 test('all 48 Human Ledger records are unique, authored, tied to 12 original-sector wall plaques',()=>{
  assert.equal(ARCHIVE_RECORDS.length,48);
  assert.deepEqual(ARCHIVE_DOSSIERS.map(d=>d.threshold),[3,6,9]);
- assert.equal(new Set(ARCHIVE_RECORDS.map(r=>r.id)).size,12);
+ assert.equal(new Set(ARCHIVE_RECORDS.map(r=>r.id)).size,48);
  assert.ok(ARCHIVE_RECORDS.some(r=>r.kind.includes('PLUGGED')));
  assert.ok(ARCHIVE_RECORDS.some(r=>r.kind.includes('REPEATER')));
  assert.ok(ARCHIVE_RECORDS.some(r=>r.kind.includes('WARDEN')));
