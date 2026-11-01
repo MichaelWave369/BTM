@@ -8,6 +8,7 @@ import {TEXTURE_PACKS} from '../src/texture-packs.js';
 import {WALL_HEIGHT,WORLD_SCALE} from '../src/spatial.js';
 import {WorldScene} from '../src/world-scene.js';
 import {matIdentity} from '../src/immersive-math.js';
+import {ImmersiveRig} from '../src/immersive-rig.js';
 
 test('type 4 normal and type 5 key-locked doors get explicit atlas slots, secrets stay disguised by default',()=>{
  assert.deepEqual(DOOR_MATERIALS,['door:standard','door:locked','door:secret']);
@@ -87,8 +88,8 @@ test('all six styles paint visually distinctive standard, locked and revealed do
 });
 test('WorldScene renders normal and locked door frames but never reveals hidden secrets early',()=>{
  const game=new Game();game.start();const scene=new WorldScene();
- const eye=matIdentity();eye[12]=game.player.x*WORLD_SCALE;eye[13]=1.65;eye[14]=game.player.y*WORLD_SCALE;
- const rig={eye,headWorld:eye,settings:{},aim:null}; // only read-only rendering context
+ const head=matIdentity();head[13]=1.65;
+ const rig=new ImmersiveRig();rig.prepare(game,{head,rightRay:head},null,{},.014);
  const untouched=JSON.stringify(game.snapshot());
  const batch=scene.update(game,rig,0,{vrQuality:'balanced'});
  assert.ok(batch.length>0);assert.equal(batch.dropped,0);
