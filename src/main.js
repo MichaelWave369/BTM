@@ -18,6 +18,15 @@ import {PointerCapture,keyCode} from './controls.js';
 import {GamepadInput,ControllerMenu,ControllerRumble,CONTROLLER_DEFAULTS,controllerSettings,gameplayInput,controllerActions} from './gamepad.js';
 const $=id=>document.getElementById(id),canvas=$('game'),game=new Game(),renderer=new Renderer(canvas),audio=new AudioEngine(),communications=new Communications();
 const SAVE_KEY=ORIGINAL_SAVE_KEY,SETTINGS_KEY='mwave-ori-settings-v1';
+// Keep the original SVG title scene when the optional locally bundled album art is absent.
+// Once the image is added, use its complete cover without cropping the title or credits.
+const titleCover=$('title-cover-art');
+if(titleCover){
+  const updateTitleCover=()=>{$('title-screen').classList.toggle('album-cover-ready',titleCover.naturalWidth>0);};
+  titleCover.addEventListener('load',updateTitleCover);
+  titleCover.addEventListener('error',updateTitleCover);
+  if(titleCover.complete)updateTitleCover();
+}
 function updateSoundtrackCue(){audio.setScore({kind:game.campaign==='pit'?'pit':'original',stage:game.levelIndex,boss:!!game.level?.enemies?.some(e=>!e.dead&&(e.type==='warden'||e.pitBoss))});}
 const defaults={...IMMERSIVE_DEFAULTS,vrDistance:2.5,vrWidth:2.8,...CONTROLLER_DEFAULTS,sensitivity:1,music:.35,sfx:.65,muted:false,soundtrackMode:'album',soundtrackTrack:'auto',resolution:640,crt:true,controlMode:'auto',reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches};
 const controller=new GamepadInput(),rumble=new ControllerRumble();let inputMode='keyboard',desktopFrame=0,alertText='',alertTimer=0;
