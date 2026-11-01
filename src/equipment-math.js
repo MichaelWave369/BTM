@@ -155,7 +155,7 @@ export function placeComfortCaption(out,rig,settings={},wrist=null,rows=2){
   }
   // The original, bounded Ori body should never occupy the same binocular
   // caption area, even if the regular preferred dock becomes obstructed.
-  if(!blocked&&Array.isArray(settings.oriPosition)&&settings.oriPosition.length===3){
+  if(!blocked&&settings.oriVisible&&settings.oriPosition?.length===3&&[...settings.oriPosition].every(Number.isFinite)){
    const [x,y,z]=settings.oriPosition,dx=x-rig.eye[0],dz=z-rig.eye[2],d=Math.hypot(dx,dz);
    if(d>.1){
     const b=panelAngularBounds(out,rig),yaw=Math.atan2(-dx*fz+dz*fx,dx*fx+dz*fz),pitch=Math.atan2(y-rig.eye[1],d),radius=Math.atan2(.15,d);
