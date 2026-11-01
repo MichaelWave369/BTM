@@ -8,9 +8,9 @@ import {RaidPlanner} from './raid-playthrough.js';
 function fixture({blast=false,phase=4,health=85}={}){
  const game=new Game();game.start();game.level=createRaidLevel(2);game.time=40;
  const players=[
-  {id:'a',x:7.5,y:5.5,a:0,health,armor:0,energy:75,reserve:45,
+  {id:'a',x:7.5,y:5.5,a:0,health,armor:80,energy:75,reserve:90,
    weapon:1,ori:100,status:'alive',dodgeCooldown:0,oriCooldown:0,vent:0,recharge:0},
-  {id:'b',x:21.5,y:5.5,a:Math.PI,health:85,armor:0,energy:75,reserve:45,
+  {id:'b',x:21.5,y:5.5,a:Math.PI,health:100,armor:80,energy:75,reserve:90,
    weapon:1,ori:100,status:'alive',dodgeCooldown:0,oriCooldown:0,vent:0,recharge:0}
  ];
  if(blast)game.level.blasts.push({x:players[0].x,y:players[0].y,radius:.72,
