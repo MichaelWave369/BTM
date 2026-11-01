@@ -4,6 +4,7 @@ import {makeAssets, makeSign} from './assets.js';
 import {MATERIALS} from './level-geometry.js';
 import {signalPalette} from './neon-signal.js';
 import {paintPackSurface} from './texture-packs.js';
+import {paintDoorSurface} from './door-visibility.js';
 
 export function createWorldAtlas(level, assets = makeAssets(), settings = {}, options = {}) {
  const tileSize = [64,128,256].includes(options.tileSize) ? options.tileSize : 64;
@@ -27,6 +28,9 @@ export function createWorldAtlas(level, assets = makeAssets(), settings = {}, op
  const special = {
   floor: surface('floor'),
   ceiling: surface('ceiling'),
+  'door:standard': tile(t => paintDoorSurface(t, 'standard', level, settings)),
+  'door:locked': tile(t => paintDoorSurface(t, 'locked', level, settings)),
+  'door:secret': tile(t => paintDoorSurface(t, 'secret', level, settings)),
   white: tile(t => { t.fillStyle = '#fff'; t.fillRect(0, 0, 64, 64); }),
   portal: tile(t => {
    t.strokeStyle = palette.accent; t.lineWidth = 5; t.strokeRect(7, 3, 50, 58);
