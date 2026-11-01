@@ -2,6 +2,7 @@ import {pitFloorState} from './pit-presentation.js';
 import {weaponMesh,appendEquipment} from './equipment-meshes.js';
 import {SignalPresentation} from './signal-presentation.js';
 import {SIGNAL_QUALITY} from './neon-signal.js';
+import {doorFrameParts,doorSurfaceMaterial} from './door-visibility.js';
 import {WEAPONS,findRoute} from './core.js';import {materialUV,doorGeometry} from './level-geometry.js';import {WORLD_SCALE,entityHeight,traceEnvironment} from './spatial.js';import {transformPoint} from './immersive-math.js';
 const ORDER=[0,1,2,0,2,3],FACES=[[4,5,6,7],[1,0,3,2],[0,4,7,3],[5,1,2,6],[3,7,6,2],[0,1,5,4]],WHITE=[1,1,1,1],STUN=[.65,1.1,1.35,1],TELL=[1.5,.45,.18,1],CYAN=[.5,1.5,1.4,1],PURPLE=[1.3,.45,1.8,1];
 const rgbCache=new Map();export function colorRGB(hex='#b9ff53'){if(!rgbCache.has(hex)){const v=hex.replace('#','');rgbCache.set(hex,[parseInt(v.slice(0,2),16)/255,parseInt(v.slice(2,4),16)/255,parseInt(v.slice(4,6),16)/255,1]);}return rgbCache.get(hex);}
@@ -21,7 +22,15 @@ export class WorldScene {
  event(e,game){this.ensureLevel(game.level);this.presentation.event(e);if(['impact','hit','burst','liberation','oriAssist'].includes(e.type)){for(let i=0;i<Math.min(e.count||7,14)&&this.effects.length<96;i++){const a=i*2.399;this.effects.push({x:e.x*WORLD_SCALE,y:(e.height??.65)*WORLD_SCALE,z:e.y*WORLD_SCALE,vx:Math.cos(a)*.6,vy:.5+(i%3)*.3,vz:Math.sin(a)*.6,life:.45,color:colorRGB(e.color)});}}if(e.type==='beam'&&this.beams.length<64)this.beams.push({from:[e.from.x*WORLD_SCALE,(e.from.height??.75)*WORLD_SCALE,e.from.y*WORLD_SCALE],to:[e.to.x*WORLD_SCALE,(e.to.height??.7)*WORLD_SCALE,e.to.y*WORLD_SCALE],life:e.ori?.25:.12,color:colorRGB(e.color),ori:!!e.ori});if(e.type==='scan')this.route=findRoute(game.level,game.player,game.objectiveTarget,{allowLocked:game.player.key}).slice(0,30);}
  update(game,rig,dt,settings={}){
   this.ensureLevel(game.level);const b=this.batch,p=game.player,l=game.level,s=WORLD_SCALE,q=QUALITY[settings.vrQuality]||QUALITY.balanced,eye=rig.eye,visible=(x,y)=>Math.hypot(x*s-eye[0],y*s-eye[2])<q.distance;b.reset();this.clock+=dt;this.counts.enemies=this.counts.objects=this.counts.particles=this.counts.projectiles=this.counts.trails=0;
-  for(const {door:d,shape:v}of this.doors){if(d.open>.995||!visible(d.x,d.y))continue;v.center[1]=v.size[1]*(.5+d.open);b.box(v.center,v.size,v.material,d.type===6&&game.shift?PURPLE:WHITE);}
+  for(const {door:d,shape:v}of this.doors){
+    if(!visible(d.x,d.y))continue;
+    // The frame remains fixed to the doorway while the panel rises.
+    // Hidden secret walls remain indistinguishable until Resonance Vision.
+    for(const part of doorFrameParts(v,d.type,game.shift))b.box(part.center,part.size,'white',part.color);
+    if(d.open>.995)continue;
+    v.center[1]=v.size[1]*(.5+d.open);
+    b.box(v.center,v.size,doorSurfaceMaterial(d.type,game.shift),WHITE);
+   }
   for(const e of l.enemies){if(e.dead||!visible(e.x,e.y))continue;const h=entityHeight(e.type)*s,frame=Math.floor(e.walk||0)%4;b.billboard(e.x*s,0,e.y*s,e.raidRole==='core'?6.4*s:h,h,e.raidRole?(e.raidRole==='core'?(e.exposed>0?'raid:open':'raid:core'):'raid:pylon'):e.pitBoss?'pitboss:'+e.pitBoss+(e.exposed>0?':open':''):(e.pain>0?'pain:':'enemy:')+e.type+':'+frame,eye,e.stun>0?STUN:WHITE);this.counts.enemies++;if(e.tell>0)b.floor(e.x*s,.025,e.y*s,.7,'marker',TELL);}
   for(const i of l.items)if(!i.taken&&visible(i.x,i.y)){b.billboard(i.x*s,.04,i.y*s,.85,.85,'item:'+i.type,eye);this.counts.objects++;}
   if(!l.key.taken){b.billboard(l.key.x*s,.12,l.key.y*s,.75,.75,'item:key',eye);this.counts.objects++;}
