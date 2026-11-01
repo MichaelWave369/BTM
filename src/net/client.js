@@ -24,7 +24,7 @@ export class NetworkView extends Game{
  get objective(){return this.netObjective||'ENTER THE NODE';}
  get liberation(){return this.netLiberation||0;}
  get exitReady(){return !!this.netExitReady;}
- get objectiveTarget(){if(this.netState?.raid)return raidObjectiveTarget(this.level,this.player,{...this.netState.raid,time:this.time});return this.networkCompetitive?(this.remotePlayers.find(a=>a.status==='alive')||this.player):super.objectiveTarget;}
+ get objectiveTarget(){if(this.netState?.raid)return raidObjectiveTarget(this.level,this.player,{...this.netState.raid,time:this.time});if(this.netState?.control?.zone)return this.netState.control.zone;return this.networkCompetitive?(this.remotePlayers.find(a=>a.status==='alive')||this.player):super.objectiveTarget;}
  accept(m){
   if(m.type==='world'){
    if(!m.level||m.level.w!==29||m.level.h!==25||m.level.cells?.length!==25||m.level.cells.some(r=>r.length!==29)||!Array.isArray(m.level.enemies)||m.level.enemies.length>128||!m.definition)throw Error('Invalid world dimensions');
