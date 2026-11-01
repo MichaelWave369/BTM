@@ -52,7 +52,7 @@ export function botIntent(room,actor){
  // Respect real cover: never fire through walls or at an unobserved actor.
  const tick=room.tick,aim=sees?Math.atan2(opponent.y-p.y,opponent.x-p.x):
   Math.atan2(target.y-p.y,target.x-p.x);
- m.angle=aim+(sees?.035*Math.sin(tick*.12+(actor.botIndex||0)):0);
+ m.angle=aim+(sees ? .035*Math.sin(tick*.12+(actor.botIndex||0)) : 0);
  m.weapon=contact!==undefined&&contact<1.5?0:1;
  const channel=['revive','use'].includes(goal.kind)&&d<goal.range&&lineOfSight(level,p,target);
  const hold=goal.kind==='hill'&&d<goal.range||goal.kind==='follow'&&d<goal.range;
