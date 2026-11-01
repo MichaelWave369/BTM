@@ -1,5 +1,5 @@
 // Real two-browser cooperative sector, natural down/revive, shared extraction and disk resume.
-import{createServer}from'../server/index.mjs';import{neutralInput}from'../src/net/protocol.js';import{createRequire}from'node:module';import{mkdir,mkdtemp,rm,writeFile}from'node:fs/promises';import{tmpdir}from'node:os';import path from'node:path';import assert from'node:assert/strict';
+import{createServer}from'../server/index.mjs';import{neutralInput}from'../src/net/protocol.js';import{createRequire}from'node:module';import{mkdir,mkdtemp,rm,writeFile,stat}from'node:fs/promises';import{tmpdir}from'node:os';import path from'node:path';import assert from'node:assert/strict';
 const{chromium}=createRequire(import.meta.url)(process.env.BTM_PLAYWRIGHT_MODULE||'playwright'),out=process.env.BTM_NETWORK_OUTPUT||'docs/bbs-lan-clan';await mkdir(out+'/screenshots',{recursive:true});const dir=await mkdtemp(path.join(tmpdir(),'btm-browser-coop-'));let server=await createServer({port:0,saveDir:dir,manual:true}),browser,room;const pages=[],errors=[],originals=[],events=[];const port=server.address.port;const io=()=>new Promise(r=>setTimeout(r,2));async function pump(n=3){for(let i=0;i<n;i++){await io();server.step();}await io();}
 async function plan(index,passive=false){return pages[index].evaluate(passive=>{const b=window.bbs,s=b.game.netState,d=window.coopPlanner;if(!s||s.state!=='playing')return null;const m=d.intent({level:b.game.level,definition:b.game.definition,revision:b.game.revision},s,b.net.id);if(passive){const me=s.players.find(p=>p.id===b.net.id);if(b.game.level.enemies.some(e=>!e.dead&&Math.hypot(e.x-me.x,e.y-me.y)<6&&window.netLOS(b.game.level,me,e))){m.move=0;m.strafe=0;}m.fire=false;m.actions=m.actions.filter(a=>['vision'].includes(a));}b.drive(m);return{goal:d.goalKey,status:b.game.status};},passive);}
 async function idle(index){await pages[index].evaluate(n=>window.bbs.drive(n),neutralInput());}
@@ -13,7 +13,14 @@ try{
  for(let i=0;i<1000&&b.status==='downed'&&a.status==='alive';i++){await plan(0);await idle(1);await pump();}assert.equal(b.status,'alive','Teammate did not complete the real revive');assert.equal(b.player.health,35);events.push({event:'revived',player:b.id,by:a.id,health:b.player.health,time:room.game.time});
  for(let i=0;i<4000&&room.state==='playing';i++){await Promise.all([plan(0),plan(1)]);await pump();if(room.state==='wipe')throw Error('Two-browser squad wiped');}
  assert.equal(room.state,'cleared');assert.equal(room.receipts.length,1);assert(room.game.level.relays.every(r=>r.active)&&room.game.level.key.taken);assert([...room.actors.values()].every(a=>a.feel.stats.distance>20&&a.feel.stats.shots>0));await pump();
- for(let i=0;i<2;i++)await pages[i].locator('#game').screenshot({path:out+'/screenshots/coop-sector1-client-'+i+'.png',timeout:60000,animations:'disabled'});
+ // Capture the real rendered browser page including the game canvas without
+  // Playwright's locator-scroll/stability wait: its live animated game surface
+  // never becomes a stable element on some CI runners. Preserve PNG evidence.
+  for(let i=0;i<2;i++){
+   const shot=out+'/screenshots/coop-sector1-client-'+i+'.png';
+   await pages[i].screenshot({path:shot,fullPage:true,animations:'disabled',timeout:60000});
+   assert((await stat(shot)).size>2048,'Co-op page screenshot missing or empty for client '+i);
+  }
  const before=[...room.actors.values()].map(a=>({id:a.id,health:a.player.health,energy:a.player.energy,reserve:a.player.reserve}));await pages[0].evaluate(()=>document.getElementById('save-btn').click());await pages[0].waitForFunction(()=>document.querySelector('#log').textContent.includes('CO-OP CHECKPOINT SAVED'));await server.close();server=await createServer({port,saveDir:dir,manual:true});
  for(const p of pages)await p.waitForFunction(()=>!window.bbs.net.connected);
  for(const p of pages)await p.evaluate(()=>document.getElementById('reconnect-btn').click());for(const p of pages)await p.waitForFunction(id=>window.bbs.net.connected&&window.bbs.net.id===id,p.pid);await pump();room=server.rooms.get(code);assert.equal(room.state,'cleared');assert.equal(room.receipts.length,1);assert.deepEqual([...room.actors.values()].map(a=>({id:a.id,health:a.player.health,energy:a.player.energy,reserve:a.player.reserve})),before);
