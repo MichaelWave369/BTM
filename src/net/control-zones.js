@@ -29,7 +29,7 @@ export function controlSnapshot(state,score){
 export function advanceControl(state,actors,level,now,dt,score,limit){
  if(!Number.isFinite(dt)||dt<0||dt>.1)throw Error('Invalid control tick');
  state.nextRotation-=dt;
- if(state.nextRotation<=0){
+ if(state.nextRotation<=1e-7){
   state.index=(state.index+1)%state.zones.length;state.nextRotation+=CONTROL_ROTATE_SECONDS;
   state.progress=0;state.holder=null;state.contested=false;state.occupancy={cyan:0,pink:0};
   return {rotated:true,point:false,winner:null};
