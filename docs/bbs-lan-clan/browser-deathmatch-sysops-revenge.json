@@ -1,0 +1,49 @@
+{
+  "passed": true,
+  "mode": "deathmatch",
+  "arena": "sysops-revenge",
+  "browser": "151.0.7922.34",
+  "twoSeparateBrowserContexts": true,
+  "distinctPlayerIds": [
+    "83dfd66dd400",
+    "0dee5c878a36"
+  ],
+  "events": [
+    {
+      "event": "first-frag",
+      "frags": 1,
+      "deaths": 1
+    },
+    {
+      "event": "respawn",
+      "health": 100
+    },
+    {
+      "event": "cell-reload",
+      "charge": 100,
+      "reserve": 123
+    },
+    {
+      "event": "reconnect",
+      "id": "83dfd66dd400",
+      "energy": 100,
+      "reserve": 123,
+      "frags": 1
+    }
+  ],
+  "frags": 3,
+  "winner": "83dfd66dd400",
+  "serverTick": 930,
+  "originalSoloSlots": [
+    {
+      "original": null,
+      "pit": null
+    },
+    {
+      "original": null,
+      "pit": null
+    }
+  ],
+  "pageErrors": [],
+  "method": "Production BBS HTML/Canvas in two separate Chromium browser contexts, each with its own real native WebSocket. Real lobby ready/start, independently driven movement/fire, damage, death, timed respawn, cell pickup/reload, reconnect preserving resources, server frag limit/results, reciprocal real gameplay captures. Manual harness advances the same fixed 1/30-second server clock, accelerating wall time; no server/player/HP/ammo/objective/kill writes. No physical Quest claim."
+}

@@ -1,3 +1,4 @@
+import {playerSprite,finaleSprite} from './net/presentation.js';
 import {pitBossSprite,paintHazardIcon} from './pit-presentation.js';
 import {makeAssets, makeSign} from './assets.js';
 import {MATERIALS} from './level-geometry.js';
@@ -44,6 +45,8 @@ export function createWorldAtlas(level, assets = makeAssets()) {
    const [kind, type, frame] = name.split(':'); image = (kind === 'pain' ? assets.pain : sprites)[type][Number(frame)];
   }
   if(name.startsWith('pitboss:'))image=pitBossSprite(name.split(':')[1],name.endsWith(':open'));
+  if(name.startsWith('raid:'))image=finaleSprite(name==='raid:pylon'?'pylon':'core',name==='raid:open');
+  if(name.startsWith('net:'))image=playerSprite(name.slice(4),name==='net:downed');
   if(name.startsWith('hazard:'))image=tile(t=>paintHazardIcon(t,name.split(':')[1]));
   if (name.startsWith('item:')) image = sprites[name.slice(5)];
   if (name.startsWith('relay:')) image = sprites[name.endsWith('on') ? 'relayOn' : 'relay'];

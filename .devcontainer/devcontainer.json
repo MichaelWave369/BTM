@@ -1,0 +1,9 @@
+{
+  "name": "BTM BBS LAN CLAN",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22-bookworm",
+  "forwardPorts": [8787],
+  "portsAttributes": {"8787": {"label": "BTM client + optional multiplayer host", "onAutoForward": "openBrowser", "visibility": "private"}},
+  "postCreateCommand": "npm ci --prefix server --ignore-scripts && npm run build",
+  "waitFor": "postCreateCommand",
+  "postStartCommand": "node scripts/dev-network.mjs"
+}

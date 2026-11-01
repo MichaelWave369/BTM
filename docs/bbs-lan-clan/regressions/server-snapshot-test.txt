@@ -1,0 +1,17 @@
+
+> michael-wave-ori-break-the-matrix@0.10.0-rc.1 test:network
+> node --test server/test/*.test.mjs
+
+✔ two real WebSocket sessions get distinct actors, authoritative movement and reconnect without resource grants (125.893184ms)
+✔ oversized WebSocket frame is closed before game parsing (5.693196ms)
+✔ real-time production timer advances a fixed-step room without a manual clock (571.292125ms)
+✔ eight real clients retain separate bodies and the ninth cannot exceed room capacity (145.148326ms)
+✔ mixed flat and bounded tracked-aim clients register a real authoritative frag through the same wire (321.380791ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1306.128741

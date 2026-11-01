@@ -1,0 +1,137 @@
+{
+  "passed": false,
+  "error": "Cannot read properties of undefined (reading 'name')",
+  "stack": "TypeError: Cannot read properties of undefined (reading 'name')\n    at get objective (file:///workspace/scratch/cb32add49277/BTM-lan/src/core.js:98:302)\n    at Room.snapshot (file:///workspace/scratch/cb32add49277/BTM-lan/src/net/simulation.js:177:693)\n    at Object.step (file:///workspace/scratch/cb32add49277/BTM-lan/server/index.mjs:64:284)\n    at file:///workspace/scratch/cb32add49277/BTM-lan/scripts/playthrough-network.mjs:12:40",
+  "stages": [
+    {
+      "stage": 1,
+      "campaign": "original",
+      "index": 0,
+      "name": "THE WAKE-UP CALL",
+      "seconds": 63.29999999999897,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 2,
+      "campaign": "original",
+      "index": 1,
+      "name": "CATHEDRAL OF STATIC",
+      "seconds": 112.49999999999618,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 3,
+      "campaign": "original",
+      "index": 2,
+      "name": "THE DEMIURGE CORE",
+      "seconds": 157.033333333327,
+      "relays": true,
+      "key": true,
+      "bosses": [
+        {
+          "id": "warden",
+          "dead": true,
+          "phase": 3
+        }
+      ]
+    },
+    {
+      "stage": 4,
+      "campaign": "original",
+      "index": 3,
+      "name": "THE MEMORY FOUNDRY",
+      "seconds": 167.39999999999307,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 5,
+      "campaign": "original",
+      "index": 4,
+      "name": "THE BLACKOUT STACK",
+      "seconds": 202.49999999999108,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 6,
+      "campaign": "original",
+      "index": 5,
+      "name": "THE NULL CROWN",
+      "seconds": 253.5333333333215,
+      "relays": true,
+      "key": true,
+      "bosses": [
+        {
+          "id": "warden",
+          "dead": true,
+          "phase": 3
+        }
+      ]
+    },
+    {
+      "stage": 7,
+      "campaign": "original",
+      "index": 6,
+      "name": "THE DEAD LETTER DEPOT",
+      "seconds": 275.0333333333365,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 8,
+      "campaign": "original",
+      "index": 7,
+      "name": "MEATSPACE FIREWALL",
+      "seconds": 316.16666666670255,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    }
+  ],
+  "state": "playing",
+  "actors": [
+    {
+      "id": "c8637fdba6c2",
+      "status": "alive",
+      "player": {
+        "x": 19.500089335766766,
+        "y": 3.8800676025465544,
+        "a": -1.5707963267948966,
+        "health": 100,
+        "armor": 75.1266592,
+        "energy": 70,
+        "reserve": 90,
+        "ori": 100,
+        "vision": 100,
+        "key": true
+      },
+      "goal": "key"
+    },
+    {
+      "id": "93aa365cabdd",
+      "status": "alive",
+      "player": {
+        "x": 17.780057368451924,
+        "y": 16.820988448250095,
+        "a": 1.770038416569897,
+        "health": 100,
+        "armor": 100,
+        "energy": 16,
+        "reserve": 0,
+        "ori": 15.68333333333241,
+        "vision": 100,
+        "key": true
+      },
+      "goal": "pickup-5"
+    }
+  ],
+  "method": "Actual WebSocket input failure retained."
+}

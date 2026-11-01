@@ -1,0 +1,40 @@
+✔ no-carrier has connected valid spawns, finite pickups and real cover (5.094073ms)
+✔ sysops-revenge has connected valid spawns, finite pickups and real cover (1.978697ms)
+✔ kill-switch has connected valid spawns, finite pickups and real cover (2.252208ms)
+✔ wire validation rejects client state, malformed, nonfinite, oversized and unknown messages (1.021697ms)
+✔ all original and Pit indexes remain independent and ordered (0.735005ms)
+✔ lobby requires two ready players and server owner (2.224887ms)
+✔ fixed clock, swept movement and input expiry resist speed and replay (7.21857ms)
+✔ real server weapons damage, armor, death, frags and respawn; no fire through cover (10.039222ms)
+✔ manual reload and racing cell pickup cannot mint energy or duplicate inventory on reconnect (19.531432ms)
+✔ co-op is one world with separate bodies and shared relays/key, and enemies choose players (4.228281ms)
+✔ co-op friendly fire is off, downed teammate needs an uninterrupted two-second revive (8.607379ms)
+✔ co-op extraction requires actual shared objectives and living squad at portal; save is separate and resumable (4.238736ms)
+✔ bounded bucket refuses flood and recovers with elapsed server time (0.178599ms)
+✔ original coordinate-based Warden definitions keep a valid objective after key/relays (1.52251ms)
+✔ cooperative entry checkpoint is immutable while avatars move, spend ammo and die (4.554782ms)
+✔ retry preserves live socket actor identity and monotonic input sequence while rolling back world resources (4.320399ms)
+✔ snapshot codec preserves actor/boss/objective state and packs discovery without static geometry (4.109152ms)
+✔ network wrist capture cancels shots while preserving deliberate utility commands (3.550582ms)
+✔ new stages reset interaction time so doors do not inherit the previous stage clock (2.40001ms)
+✔ finale stays behind 24 server-owned stage receipts and does not append either solo registry (1.279825ms)
+✔ Demiurge core rejects attacks before shield tasks, and phase-two channels need distinct teammates (28.697992ms)
+✔ cooperative finale phases, exposure window and actual shared escape gate persist separately (41.556236ms)
+✔ cooperative energy cells give each stable avatar one finite share, including partial pickup and reconnect (2.851139ms)
+✔ co-op Nightmare supply caches are finite map pickups with per-player armor, never transition grants (3.666816ms)
+✔ competitive spawn selection uses real coordinates and separates opponents (0.372831ms)
+✔ revive loses progress when the holder stops sending input, even if last packet held Use (2.306089ms)
+✔ all cooperative entry caches fit four players and Legacy-era HP normalization leaves solo definitions intact (10.632886ms)
+✔ cooperative disk schema rejects corrupt resources, geometry, identity, status and receipt order (9.135933ms)
+✔ Fracture barrier closes after players clear it and cannot be reopened with ordinary Use (17.734204ms)
+✔ raid rescue takes priority over a console channel, so a teammate downed on a node remains revivable (7.894787ms)
+✔ route maps honor the authoritative Fracture barrier while preserving end-bridge access (11.228061ms)
+✔ a raid with fewer than two revivable squad identities yields a retry instead of an unwinnable paired objective (3.536035ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 382.57166

@@ -1,0 +1,165 @@
+{
+  "passed": false,
+  "error": "Socket closed 1008 / Stale/overflow input",
+  "stack": "Error: Socket closed 1008 / Stale/overflow input\n    at file:///workspace/scratch/cb32add49277/BTM-lan/scripts/playthrough-network.mjs:11:43",
+  "connections": [
+    {
+      "id": "a842bbd63f87",
+      "bad": 12,
+      "lastReject": {
+        "seq": 69760,
+        "last": 69748,
+        "queue": 8,
+        "status": "downed"
+      }
+    }
+  ],
+  "stages": [
+    {
+      "stage": 1,
+      "campaign": "original",
+      "index": 0,
+      "name": "THE WAKE-UP CALL",
+      "seconds": 63.29999999999897,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 2,
+      "campaign": "original",
+      "index": 1,
+      "name": "CATHEDRAL OF STATIC",
+      "seconds": 112.49999999999618,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 3,
+      "campaign": "original",
+      "index": 2,
+      "name": "THE DEMIURGE CORE",
+      "seconds": 157.033333333327,
+      "relays": true,
+      "key": true,
+      "bosses": [
+        {
+          "id": "warden",
+          "dead": true,
+          "phase": 3
+        }
+      ]
+    },
+    {
+      "stage": 4,
+      "campaign": "original",
+      "index": 3,
+      "name": "THE MEMORY FOUNDRY",
+      "seconds": 167.39999999999307,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 5,
+      "campaign": "original",
+      "index": 4,
+      "name": "THE BLACKOUT STACK",
+      "seconds": 202.49999999999108,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 6,
+      "campaign": "original",
+      "index": 5,
+      "name": "THE NULL CROWN",
+      "seconds": 253.5333333333215,
+      "relays": true,
+      "key": true,
+      "bosses": [
+        {
+          "id": "warden",
+          "dead": true,
+          "phase": 3
+        }
+      ]
+    },
+    {
+      "stage": 7,
+      "campaign": "original",
+      "index": 6,
+      "name": "THE DEAD LETTER DEPOT",
+      "seconds": 275.0333333333365,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 8,
+      "campaign": "original",
+      "index": 7,
+      "name": "MEATSPACE FIREWALL",
+      "seconds": 320.83333333337293,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 9,
+      "campaign": "original",
+      "index": 8,
+      "name": "THE REDUNDANCY PIT",
+      "seconds": 388.40000000009337,
+      "relays": true,
+      "key": true,
+      "bosses": [
+        {
+          "id": "warden",
+          "dead": true,
+          "phase": 3
+        }
+      ]
+    }
+  ],
+  "state": "playing",
+  "actors": [
+    {
+      "id": "e54bfef9f46d",
+      "status": "alive",
+      "player": {
+        "x": 14.5,
+        "y": 21.5,
+        "a": -1.5707963267948966,
+        "health": 65,
+        "armor": 0,
+        "energy": 64,
+        "reserve": 0,
+        "ori": 100,
+        "vision": 100,
+        "key": false
+      },
+      "goal": "pickup-5"
+    },
+    {
+      "id": "a842bbd63f87",
+      "status": "alive",
+      "player": {
+        "x": 15.1,
+        "y": 21.5,
+        "a": -1.5707963267948966,
+        "health": 92.9486656,
+        "armor": 72.8781472,
+        "energy": 80,
+        "reserve": 26,
+        "ori": 100,
+        "vision": 100,
+        "key": false
+      },
+      "goal": "pickup-5"
+    }
+  ],
+  "method": "Actual WebSocket input failure retained."
+}

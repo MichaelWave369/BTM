@@ -22,14 +22,28 @@ export class WorldScene {
  update(game,rig,dt,settings={}){
   this.ensureLevel(game.level);const b=this.batch,p=game.player,l=game.level,s=WORLD_SCALE,q=QUALITY[settings.vrQuality]||QUALITY.balanced,eye=rig.eye,visible=(x,y)=>Math.hypot(x*s-eye[0],y*s-eye[2])<q.distance;b.reset();this.clock+=dt;this.counts.enemies=this.counts.objects=this.counts.particles=this.counts.projectiles=this.counts.trails=0;
   for(const {door:d,shape:v}of this.doors){if(d.open>.995||!visible(d.x,d.y))continue;v.center[1]=v.size[1]*(.5+d.open);b.box(v.center,v.size,v.material,d.type===6&&game.shift?PURPLE:WHITE);}
-  for(const e of l.enemies){if(e.dead||!visible(e.x,e.y))continue;const h=entityHeight(e.type)*s,frame=Math.floor(e.walk||0)%4;b.billboard(e.x*s,0,e.y*s,h,h,e.pitBoss?'pitboss:'+e.pitBoss+(e.exposed>0?':open':''):(e.pain>0?'pain:':'enemy:')+e.type+':'+frame,eye,e.stun>0?STUN:WHITE);this.counts.enemies++;if(e.tell>0)b.floor(e.x*s,.025,e.y*s,.7,'marker',TELL);}
+  for(const e of l.enemies){if(e.dead||!visible(e.x,e.y))continue;const h=entityHeight(e.type)*s,frame=Math.floor(e.walk||0)%4;b.billboard(e.x*s,0,e.y*s,e.raidRole==='core'?6.4*s:h,h,e.raidRole?(e.raidRole==='core'?(e.exposed>0?'raid:open':'raid:core'):'raid:pylon'):e.pitBoss?'pitboss:'+e.pitBoss+(e.exposed>0?':open':''):(e.pain>0?'pain:':'enemy:')+e.type+':'+frame,eye,e.stun>0?STUN:WHITE);this.counts.enemies++;if(e.tell>0)b.floor(e.x*s,.025,e.y*s,.7,'marker',TELL);}
   for(const i of l.items)if(!i.taken&&visible(i.x,i.y)){b.billboard(i.x*s,.04,i.y*s,.85,.85,'item:'+i.type,eye);this.counts.objects++;}
   if(!l.key.taken){b.billboard(l.key.x*s,.12,l.key.y*s,.75,.75,'item:key',eye);this.counts.objects++;}
   for(const r of l.relays){b.billboard(r.x*s,0,r.y*s,.9,1.15,r.active?'relay:on':'relay:off',eye);this.counts.objects++;}
   for(const c of l.captives)if(!c.freed){b.billboard(c.x*s,0,c.y*s,1.3,1.65,'captive',eye);this.counts.objects++;}
   for(const prop of l.props||[])if(visible(prop.x,prop.y)){const h=prop.height*s;b.billboard(prop.x*s,0,prop.y*s,h*.8,h,'prop:'+prop.type,eye);this.counts.objects++;}
-  b.billboard(l.exit.x*s,.05,l.exit.y*s,1.55,2.15,'portal',eye,game.exitReady?WHITE:[.35,.45,.55,1]);
-  if(l.campaign==='pit'){
+  if(!game.networkCompetitive)b.billboard(l.exit.x*s,.05,l.exit.y*s,1.55,2.15,'portal',eye,game.exitReady?WHITE:[.35,.45,.55,1]);
+  for(const n of l.raidNodes||[])b.floor(n.x*s,.025,n.y*s,1.3*s,'hazard:arc',n.active?[.5,1.2,.9,1]:[1,.8,.35,1]);
+  for(const a of game.remotePlayers||[]){
+   const x=a.renderX??a.x,y=a.renderY??a.y;if(!['alive','downed'].includes(a.status)||!visible(x,y))continue;
+   if(a.status==='downed'){b.billboard(x*s,0,y*s,.85*s,.4*s,'net:downed',eye);continue;}
+   const color=a.team==='pink'?[1,.44,.56,1]:[.5,.91,.83,1],eyeHeight=a.pose?.eye||1.03,c=Math.cos(a.a),sn=Math.sin(a.a),right=a.pose?.right;
+   const hand=right?[(x+right.x)*s,right.height*s,(y+right.y)*s]:[(x+c*.28-sn*.2)*s,eyeHeight*.65*s,(y+sn*.28+c*.2)*s];
+   const left=[(x+c*.15+sn*.2)*s,eyeHeight*.6*s,(y+sn*.15-c*.2)*s],shoulder=[x*s,eyeHeight*.65*s,y*s];
+   b.box([x*s,eyeHeight*.5*s,y*s],[.35*s,eyeHeight*.52*s,.25*s],'white',[.16,.24,.33,1]);
+   b.box([x*s,(eyeHeight-.1)*s,y*s],[.22*s,.22*s,.22*s],'white',color);
+   b.line(shoulder,hand,.055*s,eye,color);b.line(shoulder,left,.055*s,eye,color);
+   for(const h of[hand,left])b.box(h,[.11*s,.11*s,.11*s],'white',color);
+   const direction=right?[right.dx,right.dz,right.dy]:[c,0,sn],barrel=hand.map((v,i)=>v+direction[i]*.3*s);b.line(hand,barrel,.045*s,eye,[.58,.64,.7,1]);if(a.shotAnim>0)b.box(barrel,[.12*s,.12*s,.12*s],'white',colorRGB(WEAPONS[a.weapon].color));
+   this.counts.objects++;
+  }
+  if(l.hazards){
    const primary=colorRGB(game.definition.color);
    for(const h of l.hazards){if(!visible(h.x,h.y))continue;const state=pitFloorState(h,game.time),gain=state==='active'?1:state==='warning'?.7:.18,color=state==='warning'?[1,.66,.23,1]:[primary[0]*gain,primary[1]*gain,primary[2]*gain,1];b.floor(h.x*s,.025,h.y*s,h.radius*2*s,'hazard:'+h.kind,color);}
    for(const blast of l.blasts)if(visible(blast.x,blast.y))b.floor(blast.x*s,.03,blast.y*s,blast.radius*2*s,'hazard:arc',blast.hit?[1,.25,.3,1]:[1,.7,.25,1]);

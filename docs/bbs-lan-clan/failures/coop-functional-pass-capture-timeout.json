@@ -1,0 +1,61 @@
+{
+  "passed": false,
+  "error": "page.screenshot: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n",
+  "stack": "page.screenshot: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\n    at /workspace/scratch/cb32add49277/BTM-lan/scripts/verify-coop-browser.mjs:16:37",
+  "events": [
+    {
+      "event": "natural-downed",
+      "player": "f6dacc3c7f5d",
+      "time": 31.20000000000071,
+      "damage": 110.51999999999998
+    },
+    {
+      "event": "revived",
+      "player": "f6dacc3c7f5d",
+      "by": "b885be69e78b",
+      "health": 35,
+      "time": 34.70000000000059
+    }
+  ],
+  "room": {
+    "state": "cleared",
+    "time": 93.36666666666393,
+    "actors": [
+      {
+        "id": "b885be69e78b",
+        "status": "alive",
+        "player": {
+          "x": 25.500316416088346,
+          "y": 19.794488505230213,
+          "a": 1.5707963267948966,
+          "health": 100,
+          "armor": 70,
+          "energy": 100,
+          "reserve": 89,
+          "ori": 89.98333333333375,
+          "vision": 100,
+          "key": true
+        }
+      },
+      {
+        "id": "f6dacc3c7f5d",
+        "status": "alive",
+        "player": {
+          "x": 25.500324120777556,
+          "y": 19.794591347741935,
+          "a": 1.5707963267948966,
+          "health": 100,
+          "armor": 0,
+          "energy": 66,
+          "reserve": 135,
+          "ori": 89.98333333333375,
+          "vision": 100,
+          "key": true
+        }
+      }
+    ]
+  },
+  "pageErrors": [
+    "Cannot set properties of null (setting 'disabled')"
+  ]
+}

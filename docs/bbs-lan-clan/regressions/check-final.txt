@@ -1,0 +1,5 @@
+
+> michael-wave-ori-break-the-matrix@0.9.0-rc.1 check
+> node scripts/check.mjs
+
+106 JavaScript modules passed syntax checks.

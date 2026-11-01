@@ -1,0 +1,68 @@
+name: Verify authoritative LAN and cooperative campaign
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: network-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  multiplayer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install only the optional server dependency
+        run: npm ci --prefix server --ignore-scripts --no-fund
+      - run: npm audit --prefix server --omit=dev --audit-level=high
+      - run: npm run check
+      - run: npm test
+      - run: npm run test:network
+      - run: npm run build
+      - name: Two real network clients traverse all 24 stages
+        env:
+          BTM_COOP_STAGES: '24'
+          BTM_NETWORK_OUTPUT: docs/equipment/ci/network
+        run: npm run playtest:network
+      - name: Actual earned checkpoint unlocks the four-phase raid and escape
+        env:
+          BTM_NETWORK_OUTPUT: docs/equipment/ci/network
+        run: npm run playtest:raid
+      - name: Install isolated browser tooling, outside game packages
+        run: |
+          npm install --prefix "$RUNNER_TEMP/btm-browser" --ignore-scripts --no-audit --no-fund playwright@1.64.1
+          node "$RUNNER_TEMP/btm-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Two separate native browser sessions, arena rules and mixed stereo presentation
+        env:
+          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
+          BTM_SOFTWARE_WEBGL: '1'
+          BTM_NETWORK_OUTPUT: docs/equipment/ci/network
+        run: |
+          node scripts/verify-network-browser.mjs
+          BTM_ARENA_MODE=team node scripts/verify-network-browser.mjs
+          BTM_ARENA_MODE=clan node scripts/verify-network-browser.mjs
+          BTM_ARENA=sysops-revenge node scripts/verify-network-browser.mjs
+          BTM_ARENA=kill-switch node scripts/verify-network-browser.mjs
+      - name: Shared sector objectives, natural down/revive, disk restart and untouched solo saves
+        env:
+          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
+          BTM_SOFTWARE_WEBGL: '1'
+          BTM_NETWORK_OUTPUT: docs/equipment/ci/network
+        run: node scripts/verify-coop-browser.mjs
+      - name: Two actual browsers complete Demiurge Prime and escape
+        env:
+          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
+          BTM_SOFTWARE_WEBGL: '1'
+          BTM_NETWORK_OUTPUT: docs/equipment/ci/network
+        run: node scripts/verify-raid-browser.mjs
+      - name: Preserve public reports and real captures, never private passes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bbs-lan-clan-evidence
+          path: docs/equipment/ci/network
+          if-no-files-found: ignore

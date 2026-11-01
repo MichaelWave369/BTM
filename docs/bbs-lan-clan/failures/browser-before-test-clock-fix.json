@@ -1,0 +1,67 @@
+{
+  "passed": false,
+  "error": "Deathmatch hit/death timeout",
+  "stack": "Error: Deathmatch hit/death timeout\n    at duelKill (file:///workspace/scratch/cb32add49277/BTM-lan/scripts/verify-network-browser.mjs:12:346)\n    at async file:///workspace/scratch/cb32add49277/BTM-lan/scripts/verify-network-browser.mjs:27:47",
+  "events": [
+    {
+      "event": "first-frag",
+      "frags": 1,
+      "deaths": 1
+    },
+    {
+      "event": "respawn",
+      "health": 100
+    },
+    {
+      "event": "cell-reload",
+      "charge": 100,
+      "reserve": 78
+    },
+    {
+      "event": "reconnect",
+      "id": "7277a3443682",
+      "energy": 100,
+      "reserve": 78,
+      "frags": 1
+    }
+  ],
+  "pageErrors": [],
+  "room": {
+    "state": "playing",
+    "time": 12.699999999999966,
+    "actors": [
+      {
+        "id": "7277a3443682",
+        "status": "alive",
+        "player": {
+          "x": 6.499999999999999,
+          "y": 19.039997560949246,
+          "a": 2.454774517693505,
+          "health": 100,
+          "armor": 25,
+          "energy": 100,
+          "reserve": 78,
+          "ori": 100,
+          "vision": 100,
+          "key": true
+        }
+      },
+      {
+        "id": "5ac608b07b13",
+        "status": "alive",
+        "player": {
+          "x": 3.5,
+          "y": 21.5,
+          "a": -1.5707963267948966,
+          "health": 100,
+          "armor": 25,
+          "energy": 100,
+          "reserve": 45,
+          "ori": 100,
+          "vision": 100,
+          "key": true
+        }
+      }
+    ]
+  }
+}

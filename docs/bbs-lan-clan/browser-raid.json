@@ -1,0 +1,128 @@
+{
+  "passed": true,
+  "browser": "151.0.7922.34",
+  "distinctIds": [
+    "7d77537ac557",
+    "d5f64ea69966"
+  ],
+  "phases": [
+    {
+      "phase": 1,
+      "time": 0.19999999999999998
+    },
+    {
+      "phase": 2,
+      "time": 19.300000000000118
+    },
+    {
+      "phase": 3,
+      "time": 24.100000000000357
+    },
+    {
+      "phase": 4,
+      "time": 28.300000000000566
+    }
+  ],
+  "exposed": true,
+  "escape": true,
+  "result": {
+    "winner": "SQUAD",
+    "ending": "THE SIGNAL IS FREE",
+    "phases": 4,
+    "escapeSeconds": 8.166666666666202
+  },
+  "captures": [
+    {
+      "label": "awakening",
+      "client": 0,
+      "id": "7d77537ac557",
+      "file": "screenshots/raid-awakening-client-0.png"
+    },
+    {
+      "label": "awakening",
+      "client": 1,
+      "id": "d5f64ea69966",
+      "file": "screenshots/raid-awakening-client-1.png"
+    },
+    {
+      "label": "phase-2",
+      "client": 0,
+      "id": "7d77537ac557",
+      "file": "screenshots/raid-phase-2-client-0.png"
+    },
+    {
+      "label": "phase-2",
+      "client": 1,
+      "id": "d5f64ea69966",
+      "file": "screenshots/raid-phase-2-client-1.png"
+    },
+    {
+      "label": "phase-3",
+      "client": 0,
+      "id": "7d77537ac557",
+      "file": "screenshots/raid-phase-3-client-0.png"
+    },
+    {
+      "label": "phase-3",
+      "client": 1,
+      "id": "d5f64ea69966",
+      "file": "screenshots/raid-phase-3-client-1.png"
+    },
+    {
+      "label": "phase-4",
+      "client": 0,
+      "id": "7d77537ac557",
+      "file": "screenshots/raid-phase-4-client-0.png"
+    },
+    {
+      "label": "phase-4",
+      "client": 1,
+      "id": "d5f64ea69966",
+      "file": "screenshots/raid-phase-4-client-1.png"
+    },
+    {
+      "label": "core-exposed",
+      "client": 0,
+      "id": "7d77537ac557",
+      "file": "screenshots/raid-core-exposed-client-0.png"
+    },
+    {
+      "label": "core-exposed",
+      "client": 1,
+      "id": "d5f64ea69966",
+      "file": "screenshots/raid-core-exposed-client-1.png"
+    },
+    {
+      "label": "escape",
+      "client": 0,
+      "id": "7d77537ac557",
+      "file": "screenshots/raid-escape-client-0.png"
+    },
+    {
+      "label": "escape",
+      "client": 1,
+      "id": "d5f64ea69966",
+      "file": "screenshots/raid-escape-client-1.png"
+    }
+  ],
+  "players": [
+    {
+      "id": "7d77537ac557",
+      "health": 70.2,
+      "charge": 72,
+      "reserve": 45,
+      "distance": 167.0066666666652,
+      "shots": 187
+    },
+    {
+      "id": "d5f64ea69966",
+      "health": 70,
+      "charge": 73,
+      "reserve": 0,
+      "distance": 174.65999999999752,
+      "shots": 206
+    }
+  ],
+  "pageErrors": [],
+  "method": "Two separate browser contexts use native BBS UI to import private passes and restore the unedited checkpoint earned by the input-only 24-stage network traversal. Real WebSockets, four server-owned raid phases, distinct player channel tasks, finite pickups/combat, synchronized exposure, boss defeat and both players physically traverse the escape. Test clock schedules fixed 1/30-second ticks only. No direct world/HP/ammo/position/objective/phase/completion writes. Captures are production Canvas gameplay; received snapshot heartbeats continue during the frozen test clock and render callbacks are scheduled at <=20 Hz for software GPU cost. Physical Quest pending."
+}

@@ -1,0 +1,174 @@
+{
+  "passed": false,
+  "error": "Squad wipe budget exceeded at 11",
+  "stack": "Error: Squad wipe budget exceeded at 11\n    at file:///workspace/scratch/cb32add49277/BTM-lan/scripts/playthrough-network.mjs:14:48",
+  "steps": 26980,
+  "connections": [
+    {
+      "id": "d53e9e763bc8",
+      "bad": 0
+    },
+    {
+      "id": "cd19fdd3effb",
+      "bad": 0
+    }
+  ],
+  "stages": [
+    {
+      "stage": 1,
+      "campaign": "original",
+      "index": 0,
+      "name": "THE WAKE-UP CALL",
+      "seconds": 63.29999999999897,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 2,
+      "campaign": "original",
+      "index": 1,
+      "name": "CATHEDRAL OF STATIC",
+      "seconds": 48.79999999999979,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 3,
+      "campaign": "original",
+      "index": 2,
+      "name": "THE DEMIURGE CORE",
+      "seconds": 58.23333333333259,
+      "relays": true,
+      "key": true,
+      "bosses": [
+        {
+          "id": "warden",
+          "dead": true,
+          "phase": 3
+        }
+      ]
+    },
+    {
+      "stage": 4,
+      "campaign": "original",
+      "index": 3,
+      "name": "THE MEMORY FOUNDRY",
+      "seconds": 29.80000000000064,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 5,
+      "campaign": "original",
+      "index": 4,
+      "name": "THE BLACKOUT STACK",
+      "seconds": 50.83333333333301,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 6,
+      "campaign": "original",
+      "index": 5,
+      "name": "THE NULL CROWN",
+      "seconds": 77.89999999999814,
+      "relays": true,
+      "key": true,
+      "bosses": [
+        {
+          "id": "warden",
+          "dead": true,
+          "phase": 3
+        }
+      ]
+    },
+    {
+      "stage": 7,
+      "campaign": "original",
+      "index": 6,
+      "name": "THE DEAD LETTER DEPOT",
+      "seconds": 43.96666666666673,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 8,
+      "campaign": "original",
+      "index": 7,
+      "name": "MEATSPACE FIREWALL",
+      "seconds": 55.43333333333275,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    },
+    {
+      "stage": 9,
+      "campaign": "original",
+      "index": 8,
+      "name": "THE REDUNDANCY PIT",
+      "seconds": 77.13333333333152,
+      "relays": true,
+      "key": true,
+      "bosses": [
+        {
+          "id": "warden",
+          "dead": true,
+          "phase": 3
+        }
+      ]
+    },
+    {
+      "stage": 10,
+      "campaign": "original",
+      "index": 9,
+      "name": "THE PANOPTICON",
+      "seconds": 82.89999999999786,
+      "relays": true,
+      "key": true,
+      "bosses": []
+    }
+  ],
+  "state": "wipe",
+  "actors": [
+    {
+      "id": "d53e9e763bc8",
+      "status": "downed",
+      "player": {
+        "x": 15.597972611947311,
+        "y": 16.60328918080993,
+        "a": -1.4660358431706915,
+        "health": 0,
+        "armor": 0,
+        "energy": 0,
+        "reserve": 0,
+        "ori": 72.63333333333374,
+        "vision": 100,
+        "key": false
+      },
+      "goal": "pickup-9"
+    },
+    {
+      "id": "cd19fdd3effb",
+      "status": "downed",
+      "player": {
+        "x": 15.568311911582505,
+        "y": 15.966119503056778,
+        "a": 0,
+        "health": 0,
+        "armor": 0,
+        "energy": 0,
+        "reserve": 0,
+        "ori": 19.616666666666365,
+        "vision": 100,
+        "key": false
+      },
+      "goal": "revive-d53e9e763bc8"
+    }
+  ],
+  "method": "Actual WebSocket input failure retained."
+}

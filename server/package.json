@@ -1,0 +1,11 @@
+{
+  "name": "btm-optional-lan-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Optional self-hosted authoritative BTM server. No browser dependencies.",
+  "scripts": {"start": "node index.mjs"},
+  "dependencies": {"ws": "8.22.1"},
+  "engines": {"node": ">=20"},
+  "license": "MIT"
+}
