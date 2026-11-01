@@ -1,0 +1,1021 @@
+{
+  "passed": true,
+  "stages": [
+    {
+      "stage": 1,
+      "campaign": "original",
+      "index": 0,
+      "name": "THE WAKE-UP CALL",
+      "seconds": 41.0666666666669,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 100,
+          "charge": 100,
+          "reserve": 89,
+          "distance": 160.85666666666572,
+          "shots": 23
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 100,
+          "reserve": 89,
+          "distance": 160.03666666666567,
+          "shots": 23
+        }
+      ]
+    },
+    {
+      "stage": 2,
+      "campaign": "original",
+      "index": 1,
+      "name": "CATHEDRAL OF STATIC",
+      "seconds": 32.03333333333408,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 100,
+          "charge": 100,
+          "reserve": 88,
+          "distance": 119.03666666666749,
+          "shots": 25
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 100,
+          "reserve": 88,
+          "distance": 120.6766666666662,
+          "shots": 24
+        }
+      ]
+    },
+    {
+      "stage": 3,
+      "campaign": "original",
+      "index": 2,
+      "name": "THE DEMIURGE CORE",
+      "seconds": 34.23333333333395,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [
+        {
+          "id": "warden",
+          "dead": true,
+          "phase": 3
+        }
+      ],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 100,
+          "charge": 96,
+          "reserve": 86,
+          "distance": 114.70000000000228,
+          "shots": 48
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 92,
+          "reserve": 86,
+          "distance": 113.47000000000223,
+          "shots": 51
+        }
+      ]
+    },
+    {
+      "stage": 4,
+      "campaign": "original",
+      "index": 3,
+      "name": "THE MEMORY FOUNDRY",
+      "seconds": 21.300000000000217,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 100,
+          "charge": 98,
+          "reserve": 85,
+          "distance": 79.12999999999984,
+          "shots": 22
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 64,
+          "reserve": 85,
+          "distance": 77.49000000000031,
+          "shots": 37
+        }
+      ]
+    },
+    {
+      "stage": 5,
+      "campaign": "original",
+      "index": 4,
+      "name": "THE BLACKOUT STACK",
+      "seconds": 28.833333333333925,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 100,
+          "charge": 100,
+          "reserve": 83,
+          "distance": 105.0966666666668,
+          "shots": 46
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 68,
+          "reserve": 83,
+          "distance": 112.47666666666743,
+          "shots": 44
+        }
+      ]
+    },
+    {
+      "stage": 6,
+      "campaign": "original",
+      "index": 5,
+      "name": "THE NULL CROWN",
+      "seconds": 40.03333333333362,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [
+        {
+          "id": "warden",
+          "dead": true,
+          "phase": 3
+        }
+      ],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 87.26070399999996,
+          "charge": 80,
+          "reserve": 81,
+          "distance": 114.9366666666666,
+          "shots": 87
+        },
+        {
+          "id": "18357f61addd",
+          "health": 87.369536,
+          "charge": 66,
+          "reserve": 80,
+          "distance": 146.62133273166432,
+          "shots": 75
+        }
+      ]
+    },
+    {
+      "stage": 7,
+      "campaign": "original",
+      "index": 6,
+      "name": "THE DEAD LETTER DEPOT",
+      "seconds": 41.033333333333566,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 100,
+          "charge": 74,
+          "reserve": 124,
+          "distance": 154.48367513490751,
+          "shots": 54
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 68,
+          "reserve": 122,
+          "distance": 156.82314769782607,
+          "shots": 70
+        }
+      ]
+    },
+    {
+      "stage": 8,
+      "campaign": "original",
+      "index": 7,
+      "name": "MEATSPACE FIREWALL",
+      "seconds": 41.6000000000002,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 94.596448,
+          "charge": 68,
+          "reserve": 121,
+          "distance": 157.77848099589988,
+          "shots": 72
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 92,
+          "reserve": 118,
+          "distance": 162.1339173827416,
+          "shots": 80
+        }
+      ]
+    },
+    {
+      "stage": 9,
+      "campaign": "original",
+      "index": 8,
+      "name": "THE REDUNDANCY PIT",
+      "seconds": 57.4999999999993,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [
+        {
+          "id": "warden",
+          "dead": true,
+          "phase": 3
+        }
+      ],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 93.97009919999999,
+          "charge": 100,
+          "reserve": 62,
+          "distance": 213.5555340530909,
+          "shots": 131
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 94,
+          "reserve": 114,
+          "distance": 197.368977692126,
+          "shots": 94
+        }
+      ]
+    },
+    {
+      "stage": 10,
+      "campaign": "original",
+      "index": 9,
+      "name": "THE PANOPTICON",
+      "seconds": 61.166666666665755,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 100,
+          "charge": 80,
+          "reserve": 57,
+          "distance": 238.79864809256856,
+          "shots": 126
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 84,
+          "reserve": 109,
+          "distance": 235.90043772877002,
+          "shots": 122
+        }
+      ]
+    },
+    {
+      "stage": 11,
+      "campaign": "original",
+      "index": 10,
+      "name": "THE GOD PROCESS",
+      "seconds": 76.66666666666488,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [
+        {
+          "id": "warden",
+          "dead": true,
+          "phase": 3
+        }
+      ],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 100,
+          "charge": 82,
+          "reserve": 51,
+          "distance": 267.2826378733378,
+          "shots": 144
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 64,
+          "reserve": 103,
+          "distance": 267.3894121598153,
+          "shots": 158
+        }
+      ]
+    },
+    {
+      "stage": 12,
+      "campaign": "original",
+      "index": 11,
+      "name": "THE IMPOSSIBLE FREQUENCY",
+      "seconds": 91.19999999999739,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [
+        {
+          "id": "warden",
+          "dead": true,
+          "phase": 3
+        }
+      ],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 100,
+          "charge": 46,
+          "reserve": 0,
+          "distance": 326.34021400959637,
+          "shots": 185
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 91,
+          "reserve": 0,
+          "distance": 336.2044727161213,
+          "shots": 183
+        }
+      ]
+    },
+    {
+      "stage": 13,
+      "campaign": "pit",
+      "index": 0,
+      "name": "FIRST FALL",
+      "seconds": 28.833333333333925,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 96.8,
+          "charge": 61,
+          "reserve": 135,
+          "distance": 116.16666666666772,
+          "shots": 15
+        },
+        {
+          "id": "18357f61addd",
+          "health": 96.8,
+          "charge": 57,
+          "reserve": 180,
+          "distance": 117.80666666666787,
+          "shots": 17
+        }
+      ]
+    },
+    {
+      "stage": 14,
+      "campaign": "pit",
+      "index": 1,
+      "name": "STARVING CIRCUIT",
+      "seconds": 36.03333333333385,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 96.8,
+          "charge": 60,
+          "reserve": 180,
+          "distance": 145.55,
+          "shots": 24
+        },
+        {
+          "id": "18357f61addd",
+          "health": 96.8,
+          "charge": 100,
+          "reserve": 179,
+          "distance": 145.54999999999987,
+          "shots": 25
+        }
+      ]
+    },
+    {
+      "stage": 15,
+      "campaign": "pit",
+      "index": 2,
+      "name": "GATEKEEPER",
+      "seconds": 22.066666666666922,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [
+        {
+          "id": "gatekeeper",
+          "dead": true,
+          "phase": 3
+        }
+      ],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 100,
+          "charge": 68,
+          "reserve": 180,
+          "distance": 89.0606391192034,
+          "shots": 20
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 56,
+          "reserve": 180,
+          "distance": 88.7660828920878,
+          "shots": 23
+        }
+      ]
+    },
+    {
+      "stage": 16,
+      "campaign": "pit",
+      "index": 3,
+      "name": "IRON LUNG",
+      "seconds": 18.566666666666748,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 96,
+          "charge": 66,
+          "reserve": 179,
+          "distance": 71.88666666666663,
+          "shots": 27
+        },
+        {
+          "id": "18357f61addd",
+          "health": 96,
+          "charge": 96,
+          "reserve": 134,
+          "distance": 71.87959351409947,
+          "shots": 27
+        }
+      ]
+    },
+    {
+      "stage": 17,
+      "campaign": "pit",
+      "index": 4,
+      "name": "FALSE SANCTUARY",
+      "seconds": 32.2666666666674,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 84,
+          "charge": 100,
+          "reserve": 133,
+          "distance": 128.95428690364457,
+          "shots": 30
+        },
+        {
+          "id": "18357f61addd",
+          "health": 84,
+          "charge": 76,
+          "reserve": 179,
+          "distance": 129.42333333333494,
+          "shots": 35
+        }
+      ]
+    },
+    {
+      "stage": 18,
+      "campaign": "pit",
+      "index": 5,
+      "name": "STATIC TYRANT",
+      "seconds": 25.20000000000041,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [
+        {
+          "id": "tyrant",
+          "dead": true,
+          "phase": 3
+        }
+      ],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 96,
+          "charge": 88,
+          "reserve": 177,
+          "distance": 82.14681148688966,
+          "shots": 33
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 56,
+          "reserve": 180,
+          "distance": 89.75906725877977,
+          "shots": 33
+        }
+      ]
+    },
+    {
+      "stage": 19,
+      "campaign": "pit",
+      "index": 6,
+      "name": "SHATTERED CHOIR",
+      "seconds": 26.966666666667166,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 95.2,
+          "charge": 80,
+          "reserve": 88,
+          "distance": 108.28630619510655,
+          "shots": 50
+        },
+        {
+          "id": "18357f61addd",
+          "health": 95.2,
+          "charge": 100,
+          "reserve": 42,
+          "distance": 108.84924703528417,
+          "shots": 47
+        }
+      ]
+    },
+    {
+      "stage": 20,
+      "campaign": "pit",
+      "index": 7,
+      "name": "BLOODLESS GRID",
+      "seconds": 26.73333333333382,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 95.2,
+          "charge": 76,
+          "reserve": 86,
+          "distance": 104.2135457391679,
+          "shots": 51
+        },
+        {
+          "id": "18357f61addd",
+          "health": 90.4,
+          "charge": 100,
+          "reserve": 85,
+          "distance": 96.94785149116319,
+          "shots": 53
+        }
+      ]
+    },
+    {
+      "stage": 21,
+      "campaign": "pit",
+      "index": 8,
+      "name": "MIRROR ENGINE",
+      "seconds": 30.833333333334025,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [
+        {
+          "id": "mirror",
+          "dead": true,
+          "phase": 3
+        }
+      ],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 100,
+          "charge": 92,
+          "reserve": 84,
+          "distance": 105.08794267858472,
+          "shots": 41
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 66,
+          "reserve": 129,
+          "distance": 104.27049087257218,
+          "shots": 44
+        }
+      ]
+    },
+    {
+      "stage": 22,
+      "campaign": "pit",
+      "index": 9,
+      "name": "UNLIT CORE",
+      "seconds": 25.433333333333756,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 88.80000000000001,
+          "charge": 54,
+          "reserve": 82,
+          "distance": 99.63240028116392,
+          "shots": 70
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 80,
+          "reserve": 81,
+          "distance": 100.07372803532084,
+          "shots": 64
+        }
+      ]
+    },
+    {
+      "stage": 23,
+      "campaign": "pit",
+      "index": 10,
+      "name": "LAST RESERVOIR",
+      "seconds": 37.26666666666711,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 100,
+          "charge": 82,
+          "reserve": 124,
+          "distance": 146.8553422910916,
+          "shots": 59
+        },
+        {
+          "id": "18357f61addd",
+          "health": 94.4,
+          "charge": 84,
+          "reserve": 124,
+          "distance": 143.60950694679644,
+          "shots": 52
+        }
+      ]
+    },
+    {
+      "stage": 24,
+      "campaign": "pit",
+      "index": 11,
+      "name": "THE PIT ITSELF",
+      "seconds": 44.000000000000064,
+      "relays": true,
+      "key": true,
+      "captives": true,
+      "bosses": [
+        {
+          "id": "abyss",
+          "dead": true,
+          "phase": 3
+        }
+      ],
+      "players": [
+        {
+          "id": "f739bf548d12",
+          "health": 94.4,
+          "charge": 94,
+          "reserve": 121,
+          "distance": 143.55804284972498,
+          "shots": 68
+        },
+        {
+          "id": "18357f61addd",
+          "health": 100,
+          "charge": 88,
+          "reserve": 121,
+          "distance": 142.60979592663398,
+          "shots": 73
+        }
+      ]
+    }
+  ],
+  "steps": 27626,
+  "retries": 0,
+  "retryByStage": {},
+  "distinctIds": [
+    "f739bf548d12",
+    "18357f61addd"
+  ],
+  "checkpointRestoreChecks": 24,
+  "wire": [
+    {
+      "id": "f739bf548d12",
+      "bytesIn": 44542360,
+      "maxFrame": 27109
+    },
+    {
+      "id": "18357f61addd",
+      "bytesIn": 44543293,
+      "maxFrame": 27109
+    }
+  ],
+  "events": [
+    {
+      "stage": 1,
+      "type": "stageCleared",
+      "id": 700
+    },
+    {
+      "stage": 2,
+      "type": "stageCleared",
+      "id": 1487
+    },
+    {
+      "stage": 3,
+      "type": "stageCleared",
+      "id": 2372
+    },
+    {
+      "stage": 4,
+      "type": "stageCleared",
+      "id": 3181
+    },
+    {
+      "stage": 5,
+      "type": "stageCleared",
+      "id": 4252
+    },
+    {
+      "stage": 6,
+      "type": "stageCleared",
+      "id": 6262
+    },
+    {
+      "stage": 7,
+      "type": "stageCleared",
+      "id": 8032
+    },
+    {
+      "stage": 8,
+      "type": "stageCleared",
+      "id": 9557
+    },
+    {
+      "stage": 9,
+      "type": "stageCleared",
+      "id": 12372
+    },
+    {
+      "stage": 10,
+      "type": "stageCleared",
+      "id": 14641
+    },
+    {
+      "stage": 11,
+      "type": "stageCleared",
+      "id": 17307
+    },
+    {
+      "stage": 12,
+      "type": "stageCleared",
+      "id": 21424
+    },
+    {
+      "stage": 13,
+      "type": "stageCleared",
+      "id": 22043
+    },
+    {
+      "stage": 14,
+      "type": "stageCleared",
+      "id": 22735
+    },
+    {
+      "type": "bossAttack",
+      "boss": "gatekeeper",
+      "attack": "ram",
+      "phase": 1,
+      "actorId": "f739bf548d12",
+      "id": 22942
+    },
+    {
+      "type": "bossAttack",
+      "boss": "gatekeeper",
+      "attack": "ram",
+      "phase": 1,
+      "actorId": "f739bf548d12",
+      "id": 22996
+    },
+    {
+      "type": "bossPhase",
+      "boss": "gatekeeper",
+      "phase": 2,
+      "actorId": "f739bf548d12",
+      "id": 23060
+    },
+    {
+      "type": "bossAttack",
+      "boss": "gatekeeper",
+      "attack": "ram",
+      "phase": 2,
+      "actorId": "f739bf548d12",
+      "id": 23120
+    },
+    {
+      "type": "bossPhase",
+      "boss": "gatekeeper",
+      "phase": 3,
+      "actorId": "f739bf548d12",
+      "id": 23150
+    },
+    {
+      "stage": 15,
+      "type": "stageCleared",
+      "id": 23269
+    },
+    {
+      "stage": 16,
+      "type": "stageCleared",
+      "id": 23840
+    },
+    {
+      "stage": 17,
+      "type": "stageCleared",
+      "id": 24582
+    },
+    {
+      "type": "bossPhase",
+      "boss": "tyrant",
+      "phase": 2,
+      "actorId": "18357f61addd",
+      "id": 25439
+    },
+    {
+      "type": "bossAttack",
+      "boss": "tyrant",
+      "attack": "ground",
+      "phase": 2,
+      "actorId": "18357f61addd",
+      "id": 25514
+    },
+    {
+      "type": "bossPhase",
+      "boss": "tyrant",
+      "phase": 3,
+      "actorId": "18357f61addd",
+      "id": 25551
+    },
+    {
+      "stage": 18,
+      "type": "stageCleared",
+      "id": 25656
+    },
+    {
+      "stage": 19,
+      "type": "stageCleared",
+      "id": 26524
+    },
+    {
+      "stage": 20,
+      "type": "stageCleared",
+      "id": 27654
+    },
+    {
+      "type": "bossAttack",
+      "boss": "mirror",
+      "attack": "cross",
+      "phase": 1,
+      "actorId": "18357f61addd",
+      "id": 28088
+    },
+    {
+      "type": "bossPhase",
+      "boss": "mirror",
+      "phase": 2,
+      "actorId": "18357f61addd",
+      "id": 28140
+    },
+    {
+      "type": "bossAttack",
+      "boss": "mirror",
+      "attack": "cross",
+      "phase": 2,
+      "actorId": "f739bf548d12",
+      "id": 28157
+    },
+    {
+      "type": "bossPhase",
+      "boss": "mirror",
+      "phase": 3,
+      "actorId": "18357f61addd",
+      "id": 28392
+    },
+    {
+      "type": "bossAttack",
+      "boss": "mirror",
+      "attack": "cross",
+      "phase": 3,
+      "actorId": "18357f61addd",
+      "id": 28404
+    },
+    {
+      "stage": 21,
+      "type": "stageCleared",
+      "id": 28463
+    },
+    {
+      "stage": 22,
+      "type": "stageCleared",
+      "id": 29685
+    },
+    {
+      "stage": 23,
+      "type": "stageCleared",
+      "id": 31407
+    },
+    {
+      "type": "bossAttack",
+      "boss": "abyss",
+      "attack": "fan",
+      "phase": 1,
+      "actorId": "f739bf548d12",
+      "id": 32507
+    },
+    {
+      "type": "bossPhase",
+      "boss": "abyss",
+      "phase": 2,
+      "actorId": "18357f61addd",
+      "id": 32575
+    },
+    {
+      "type": "bossPhase",
+      "boss": "abyss",
+      "phase": 3,
+      "actorId": "18357f61addd",
+      "id": 32640
+    },
+    {
+      "type": "bossAttack",
+      "boss": "abyss",
+      "attack": "ram",
+      "phase": 3,
+      "actorId": "f739bf548d12",
+      "id": 32673
+    }
+  ],
+  "method": "Two real independent Node WebSocket clients with input-only map/aim planners. One authoritative SharedWorld, 30 Hz fixed dt, accelerated manual test clock; no state, HP, ammo, enemy/objective mutation or direct completion/damage calls. Not browser or physical Quest validation."
+}

@@ -282,3 +282,5 @@ function frame(now){desktopFrame=0;if(vr.active)return;tick(now);desktopFrame=re
 void vr.probe();navigator.xr?.addEventListener?.('devicechange',()=>void vr.probe());
 applySettings();showScreen('title-screen');updateHUD();desktopFrame=requestAnimationFrame(frame);
 if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').then(()=>navigator.serviceWorker.ready).then(()=>{$('offline-status').textContent='OFFLINE READY';}).catch(()=>{$('offline-status').textContent='ONLINE';$('offline-status').title='Offline caching unavailable here. Keep the source download for local play.';});else $('offline-status').textContent='LOCAL BUILD';
+
+$('bbs-btn').addEventListener('click',async()=>{if(vr.active)await vr.exit();window.location.assign('./bbs.html');});

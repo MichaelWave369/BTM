@@ -95,7 +95,7 @@ export class Game {
     this.ori={x:this.player.x+.35,y:this.player.y+.3,a:0};this.effects=[];this.projectiles=[];this.time=0;this.levelFreed=0;this.shots=0;this.hits=0;this.cooldown=0;this.recharge=0;this.vent=0;this.shotAnim=0;this.hurt=0;this.shake=0;this.shift=false;this.bassCharge=0;this.dodgeCooldown=0;this.dodgeFlash=0;this.shieldTime=0;this.shieldCharge=0;this.oriCooldown=0;this.oriAuto=3;this.warning=4;this.objectiveTime=0;this.levelKills=0;this.unlocked=this.campaign==='pit'?6:Math.max(this.unlocked,index===0?3:index===1?4:6);this.mode='playing';this.resetFeel();this.checkpoint=this.snapshot();this.emit('checkpoint');this.emit('sector',{index,name:this.definition.name,campaign:this.campaign});
   }
   get liberation(){return Math.round(this.totalFreed/(this.campaign==='pit'?PIT_HOSTS:CAMPAIGN_HOSTS)*100);}
-  get objective(){const n=this.level.relays.filter(r=>r.active).length;if(n<2)return `BREAK CONTROL RELAYS ${n}/2`;if(!this.player.key)return 'FIND THE GOLDEN ACCESS KEY';if(this.level.enemies.some(e=>e.type==='warden'&&!e.dead))return 'DEFEAT '+(this.definition.boss?PIT_BOSSES[this.definition.boss].name:'THE WARDEN');return 'REACH THE EXTRACTION PORTAL';}
+  get objective(){const n=this.level.relays.filter(r=>r.active).length;if(n<2)return `BREAK CONTROL RELAYS ${n}/2`;if(!this.player.key)return 'FIND THE GOLDEN ACCESS KEY';if(this.level.enemies.some(e=>e.type==='warden'&&!e.dead))return 'DEFEAT '+(PIT_BOSSES[this.definition.boss]?.name||'THE WARDEN');return 'REACH THE EXTRACTION PORTAL';}
   get objectiveTarget(){return this.level.relays.find(r=>!r.active)||(!this.player.key?{...this.level.key,label:'GOLD ACCESS KEY'}:null)||this.level.enemies.find(e=>e.type==='warden'&&!e.dead)||{...this.level.exit,label:'EXTRACTION'};}
   get exitReady(){return this.level.relays.every(r=>r.active)&&this.player.key&&!this.level.enemies.some(e=>e.type==='warden'&&!e.dead);}
   selectWeapon(index){if(index<0||index>=this.unlocked){this.emit('toast',{text:'WEAPON LOCKED · advance to the next sector'});return false;}if(this.weapon!==index){this.weapon=index;this.equipAnim=.24;this.emit('sound',{name:'equip'});this.emit('weapon');}return true;}
@@ -208,7 +208,7 @@ export class Game {
   continueBeyond(){if(this.campaign==='pit'||this.mode!=='ending'||![5,8].includes(this.levelIndex))return false;this.loadLevel(this.levelIndex+1);this.banter('nightmare-entry',[['ORI',SECTORS[this.levelIndex].subtitle],['WAVE','Bro. They patched the easy mode.']]);return true;}
   startNightmare(options={}){this.start(options);this.loadLevel(6,false);this.say('Nightmare entry. All six weapons unlocked. No artifact upgrades earned yet.','ORI',2);}
   retry(){const deaths=(this.pitDeaths||0)+1,snap=this.checkpoint;if(snap){this.restore(snap);this.pitDeaths=deaths;this.mode='playing';this.player.health=Math.max(65,this.player.health);if(!this.survival)this.player.energy=100;this.hurt=0;this.projectiles=[];this.emit('checkpoint');}else this.loadLevel(this.levelIndex);}
-  snapshot(){return {...(this.campaign==='pit'?{version:2,schema:'btm.pit/1',campaign:'pit',pitRecord:structuredClone(this.pitRecord||[]),pitDeaths:this.pitDeaths||0,pitCleared:['complete','ending'].includes(this.mode)}:{version:1}),energyMode:this.energyMode,release:'0.9.0-rc.1',levelIndex:this.levelIndex,level:structuredClone(this.level),player:{...this.player},time:this.time,totalFreed:this.totalFreed,totalArtifacts:this.totalArtifacts,totalSecrets:this.totalSecrets,campaignTime:this.campaignTime,unlocked:this.unlocked,weapon:this.weapon,levelFreed:this.levelFreed,levelKills:this.levelKills,shots:this.shots,hits:this.hits,bassCharge:this.bassCharge,rng:this.rng,v2:{chatterUsed:structuredClone(this.chatterUsed),stats:{...this.stats}}};}
+  snapshot(){return {...(this.campaign==='pit'?{version:2,schema:'btm.pit/1',campaign:'pit',pitRecord:structuredClone(this.pitRecord||[]),pitDeaths:this.pitDeaths||0,pitCleared:['complete','ending'].includes(this.mode)}:{version:1}),energyMode:this.energyMode,release:'0.10.0-rc.1',levelIndex:this.levelIndex,level:structuredClone(this.level),player:{...this.player},time:this.time,totalFreed:this.totalFreed,totalArtifacts:this.totalArtifacts,totalSecrets:this.totalSecrets,campaignTime:this.campaignTime,unlocked:this.unlocked,weapon:this.weapon,levelFreed:this.levelFreed,levelKills:this.levelKills,shots:this.shots,hits:this.hits,bassCharge:this.bassCharge,rng:this.rng,v2:{chatterUsed:structuredClone(this.chatterUsed),stats:{...this.stats}}};}
   restore(s,{campaign:expected}={}){
     const campaign=s?.version===2&&s?.campaign==='pit'&&s?.schema==='btm.pit/1'?'pit':'original',defs=campaign==='pit'?PIT_STAGES:SECTORS;
     if(expected&&campaign!==expected)throw Error('Checkpoint belongs to a different campaign');
@@ -217,7 +217,12 @@ export class Game {
     const copy=structuredClone(s);this.campaign=campaign;Object.assign(this,copy);this.energyMode=s.energyMode==='survival'?'survival':'legacy';this.player.energy=clamp(Number.isFinite(s.player.energy)?s.player.energy:100,0,ENERGY_CAPACITY);this.player.reserve=this.survival?clamp(Number.isFinite(s.player.reserve)?s.player.reserve:0,0,RESERVE_CAPACITY):0;if(!this.level.regions)decorateLevel(this.level,this.definition,this.levelIndex);this.nav=null;this.navTime=0;this.ori={x:this.player.x+.3,y:this.player.y+.2,a:0};this.mode='playing';this.cooldown=0;this.recharge=0;this.vent=0;this.shotAnim=0;this.hurt=0;this.shake=0;this.shift=false;this.dodgeCooldown=0;this.dodgeFlash=0;this.shieldTime=0;this.shieldCharge=0;this.oriCooldown=0;this.oriAuto=3;this.warning=5;this.objectiveTime=0;this.effects=[];this.projectiles=[];this.events=[];this.resetFeel(copy.v2);if(campaign==='pit'&&s.pitCleared)this.mode=this.levelIndex===11?'ending':'complete';this.checkpoint=this.snapshot();return true;
   }
   update(dt,input={}){
-    if(this.mode!=='playing')return;dt=clamp(dt,0,.05);this.time+=dt;const p=this.player,l=this.level;
+    if(this.mode!=='playing')return;dt=clamp(dt,0,.05);this.time+=dt;
+    this.updatePlayer(dt,input);this.updateShared(dt);this.collectPlayerItems();this.updateWorld(dt);
+  }
+  // Split phases let an optional authoritative squad step each avatar, then one world.
+  updatePlayer(dt,input={}){
+    const p=this.player,l=this.level;
     for(const name of ['cooldown','recharge','shotAnim','hurt','shake','oriCooldown','dodgeCooldown','dodgeFlash','objectiveTime','hitPulse','assistTime','scanTime','equipAnim','portraitTime','speechCooldown','dangerCooldown','muzzle','shieldTime'])this[name]=Math.max(0,this[name]-dt*(name==='shotAnim'?5:name==='muzzle'?12:1));
     if(this.speechCooldown<=0&&this.speechQueue.length){const line=this.speechQueue.shift();this.say(line.text,line.speaker,line.priority);}
     if(this.portraitTime<=0)this.portraitMood=p.health<30?'DETERMINED':this.charge>.3?'CHARGING':input.fire?'FIRING':'FOCUSED';
@@ -232,18 +237,26 @@ export class Game {
     if(this.footDistance>(input.sprint?.95:.7)){this.footDistance=0;this.emit('sound',{name:'step'});}
     p.a=angleDiff(p.a,0);this.moving=travel>.0005;this.sprinting=!!input.sprint;input.afterMovement?.();
     if(!input.deferFire)this.advanceCombat(dt,input.fire);
+  }
+  updateShared(dt){
+    const p=this.player,l=this.level;
     const ox=p.x+Math.cos(p.a+.45)*.8,oy=p.y+Math.sin(p.a+.45)*.8;
     this.ori.x+=(ox-this.ori.x)*Math.min(1,dt*6);this.ori.y+=(oy-this.ori.y)*Math.min(1,dt*6);
     for(const d of Object.values(l.doors))d.open=clamp(d.open+(d.target-d.open)*dt*4,0,1);
+  }
+  collectPlayerItems(){
+    const p=this.player,l=this.level;
     // Automap fog is discovery-based, never leaks the entire layout by default.
     for(let y=Math.floor(p.y)-3;y<=p.y+3;y++)for(let x=Math.floor(p.x)-3;x<=p.x+3;x++)if(x>=0&&y>=0&&x<l.w&&y<l.h&&lineOfSight(l,p,{x:x+.5,y:y+.5}))l.seen[y*l.w+x]=true;
     for(const item of l.items){if(!item.taken&&distance(p,item)<.6){if(item.type==='health'&&p.health>=100||item.type==='energy'&&(this.survival?p.reserve>=RESERVE_CAPACITY:p.energy>=99)||item.type==='armor'&&p.armor>=100)continue;item.taken=true;this.stats.pickups++;if(item.type==='health')p.health=Math.min(100,p.health+35);if(item.type==='energy'){if(this.survival){const available=item.remaining??45,amount=Math.min(available,RESERVE_CAPACITY-p.reserve);p.reserve+=amount;item.remaining=available-amount;item.taken=item.remaining<=0;}else p.energy=Math.min(100,p.energy+45);}if(item.type==='armor')p.armor=Math.min(100,p.armor+45);if(item.type==='artifact'){this.totalArtifacts++;this.banter('artifact',[['ORI',this.totalArtifacts%2===0?'Artifact resonance upgraded every weapon.':'Φ artifact recovered. Two of these upgrade every weapon.'],['WAVE','That belongs in a museum. A very loud museum.']]);this.saveCheckpoint();}this.emit('pickup',{item:item.type});this.emit('sound',{name:'pickup'});}}
     if(!l.key.taken&&distance(p,l.key)<.6){l.key.taken=true;p.key=true;this.stats.pickups++;this.banter('key',[['ORI','Gold access acquired. Extraction doors are yours.'],['WAVE','A key to reality? Finally, something I will not lose in the couch.']]);this.emit('pickup',{item:'GOLDEN ACCESS KEY'});this.emit('sound',{name:'pickup'});this.saveCheckpoint();}
-    updatePitEnvironment(this,dt);if(this.mode!=='playing')return;
+  }
+  updateEnvironment(dt){updatePitEnvironment(this,dt);}
+  updateWorld(dt){
+    const p=this.player,l=this.level;
+    this.updateEnvironment(dt);if(this.mode!=='playing')return;
     for(const e of l.enemies){this.updateEnemy(e,dt);if(this.mode!=='playing')return;}
-    for(const b of this.projectiles){
-      const steps=3;for(let i=0;i<steps&&!b.dead;i++){b.x+=Math.cos(b.a)*b.speed*dt/steps;b.y+=Math.sin(b.a)*b.speed*dt/steps;if(Number.isFinite(b.height))b.height+=(b.vh||0)*dt/steps;if(solidAt(l,b.x,b.y)||Number.isFinite(b.height)&&(b.height<0||b.height>WALL_HEIGHT)){b.dead=true;this.emit('burst',{x:b.x,y:b.y,color:b.color,count:5,...(Number.isFinite(b.height)?{height:clamp(b.height,.01,WALL_HEIGHT-.01)}:{})});break;}if(b.enemy){if(distance(p,b)<.26&&(!this.combatPose||!Number.isFinite(b.height)||b.height>=.08&&b.height<=this.combatPose.head.height+.08)){this.damagePlayer(b.damage,{x:b.x-Math.cos(b.a),y:b.y-Math.sin(b.a)});b.dead=true;}}else{const e=l.enemies.find(e=>!e.dead&&distance(b,e)<.4&&(!Number.isFinite(b.height)||b.height>=0&&b.height<=entityHeight(e.type)));if(e){this.damageEnemy(e,b.damage,.2);this.hits++;b.dead=true;}}}b.life-=dt;}
-    this.projectiles=this.projectiles.filter(b=>!b.dead&&b.life>0);
+    this.updateProjectiles(dt);
     this.oriAuto-=dt;this.warning-=dt;
     const nearby=l.enemies.find(e=>!e.dead&&distance(p,e)<4&&lineOfSight(l,p,e));
     if(nearby&&this.oriAuto<=0&&p.ori>=16){p.ori-=16;this.oriAuto=6;this.assistTime=.7;this.stats.oriAssists++;this.ori.target={x:nearby.x,y:nearby.y};nearby.stun=Math.max(nearby.stun,nearby.pitBoss?.2:1);this.damageEnemy(nearby,10,0,'ori');this.emit('oriAssist',{x:nearby.x,y:nearby.y});this.emit('sound',{name:'oriBolt',position:{x:this.ori.x,y:this.ori.y,height:.75}});this.emit('beam',{from:{...this.ori},to:{x:nearby.x,y:nearby.y},color:'#5df6ec',ori:true});}
@@ -254,6 +267,12 @@ export class Game {
     const region=l.regions?.find(r=>p.x>=r.bounds[0]&&p.x<r.bounds[2]+1&&p.y>=r.bounds[1]&&p.y<r.bounds[3]+1)?.name||'ACCESS CORRIDOR';if(region!==this.region){this.region=region;this.emit('landmark',{name:region});}
     if(this.time>10&&this.stats.distance<3)this.banter('door-help',[['ORI','Head to the striped door. Get close, face it, and press E. Freedom has a surprisingly small button.']]);
     if(this.exitReady&&distance(p,l.exit)<.75)this.complete();
+  }
+  updateProjectiles(dt){
+    const p=this.player,l=this.level;
+    for(const b of this.projectiles){
+      const steps=3;for(let i=0;i<steps&&!b.dead;i++){b.x+=Math.cos(b.a)*b.speed*dt/steps;b.y+=Math.sin(b.a)*b.speed*dt/steps;if(Number.isFinite(b.height))b.height+=(b.vh||0)*dt/steps;if(solidAt(l,b.x,b.y)||Number.isFinite(b.height)&&(b.height<0||b.height>WALL_HEIGHT)){b.dead=true;this.emit('burst',{x:b.x,y:b.y,color:b.color,count:5,...(Number.isFinite(b.height)?{height:clamp(b.height,.01,WALL_HEIGHT-.01)}:{})});break;}if(b.enemy){if(distance(p,b)<.26&&(!this.combatPose||!Number.isFinite(b.height)||b.height>=.08&&b.height<=this.combatPose.head.height+.08)){this.damagePlayer(b.damage,{x:b.x-Math.cos(b.a),y:b.y-Math.sin(b.a)});b.dead=true;}}else{const e=l.enemies.find(e=>!e.dead&&distance(b,e)<.4&&(!Number.isFinite(b.height)||b.height>=0&&b.height<=entityHeight(e.type)));if(e){this.damageEnemy(e,b.damage,.2);this.hits++;b.dead=true;}}}b.life-=dt;}
+    this.projectiles=this.projectiles.filter(b=>!b.dead&&b.life>0);
   }
   updateEnemy(e,dt){
     if(e.dead)return;const p=this.player,l=this.level;e.walk+=dt*(e.state==='pursue'?7:3);e.flash=Math.max(0,e.flash-dt);e.pain=Math.max(0,(e.pain||0)-dt);e.recoil=Math.max(0,(e.recoil||0)-dt);e.stun=Math.max(0,e.stun-dt);e.cooldown-=dt;

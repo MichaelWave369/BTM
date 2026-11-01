@@ -24,7 +24,7 @@ export class ImmersiveRig {
   if(playing&&this.menuActive){this.menuActive=false;this.fade=.16;this.menuPosition={x:game.player.x,y:game.player.y};}
   if(!playing&&!this.menuActive){this.menuActive=true;this.menuPosition={x:game.player.x,y:game.player.y};}
   const c=Math.cos(this.yaw),s=Math.sin(this.yaw),wx=(c*dx+s*dz)/WORLD_SCALE,wy=(-s*dx+c*dz)/WORLD_SCALE,body=playing?game.player:this.menuPosition,oldX=body.x,oldY=body.y;
-  if(playing)moveBody(game.level,body,wx,wy);
+  if(playing){if(game.moveTrackedBody)game.moveTrackedBody(wx,wy);else moveBody(game.level,body,wx,wy);}
   else{const max=.6/WORLD_SCALE,px=body.x+wx-game.player.x,py=body.y+wy-game.player.y,n=Math.hypot(px,py),ratio=n>max?max/n:1;moveBody(game.level,body,game.player.x+px*ratio-body.x,game.player.y+py*ratio-body.y);}
   this.blocked=Math.hypot(body.x-oldX-wx,body.y-oldY-wy)*WORLD_SCALE>.015;
   if(playing){const travel=Math.hypot(body.x-oldX,body.y-oldY);game.stats.distance+=travel;game.lessonDistance+=travel;game.footDistance+=travel;}

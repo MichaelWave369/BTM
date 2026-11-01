@@ -1,0 +1,5 @@
+
+> michael-wave-ori-break-the-matrix@0.10.0-rc.1 build
+> node scripts/build.mjs
+
+Production build complete: dist/ · relative asset paths · no runtime dependencies.

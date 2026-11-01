@@ -1,0 +1,59 @@
+{
+  "passed": false,
+  "error": "The expression evaluated to a falsy value:\n\n  assert(cell.taken)\n",
+  "stack": "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert(cell.taken)\n\n    at file:///workspace/scratch/cb32add49277/BTM-lan/scripts/verify-network-browser.mjs:22:98",
+  "events": [
+    {
+      "event": "first-frag",
+      "frags": 1,
+      "deaths": 1
+    },
+    {
+      "event": "respawn",
+      "health": 100
+    }
+  ],
+  "pageErrors": [],
+  "room": {
+    "state": "playing",
+    "time": 65.89999999999883,
+    "actors": [
+      {
+        "id": "a678e6a6d683",
+        "status": "alive",
+        "connected": true,
+        "lastSeq": 835,
+        "player": {
+          "x": 6.500000000000003,
+          "y": 20.126031571534696,
+          "a": -1.5707963267948992,
+          "health": 100,
+          "armor": 25,
+          "energy": 88,
+          "reserve": 45,
+          "ori": 100,
+          "vision": 100,
+          "key": true
+        }
+      },
+      {
+        "id": "cc2d3cf361bb",
+        "status": "alive",
+        "connected": true,
+        "lastSeq": 832,
+        "player": {
+          "x": 3.5,
+          "y": 21.5,
+          "a": 0,
+          "health": 100,
+          "armor": 25,
+          "energy": 100,
+          "reserve": 45,
+          "ori": 100,
+          "vision": 100,
+          "key": true
+        }
+      }
+    ]
+  }
+}

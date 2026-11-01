@@ -76,7 +76,7 @@ export class SignalPresentation {
   // The visual core follows smoothly and keeps a clear lane around the weapon ray.
   const flight=this.flight.update(game,rig,dt,settings);this.ori.set(flight.position);
   const threat=l.enemies.find(e=>!e.dead&&e.tell>0&&Math.hypot(e.x-game.player.x,e.y-game.player.y)<9);
-  const state=game.player.health<30?'low':game.assistTime>0?'assist':game.scanTime>0?'scan':'idle';
+  const state=game.oriCorrupted||game.player.health<30?'low':game.assistTime>0?'assist':game.scanTime>0?'scan':'idle';
   this.oriVisible=flight.visible;
   if(flight.visible){
    const m=this.oriMatrix,scale=.8+(Number.isFinite(settings.vrOriScale)?Math.max(.4,Math.min(1,settings.vrOriScale)):.65)*.3;

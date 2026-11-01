@@ -1,0 +1,51 @@
+{
+  "passed": true,
+  "browser": "151.0.7922.34",
+  "distinctPlayerIds": [
+    "36ff883180a1",
+    "2b3606ed573b"
+  ],
+  "events": [
+    {
+      "event": "natural-downed",
+      "player": "2b3606ed573b",
+      "time": 30.900000000000695,
+      "damage": 110.51999999999998
+    },
+    {
+      "event": "revived",
+      "player": "2b3606ed573b",
+      "by": "36ff883180a1",
+      "health": 35,
+      "time": 33.50000000000066
+    }
+  ],
+  "receipt": {
+    "stage": 1,
+    "campaign": "original",
+    "index": 0,
+    "name": "THE WAKE-UP CALL",
+    "seconds": 57.33333333333264,
+    "relays": true,
+    "key": true,
+    "bosses": []
+  },
+  "diskRestartResume": true,
+  "resourcesPreserved": [
+    {
+      "id": "36ff883180a1",
+      "health": 100,
+      "energy": 100,
+      "reserve": 89
+    },
+    {
+      "id": "2b3606ed573b",
+      "health": 85,
+      "energy": 80,
+      "reserve": 90
+    }
+  ],
+  "realSoloAndPitSlotsBytePreserved": true,
+  "pageErrors": [],
+  "method": "Two separate Chromium contexts, native BBS client and real WebSocket connections. Clients start actual solo/Pit saves first, then co-op. Passive client is naturally downed by live enemies; teammate moves, fights and channels a server-timed revive. Shared relays/key, two-player movement/combat/extraction, atomic host save, Node server restart and token resume preserve resources and completion. Manual fixed-step test clock accelerates wall time; no HP/ammo/position/objective/completion writes. Physical Quest pending."
+}

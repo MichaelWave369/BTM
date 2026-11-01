@@ -1,0 +1,71 @@
+{
+  "passed": false,
+  "error": "page.screenshot: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n",
+  "stack": "page.screenshot: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - taking page screenshot\u001b[22m\n\u001b[2m  - waiting for fonts to load...\u001b[22m\n\u001b[2m  - fonts loaded\u001b[22m\n\n    at /workspace/scratch/cb32add49277/BTM-lan/scripts/verify-network-browser.mjs:28:189",
+  "events": [
+    {
+      "event": "first-frag",
+      "frags": 1,
+      "deaths": 1
+    },
+    {
+      "event": "respawn",
+      "health": 100
+    },
+    {
+      "event": "cell-reload",
+      "charge": 100,
+      "reserve": 90
+    },
+    {
+      "event": "reconnect",
+      "id": "6d71f9a4e97b",
+      "energy": 100,
+      "reserve": 90,
+      "frags": 1
+    }
+  ],
+  "pageErrors": [],
+  "room": {
+    "state": "results",
+    "time": 8.933333333333312,
+    "actors": [
+      {
+        "id": "6d71f9a4e97b",
+        "status": "alive",
+        "connected": true,
+        "lastSeq": 2271,
+        "player": {
+          "x": 25.265624333146167,
+          "y": 21.36805802538369,
+          "a": -1.555797451643046,
+          "health": 100,
+          "armor": 25,
+          "energy": 88,
+          "reserve": 45,
+          "ori": 100,
+          "vision": 100,
+          "key": true
+        }
+      },
+      {
+        "id": "e4977ebb90ae",
+        "status": "dead",
+        "connected": true,
+        "lastSeq": 2281,
+        "player": {
+          "x": 25.5,
+          "y": 3.5,
+          "a": 0,
+          "health": 0,
+          "armor": 0,
+          "energy": 100,
+          "reserve": 45,
+          "ori": 100,
+          "vision": 100,
+          "key": true
+        }
+      }
+    ]
+  }
+}

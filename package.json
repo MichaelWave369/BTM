@@ -1,9 +1,9 @@
 {
   "name": "michael-wave-ori-break-the-matrix",
-  "version": "0.9.0-rc.1",
+  "version": "0.10.0-rc.1",
   "private": true,
   "type": "module",
-  "description": "Pit of Despair: twelve separate Survival trials and four phased bosses in native Canvas/WebGL/WebXR.",
+  "description": "BBS LAN CLAN: optional authoritative LAN arenas, 24-stage co-op and The Final Frequency in native Canvas/WebGL/WebXR.",
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "build": "node scripts/build.mjs",
@@ -11,7 +11,11 @@
     "check": "node scripts/check.mjs",
     "playtest": "node scripts/playthrough.mjs",
     "playtest:immersive": "node scripts/playthrough-immersive.mjs",
-    "playtest:pit": "node scripts/playthrough-pit.mjs"
+    "playtest:pit": "node scripts/playthrough-pit.mjs",
+    "test:network": "node --test server/test/*.test.mjs",
+    "server": "node server/index.mjs",
+    "playtest:network": "node scripts/playthrough-network.mjs",
+    "playtest:raid": "node scripts/playthrough-raid.mjs"
   },
   "engines": {
     "node": ">=20"
