@@ -29,9 +29,11 @@ function chooseCoop(room,actor){
  const goal=nearest(p,unlit.length?unlit:unfreed);
  if(goal)return{point:goal,kind:'use',range:1.15};
  if(!l.key.taken)return{point:l.key,kind:'pickup',range:.35};
+ // Once the real objective is complete, squadmates extract instead of
+ // endlessly chasing optional enemies off the route.
+ if(g.exitReady)return{point:l.exit,kind:'exit',range:1.15};
  const enemies=l.enemies.filter(e=>!e.dead);
  if(enemies.length)return{point:nearest(p,enemies),kind:'fight',range:4};
- if(g.exitReady)return{point:l.exit,kind:'exit',range:1.15};
  const lead=nearest(p,partners.filter(a=>a.status==='alive').map(a=>a.player));
  return {point:lead||l.exit,kind:'follow',range:1.7};
 }
