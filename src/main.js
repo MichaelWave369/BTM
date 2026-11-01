@@ -9,6 +9,7 @@ import {loadHostedMission} from './phi-content/hosted-missions.js';
 import {UI,WEAPON_UI,drawOri,drawWeaponIcon} from './arcade-ui.js';
 import {Communications,criticalMessage} from './communications.js';
 import {AudioEngine} from './audio.js';
+import {mountSoundtrackControls} from './soundtrack-ui.js';
 import {drawPortrait} from './assets.js';
 import {VRArcade} from './vr.js';
 import {IMMERSIVE_DEFAULTS,immersiveSettings} from './immersive-rig.js';
@@ -17,13 +18,15 @@ import {PointerCapture,keyCode} from './controls.js';
 import {GamepadInput,ControllerMenu,ControllerRumble,CONTROLLER_DEFAULTS,controllerSettings,gameplayInput,controllerActions} from './gamepad.js';
 const $=id=>document.getElementById(id),canvas=$('game'),game=new Game(),renderer=new Renderer(canvas),audio=new AudioEngine(),communications=new Communications();
 const SAVE_KEY=ORIGINAL_SAVE_KEY,SETTINGS_KEY='mwave-ori-settings-v1';
-const defaults={...IMMERSIVE_DEFAULTS,vrDistance:2.5,vrWidth:2.8,...CONTROLLER_DEFAULTS,sensitivity:1,music:.35,sfx:.65,muted:false,resolution:640,crt:true,controlMode:'auto',reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches};
+const defaults={...IMMERSIVE_DEFAULTS,vrDistance:2.5,vrWidth:2.8,...CONTROLLER_DEFAULTS,sensitivity:1,music:.35,sfx:.65,muted:false,soundtrackMode:'album',soundtrackTrack:'auto',resolution:640,crt:true,controlMode:'auto',reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches};
 const controller=new GamepadInput(),rumble=new ControllerRumble();let inputMode='keyboard',desktopFrame=0,alertText='',alertTimer=0;
 let settings={...defaults,energyMode:'survival'},saved=null,pitSaved=null,screen='title-screen',returnScreen='title-screen',keys=new Set(),fire=false,mapOpen=false,dragging=false,lastMouseX=0,toastTimer=0,dialogueTimer=0,lastFrame=performance.now(),hudTime=0,fpsTime=0,fpsFrames=0,ambientTimer=8,touch=matchMedia('(pointer:coarse)').matches,altStart=0;
 try{
   const stored=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'null');
   if(stored&&typeof stored==='object'){
     if(['legacy','survival'].includes(stored.energyMode))settings.energyMode=stored.energyMode;
+    if(['album','procedural'].includes(stored.soundtrackMode))settings.soundtrackMode=stored.soundtrackMode;
+    if(stored.soundtrackTrack==='auto'||stored.soundtrackTrack==='album'||/^(?:[1-9]|1[0-8])$/.test(String(stored.soundtrackTrack)))settings.soundtrackTrack=String(stored.soundtrackTrack);
     Object.assign(settings,controllerSettings(stored),immersiveSettings(stored));
     for(const k of ['sensitivity','music','sfx'])if(Number.isFinite(stored[k]))settings[k]=clamp(stored[k],k==='sensitivity'?.3:0,k==='sensitivity'?3:1);
     for(const k of ['muted','crt','reducedMotion'])if(typeof stored[k]==='boolean')settings[k]=stored[k];
@@ -95,9 +98,9 @@ function showScreen(id){
   if(id==='title-screen'){$('dialogue').hidden=true;$('boss-bar').hidden=true;$('vision-tag').hidden=true;$('interaction').textContent='';$('header-sector').textContent='SIMULATION ONLINE';}updateCapture();
 }
 function lockMouse(){if(touch||vr.active||inputMode!=='keyboard'||settings.controlMode!=='auto')return;canvas.focus({preventScroll:true});void capture.capture();}
-function play(fresh=false){if(fresh){communications.reset();game.start({energyMode:settings.energyMode});mapOpen=false;}else game.mode='playing';showScreen('');audio.pitAct=game.campaign==='pit'?game.definition.act:null;audio.sector=game.levelIndex;audio.start();audio.pause(false);canvas.focus({preventScroll:true});lockMouse();processEvents();updateHUD();}
+function play(fresh=false){if(fresh){communications.reset();game.start({energyMode:settings.energyMode});mapOpen=false;}else game.mode='playing';showScreen('');audio.pitAct=game.campaign==='pit'?game.definition.act:null;audio.sector=game.levelIndex;audio.setScore({kind:game.campaign==='pit'?'pit':'original',stage:game.levelIndex,boss:false});audio.start();audio.pause(false);canvas.focus({preventScroll:true});lockMouse();processEvents();updateHUD();}
 function pause(){if(game.mode!=='playing')return;game.mode='paused';audio.pause(true);showScreen('pause-screen');}
-function home(){if(game.phiwadCustom)leavePhiWadMission(game);else if(game.mode==='playing'||game.mode==='paused'){game.saveCheckpoint();saveCheckpoint();}game.mode='title';audio.pause(true);showScreen('title-screen');$('continue-btn').hidden=!saved;$('continue-pit-btn').hidden=!pitSaved;}
+function home(){if(game.phiwadCustom)leavePhiWadMission(game);else if(game.mode==='playing'||game.mode==='paused'){game.saveCheckpoint();saveCheckpoint();}game.mode='title';audio.pause(true);audio.setScore({kind:'title'});showScreen('title-screen');$('continue-btn').hidden=!saved;$('continue-pit-btn').hidden=!pitSaved;}
 function openSettings(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('settings-screen');}
 function openHelp(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('help-screen');}
 function applySettings(){
@@ -152,8 +155,8 @@ function processEvents(){
     if(e.type==='pickup')showToast((e.item==='artifact'?'Φ ARTIFACT / ':'')+e.item.toUpperCase()+' ACQUIRED');
     if(e.type==='secret'){showToast('SECRET FOUND / CODE BROWN SUPPLY CLOSET');audio.play('free');}
     if(e.type==='pitTell'){alertText=e.text;alertTimer=2.3;}
-    if(e.type==='sector'){audio.sector=e.index;audio.pitAct=e.campaign==='pit'?game.definition.act:null;showToast((e.campaign==='pit'?'PIT / TRIAL ':'SECTOR ')+String(e.index+1).padStart(2,'0')+' / '+e.name);}
-    if(e.type==='bass')audio.play('fire',2);if(e.type==='complete'||e.type==='dead')result();
+    if(e.type==='sector'){audio.sector=e.index;audio.pitAct=e.campaign==='pit'?game.definition.act:null;audio.setScore({kind:e.campaign==='pit'?'pit':'original',stage:e.index,boss:false});showToast((e.campaign==='pit'?'PIT / TRIAL ':'SECTOR ')+String(e.index+1).padStart(2,'0')+' / '+e.name);}
+    if(e.type==='bass')audio.play('fire',2);if(e.type==='complete'){audio.setScore({kind:'ending'});}if(e.type==='complete'||e.type==='dead')result();
   }
 }
 function updateHUD(){
@@ -280,6 +283,7 @@ function tick(now,externalPad,spatial){
 }
 function frame(now){desktopFrame=0;if(vr.active)return;tick(now);desktopFrame=requestAnimationFrame(frame);}
 void vr.probe();navigator.xr?.addEventListener?.('devicechange',()=>void vr.probe());
+mountSoundtrackControls({audio,settings,apply:applySettings,save:storeSettings});
 applySettings();showScreen('title-screen');updateHUD();desktopFrame=requestAnimationFrame(frame);
 if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').then(()=>navigator.serviceWorker.ready).then(()=>{$('offline-status').textContent='OFFLINE READY';}).catch(()=>{$('offline-status').textContent='ONLINE';$('offline-status').title='Offline caching unavailable here. Keep the source download for local play.';});else $('offline-status').textContent='LOCAL BUILD';
 
