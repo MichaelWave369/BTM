@@ -86,7 +86,7 @@ test('all six styles paint visually distinctive standard, locked and revealed do
  }
  const {g}=recorder();assert.equal(paintDoorSurface(g,'unknown',{index:0}),false);
 });
-test('WorldScene renders normal and locked door frames but never reveals hidden secrets early',()=>{
+test('WorldScene renders normal and locked door frames but never reveals hidden secrets early',async()=>{
  const game=new Game();game.start();const scene=new WorldScene();
  const head=matIdentity();head[13]=1.65;
  const rig=new ImmersiveRig();rig.prepare(game,{head,rightRay:head},null,{},.014);
