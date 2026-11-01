@@ -1,3 +1,10 @@
+# 0.9.0-rc.1 — Pit of Despair candidate
+
+- Add a standalone twelve-trial menu campaign with four distinct authored acts and independent version-2 checkpoints; preserve original v1 saves and registries.
+- Add Gatekeeper, Static Tyrant, Mirror Engine and The Pit Itself with procedural identities, three gated phases, guard/weakness rules, telegraphed attacks and finite attack budgets.
+- Add timed floor hazards, act palettes and procedural sound, finite Survival supply routes and an ending that resumes without duplicate awards. Preserve free close-range counterplay.
+- Verify all twelve stages through production Classic and tracked simulation, saves/resume, browser rendering and offline play. Add campaign CI and genuine gameplay evidence. Keep failed-run evidence and pending physical Quest/human balance gates explicit.
+
 # Cybernetic equipment — 0.6.0-rc.1 candidate
 
 ## 0.8.0-rc.1 — Ori Reborn / Survival candidate

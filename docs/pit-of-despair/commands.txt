@@ -1,0 +1,37 @@
+$ npm run check
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> michael-wave-ori-break-the-matrix@0.9.0-rc.1 check
+> node scripts/check.mjs
+
+86 JavaScript modules passed syntax checks.
+
+$ npm run build
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> michael-wave-ori-break-the-matrix@0.9.0-rc.1 build
+> node scripts/build.mjs
+
+Production build complete: dist/ · relative asset paths · no runtime dependencies.
+
+$ node scripts/verify-build.mjs
+Build verification passed: 161 asset/import/cache references resolve under /MichaelWave-Ori-BreakTheMatrix/.
+
+$ node scripts/verify-offline.mjs
+{
+  "passed": true,
+  "offlineAssets": 55,
+  "expansionCached": true,
+  "controlsCached": true,
+  "gamepadCached": true,
+  "vrCached": true,
+  "gauntletCached": true,
+  "immersiveWorldCached": true,
+  "equipmentCached": true,
+  "neonUiAndLocalFontsCached": true,
+  "navigationFallback": true,
+  "postRequestsIgnored": true,
+  "unrelatedCachePreserved": true,
+  "oldVersionCacheRemoved": true,
+  "method": "Generated service worker executed in a Node VM with local asset bytes and a disconnected fetch. This is a cache-logic test, not a browser airplane-mode test."
+}

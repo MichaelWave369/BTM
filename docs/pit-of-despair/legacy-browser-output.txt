@@ -1,0 +1,36 @@
+{
+  "passed": true,
+  "browser": "151.0.7922.34",
+  "groups": {
+    "signal": {
+      "passed": true,
+      "total": 17
+    },
+    "webgl": {
+      "passed": true,
+      "total": 40
+    },
+    "immersive": {
+      "passed": true,
+      "total": 36
+    },
+    "ui": {
+      "passed": true,
+      "total": 23
+    },
+    "arcade": {
+      "passed": true,
+      "total": 22
+    },
+    "xbox": {
+      "passed": true,
+      "total": 27
+    },
+    "smoke": {
+      "passed": true
+    },
+    "offline": {
+      "passed": true
+    }
+  }
+}

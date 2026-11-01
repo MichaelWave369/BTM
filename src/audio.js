@@ -1,6 +1,6 @@
 // Original procedural soundtrack and effects. No samples or network requests.
 export class AudioEngine {
-  constructor(){this.music=.35;this.sfx=.65;this.muted=false;this.started=false;this.active=false;this.step=0;this.next=0;this.sector=0;}
+  constructor(){this.music=.35;this.sfx=.65;this.muted=false;this.started=false;this.active=false;this.step=0;this.next=0;this.sector=0;this.pitAct=null;}
   start(){
     if(!this.ctx){const AC=globalThis.AudioContext||globalThis.webkitAudioContext;if(!AC)return;this.ctx=new AC();this.master=this.ctx.createGain();this.limiter=this.ctx.createDynamicsCompressor();this.limiter.threshold.value=-10;this.limiter.ratio.value=5;this.limiter.knee.value=12;this.master.connect(this.limiter);this.limiter.connect(this.ctx.destination);this.musicGain=this.ctx.createGain();this.musicGain.connect(this.master);this.sfxGain=this.ctx.createGain();this.sfxGain.connect(this.master);const b=this.ctx.createBuffer(1,this.ctx.sampleRate,this.ctx.sampleRate);const data=b.getChannelData(0);let s=369;for(let i=0;i<data.length;i++){s=(Math.imul(s,1664525)+1013904223)>>>0;data[i]=s/2147483648-1;}this.noiseBuffer=b;this.next=this.ctx.currentTime+.05;this.timer=setInterval(()=>this.schedule(),60);}
     this.ctx.resume().catch(()=>{});this.active=true;this.updateVolumes();
@@ -25,8 +25,12 @@ export class AudioEngine {
     if(p.positionX){p.positionX.setValueAtTime(x,t);p.positionY.setValueAtTime(y,t);p.positionZ.setValueAtTime(z,t);}else p.setPosition(x,y,z);
     p.connect(this.sfxGain);this.spatialVoices=(this.spatialVoices||0)+1;this.spatialBus=p;try{this.play(name,weapon);}finally{this.spatialBus=null;setTimeout(()=>{p.disconnect();this.spatialVoices--;},2200);}
   }
-  schedule(){if(!this.ctx)return;const now=this.ctx.currentTime;if(this.next<now-.2)this.next=now+.03;while(this.next<now+.15){const t=this.next,s=this.step%32,b=s%16;if(this.active){if([0,6,10,16,19,26,30].includes(s))this.tone(135,.19,'sine',.7,t,38,true);if([4,12,20,28,31].includes(s)){this.noise(.13,.22,t,1300,true);this.tone(165,.08,'triangle',.17,t,70,true);}this.noise(b%2?.027:.05,b%2?.04:.08,t,6000,true);const bass=[36,36,48,39,36,43,41,34];if([0,3,6,8,10,14].includes(b)){const note=bass[Math.floor(s/4)%8],hz=440*2**((note-69)/12);this.tone(hz,.16,'sawtooth',.07,t,hz*.98,true);this.tone(hz/2,.19,'sine',.19,t,null,true);}if(s===0||s===16){this.tone(146.83,.8,'triangle',.04,t,null,true);this.tone(220,.7,'triangle',.025,t,null,true);}}this.step++;this.next+=60/138/4;}}
+  schedule(){if(!this.ctx)return;const now=this.ctx.currentTime;if(this.next<now-.2)this.next=now+.03;while(this.next<now+.15){const t=this.next,s=this.step%32,b=s%16;if(this.active){if([0,6,10,16,19,26,30].includes(s))this.tone(135,.19,'sine',.7,t,38,true);if([4,12,20,28,31].includes(s)){this.noise(.13,.22,t,1300,true);this.tone(165,.08,'triangle',.17,t,70,true);}this.noise(b%2?.027:.05,b%2?.04:.08,t,6000,true);const bass=[36,36,48,39,36,43,41,34];if([0,3,6,8,10,14].includes(b)){const note=bass[Math.floor(s/4)%8]+(this.pitAct===null?0:[-5,-2,2,-7][this.pitAct]),hz=440*2**((note-69)/12);this.tone(hz,.16,'sawtooth',.07,t,hz*.98,true);this.tone(hz/2,.19,'sine',.19,t,null,true);}if(s===0||s===16){this.tone(146.83,.8,'triangle',.04,t,null,true);this.tone(220,.7,'triangle',.025,t,null,true);}}this.step++;this.next+=60/(this.pitAct===null?138:[112,124,132,140][this.pitAct])/4;}}
   play(name,weapon=1){if(!this.ctx)return;const now=this.ctx.currentTime;switch(name){
+    case 'pit1':this.noise(.24,.07,0,260);this.tone(55,.3,'triangle',.08,0,32);break;
+    case 'pit2':this.tone(720,.12,'square',.06,0,150);this.noise(.12,.05,0,4000);break;
+    case 'pit3':this.tone(410,.25,'triangle',.07,0,190);this.tone(615,.23,'triangle',.04,now+.06,230);break;
+    case 'pit4':this.tone(31,.5,'sine',.12,0,19);this.noise(.3,.035,0,1100);break;
     case 'hit':this.noise(.035,.11,0,1800);this.tone(290,.045,'triangle',.15,0,130);break;
     case 'ricochet':this.tone(1700,.045,'triangle',.035,0,550);break;
     case 'equip':this.noise(.035,.08,0,1900);this.tone(165,.055,'triangle',.09,0,230);break;

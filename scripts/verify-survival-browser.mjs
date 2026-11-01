@@ -23,13 +23,13 @@ try{
  const reloaded=Number(await page.locator('#energy').textContent()),reserve=await page.locator('#reserve').textContent();assert(reloaded>spent);assert.notEqual(reserve,'RES 45/180');
  await page.keyboard.down('KeyW');await page.waitForTimeout(2000);await page.keyboard.up('KeyW');await page.keyboard.press('KeyE');await page.waitForTimeout(500);
  await page.keyboard.down('KeyW');await page.keyboard.down('KeyZ');await page.waitForTimeout(1300);await page.keyboard.up('KeyW');await page.waitForTimeout(1200);await page.keyboard.up('KeyZ');
- await page.locator('#app').screenshot({path:out+'/screenshots/desktop-survival-combat.png'});
+ await page.screenshot({path:out+'/screenshots/desktop-survival-combat.png',clip:await page.locator('#app').boundingBox()});
  await page.keyboard.press('Space');await page.waitForTimeout(100);
  const dash=await page.locator('#dash-status').textContent();assert.match(dash,/DASH|SHIELD/);
  await page.keyboard.press('Escape');await page.locator('#pause-settings').click();await page.locator('#captions').uncheck();await page.locator('#spokenDialogue').check();await page.locator('#settings-back').click();await page.locator('#resume-btn').click();
  assert(await page.locator('#dialogue').isHidden());
  await page.keyboard.press('KeyH');const log=await page.locator('#communication-log').textContent();assert(log.includes('ORI:'));assert(log.includes('RELOADING'));
- await page.locator('#app').screenshot({path:out+'/screenshots/communication-log.png'});
+ await page.screenshot({path:out+'/screenshots/communication-log.png',clip:await page.locator('#app').boundingBox()});
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('mwave-ori-checkpoint-v1')));assert.equal(saved.energyMode,'survival');assert(Number.isFinite(saved.player.reserve));
  assert.equal(errors.length,0,errors.join('\n'));
  const report={passed:true,browser:browser.version(),initial,spent,reloaded,reserve,dash,captionsOff:true,speechOptInFallback:true,logRetained:true,survivalCheckpoint:true,pageErrors:errors,method:'Real Chromium, production dist, real DOM controls and keyboard movement/fire/reload/dash. No simulation or HP/objective writes. Optional speech engine unavailable/device-dependent; no assertion of audible output. Desktop gameplay captures, no physical Quest.'};

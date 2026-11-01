@@ -43,3 +43,6 @@ body[data-input=controller] #game,body[data-input=vr] #game{cursor:none}.reduced
 
 /* Survival instruments and accessible retained communication history. */
 #reserve{font:600 11px Oxanium,sans-serif;color:var(--muted,#a5b4d6);white-space:nowrap}#dash-status{font-size:10px;color:#ffcd75}.communication-log{white-space:pre-wrap;max-height:240px;overflow:auto;font:14px/1.6 Oxanium,sans-serif;background:#07121f;padding:14px;border:1px solid #394b80}
+
+/* Campaign choices and both independent Continue buttons must grow with mobile content. */
+@media(max-width:820px){.title-screen{height:auto;flex-direction:column;padding-bottom:26px}.title-lower{position:relative;left:auto;right:auto;bottom:auto;margin-top:12px}}

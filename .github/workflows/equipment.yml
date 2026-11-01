@@ -22,6 +22,9 @@ jobs:
       - run: npm test
       - run: npm run playtest
       - run: npm run playtest:immersive
+      - run: npm run playtest:pit
+        env:
+          BTM_PIT_OUTPUT: docs/equipment/ci/pit
       - run: npm run build
       - run: node scripts/verify-build.mjs
       - run: node scripts/verify-offline.mjs
@@ -31,6 +34,7 @@ jobs:
           node "$RUNNER_TEMP/btm-browser/node_modules/playwright/cli.js" install --with-deps chromium
       - name: Production stereo equipment checks and comparisons
         env:
+          BTM_EQUIPMENT_BASELINE: 89d9dc0795fd73e71176940721202091706a61c0
           BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
           BTM_SOFTWARE_WEBGL: '1'
         run: node scripts/verify-equipment-browser.mjs
@@ -46,6 +50,12 @@ jobs:
           BTM_SOFTWARE_WEBGL: '1'
           BTM_BROWSER_OUTPUT: docs/equipment/ci/survival
         run: node scripts/verify-survival-browser.mjs
+      - name: Twelve Pit trials, isolated saves, production captures and offline resume
+        env:
+          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
+          BTM_SOFTWARE_WEBGL: '1'
+          BTM_PIT_OUTPUT: docs/equipment/ci/pit
+        run: node scripts/verify-pit-browser.mjs
       - name: Preserve reports and full-resolution captures
         if: always()
         uses: actions/upload-artifact@v4

@@ -14,7 +14,7 @@ export async function uiChecks(frame,onProgress=()=>{}){
   await doc.fonts.ready;await tick();
   await run(`${w}×${h}: local typefaces load and title navigation is usable`,()=>{
    expect(doc.fonts.check('600 16px Oxanium')&&doc.fonts.check('16px "Racing Sans One"'),'Bundled fonts not loaded');
-   for(const id of ['start-btn','nightmare-btn','vr-btn','immersive-btn','title-settings','howto-btn','controller-setup']){const el=$(id),r=el.getBoundingClientRect();expect(r.width>40&&r.height>=30,id+' target missing or too small');expect(r.left>=0&&r.right<=w+1,id+' outside screen');}
+   for(const id of ['start-btn','nightmare-btn','pit-btn','vr-btn','immersive-btn','title-settings','howto-btn','controller-setup']){const el=$(id),r=el.getBoundingClientRect();expect(r.width>40&&r.height>=30,id+' target missing or too small');expect(r.left>=0&&r.right<=w+1,id+' outside screen');}
    const actions=doc.querySelector('.title-actions').getBoundingClientRect(),lower=doc.querySelector('.title-lower').getBoundingClientRect();expect(actions.bottom<lower.top,'Launch choices overlap title footer');expect(doc.documentElement.scrollWidth<=w+1,'Horizontal overflow');
   });
   await run(`${w}×${h}: settings preserve all controls and return to title`,async()=>{
@@ -35,6 +35,17 @@ export async function uiChecks(frame,onProgress=()=>{}){
    $('map-toggle').click();await tick();expect($('radar-panel').hidden,'Map did not open');$('game').dispatchEvent(new KeyboardEvent('keydown',{code:'Tab',key:'Tab',bubbles:true}));$('game').dispatchEvent(new KeyboardEvent('keyup',{code:'Tab',key:'Tab',bubbles:true}));await tick();expect(!$('radar-panel').hidden,'Map did not close');
    $('game').dispatchEvent(new KeyboardEvent('keydown',{code:'Escape',key:'Escape',bubbles:true}));await tick();expect(!$('pause-screen').hidden,'Pause not reachable');$('pause-settings').click();await tick();expect(!$('settings-screen').hidden,'Pause settings not reachable');$('settings-back').click();$('resume-btn').click();await tick();expect(doc.body.classList.contains('playing'),'Resume failed');
    $('game').dispatchEvent(new KeyboardEvent('keydown',{code:'KeyH',key:'h',bubbles:true}));await tick();expect(!$('help-screen').hidden,'Field manual not reachable');$('help-back').click();await tick();expect(!$('pause-screen').hidden,'Manual did not return to pause');
+  });
+  await run(`${w}×${h}: independent Pit menu and both Continue choices remain usable`,async()=>{
+   $('quit-btn').click();await tick();const original=win.localStorage.getItem('mwave-ori-checkpoint-v1');
+   $('pit-btn').click();await tick();expect($('header-sector').textContent.startsWith('PIT /'),'Pit launch disconnected');
+   $('game').dispatchEvent(new KeyboardEvent('keydown',{code:'Escape',key:'Escape',bubbles:true}));await tick();$('quit-btn').click();await tick();
+   for(const id of ['continue-btn','continue-pit-btn'])expect(!$(id).hidden&&$(id).getBoundingClientRect().height>=30,id+' unavailable');
+   expect(doc.querySelector('.title-actions').getBoundingClientRect().bottom<doc.querySelector('.title-lower').getBoundingClientRect().top,'Two checkpoints overlap title footer');
+   expect(win.localStorage.getItem('mwave-ori-checkpoint-v1')===original,'Pit changed original checkpoint');
+   $('continue-pit-btn').click();await tick();expect($('header-sector').textContent.startsWith('PIT /'),'Pit resume disconnected');
+   $('game').dispatchEvent(new KeyboardEvent('keydown',{code:'Escape',key:'Escape',bubbles:true}));await tick();$('quit-btn').click();await tick();
+   $('continue-btn').click();await tick();expect($('header-sector').textContent.includes('SECTOR 01'),'Original resume disconnected');
   });
  }
  await run('All canvas UI art renders using original vector paths',()=>{const c=document.createElement('canvas');c.width=600;c.height=130;const g=c.getContext('2d');drawOri(g,0,0,100,1,true);for(let i=0;i<6;i++)drawWeaponIcon(g,i,100+i*80,30,70,44,true);expect(painted(c)>80,'Interface illustration blank');});

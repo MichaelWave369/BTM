@@ -1,4 +1,6 @@
 import {castRay,distance,angleDiff,findRoute,SECTORS,WEAPONS,clamp} from './core.js';
+import {pitBossSprite,pitFloorState} from './pit-presentation.js';
+import {paintSignalSurface} from './neon-signal.js';
 import {UI,UI_FONT} from './arcade-ui.js';
 import {makeAssets,makeSign} from './assets.js';
 export class Renderer {
@@ -7,9 +9,9 @@ export class Renderer {
   event(e){if(['burst','liberation','hit','telegraph','impact','oriAssist'].includes(e.type)){const n=e.count??(e.type==='liberation'?30:e.type==='oriAssist'?18:10),color=e.color??(e.type==='liberation'?'#b9ff53':e.type==='oriAssist'?'#5df6ec':'#ffbc82');for(let i=0;i<n;i++){const a=i/n*Math.PI*2;this.particles.push({x:e.x,y:e.y,z:.25+(i%5)*.11,vx:Math.cos(a)*.8,vy:Math.sin(a)*.8,vz:.4+(i%3)*.5,life:e.type==='liberation'?1.1:.45,max:e.type==='liberation'?1.1:.45,color});}}if(e.type==='hit'&&e.source!=='ori'){this.hitMarker=.17;this.finisher=e.finisher?.3:0;}if(e.type==='liberation')this.ghosts.push({...e,life:.85});if(e.type==='beam')this.beams.push({...e,life:e.ori?.24:.12});if(e.type==='bass')this.bassFlash=.7;this.particles=this.particles.slice(-500);this.beams=this.beams.slice(-24);}
   draw(game,dt,settings,{demo=false,map=false}={}){
     const g=this.g,w=this.canvas.width,h=this.canvas.height,p=game.player,l=game.level;this.lastTime+=dt;this.finisher=Math.max(0,this.finisher-dt);this.reducedMotion=settings.reducedMotion;
-    if(this.drawLevel!==l){this.drawLevel=l;this.signTextures=new Map((l.signs||[]).map(sign=>[`${sign.x},${sign.y}`,makeSign(sign,this.assets.textures[l.cells[sign.y][sign.x]]||this.assets.textures[1])]));this.particles=[];this.beams=[];this.ghosts=[];}
+    if(this.drawLevel!==l){this.drawLevel=l;this.levelTextures=this.assets.textures;if(l.campaign==='pit')this.levelTextures=Object.fromEntries(Object.entries(this.assets.textures).map(([key,tex])=>{const i=Number(key);if(i<1||i>3)return [key,tex];const c=document.createElement('canvas');c.width=c.height=64;paintSignalSurface(c.getContext('2d'),'wall',l.palette,tex);return [key,c];}));this.signTextures=new Map((l.signs||[]).map(sign=>[`${sign.x},${sign.y}`,makeSign(sign,this.levelTextures[l.cells[sign.y][sign.x]]||this.levelTextures[1])]));this.particles=[];this.beams=[];this.ghosts=[];}
     if(demo){p.a=-Math.PI/2+Math.sin(this.lastTime*.12)*.15;}
-    const bob=!settings.reducedMotion&&game.moving&&game.mode==='playing'?Math.sin(game.time*(game.sprinting?15:10))*h*.008:0,horizon=Math.floor(h*.46+bob),theme=SECTORS[game.levelIndex].color;
+    const bob=!settings.reducedMotion&&game.moving&&game.mode==='playing'?Math.sin(game.time*(game.sprinting?15:10))*h*.008:0,horizon=Math.floor(h*.46+bob),theme=game.definition.color;
     g.fillStyle=game.shift?'#0e1126':'#090f10';g.fillRect(0,0,w,horizon);g.fillStyle=game.shift?'#171323':'#19201e';g.fillRect(0,horizon,w,h-horizon);
     // Perspective floor grid, rendered as horizontal scan bands and converging seams.
     const grad=g.createLinearGradient(0,horizon,0,h);grad.addColorStop(0,'#090e0e');grad.addColorStop(1,game.levelIndex===1?'#29232e':'#29312a');g.fillStyle=grad;g.fillRect(0,horizon,w,h-horizon);
@@ -17,7 +19,7 @@ export class Renderer {
     g.strokeStyle=game.shift?'#3c2b50':'#354139';g.lineWidth=1;
     for(let j=1;j<11;j++){const yy=horizon+(h-horizon)/(j*.62+1);g.globalAlpha=.22;g.beginPath();g.moveTo(0,Math.floor(yy));g.lineTo(w,Math.floor(yy));g.stroke();}g.globalAlpha=1;
     for(let j=-5;j<=5;j++){g.globalAlpha=.12;g.beginPath();g.moveTo(w/2+j*10,horizon);g.lineTo(w/2+j*w*.27,h);g.stroke();}g.globalAlpha=1;
-    const textures=this.assets.textures;
+    const textures=this.levelTextures||this.assets.textures;
     const stripe=w>=640?2:1;
     for(let x=0;x<w;x+=stripe){
       const camera=2*x/w-1,dx=dirX+planeX*camera,dy=dirY+planeY*camera,hit=castRay(l,p.x,p.y,dx,dy,32),d=Math.max(.08,hit.distance);
@@ -42,6 +44,7 @@ export class Renderer {
     things.push({...l.exit,type:'portal',height:1.6});
     for(const b of game.projectiles)things.push({...b,type:'projectile',height:.18});
     things.sort((a,b)=>distance(b,p)-distance(a,p));
+    if(l.campaign==='pit'){for(const hazard of l.hazards)this.pitFloor(hazard,game,horizon,pitFloorState(hazard,game.time));for(const b of l.blasts)this.pitFloor(b,game,horizon,b.hit?'active':'warning');}
     for(const o of things)this.sprite(o,game,horizon);
     for(const ghost of this.ghosts){ghost.life-=dt;const pos=this.project(ghost,p);if(pos&&pos.depth<this.depth[clamp(Math.floor(pos.x),0,w-1)]){const height=h/pos.depth,width=height*.5;g.globalAlpha=Math.max(0,ghost.life)*.65;g.drawImage(this.assets.sprites.captive,pos.x-width/2,horizon-height*.55-(.85-ghost.life)*height*.5,width,height);g.globalAlpha=1;}}this.ghosts=this.ghosts.filter(s=>s.life>0);
     // World-space tracer endpoints and liberated-mind particles.
@@ -69,6 +72,7 @@ export class Renderer {
     if(map)this.drawMap(game,true);
     else if(!demo&&!settings.externalMap)this.drawMap(game,false);
   }
+  pitFloor(o,game,horizon,state){const p=this.project(o,game.player),g=this.g,w=this.canvas.width,h=this.canvas.height;if(!p||p.depth>=this.depth[clamp(Math.floor(p.x),0,w-1)]||p.x<0||p.x>w)return;const r=Math.min(w*.5,o.radius*w/(p.depth*1.4)),y=horizon+h/(2*p.depth),ry=Math.max(2,r*.22);g.strokeStyle=state==='warning'?'#ffce73':game.definition.color;g.fillStyle=state==='active'?game.definition.color:'#10131e';g.globalAlpha=state==='active'?.65:state==='warning'?.8:.3;g.beginPath();g.moveTo(p.x-r,y);g.lineTo(p.x,y-ry);g.lineTo(p.x+r,y);g.lineTo(p.x,y+ry);g.closePath();g.fill();g.stroke();g.globalAlpha=1;}
   project(o,p){const dx=o.x-p.x,dy=o.y-p.y,forward=dx*Math.cos(p.a)+dy*Math.sin(p.a);if(forward<=.12)return null;const side=-dx*Math.sin(p.a)+dy*Math.cos(p.a);return {x:this.canvas.width/2*(1+side/(forward*.70)),depth:forward,y:this.canvas.height*.46};}
   sprite(o,game,horizon){
     const g=this.g,w=this.canvas.width,h=this.canvas.height,p=game.player,s=this.project(o,p);if(!s||s.x< -w||s.x>w*2)return;const height=Math.min(h*5,h/s.depth*o.height),width=o.type==='warden'?height:height*(o.type==='relay'||o.type==='relayOn'?.8:1),x=Math.floor(s.x-width/2),y=Math.floor(horizon+h/(2*s.depth)-height+(o.bob?Math.sin(this.lastTime*3+o.x)*h*.04/s.depth:0));
@@ -76,7 +80,7 @@ export class Renderer {
       for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++){if(s.depth>=this.depth[xx])continue;const f=(xx-x)/width-.5,curve=Math.sqrt(Math.max(0,1-4*f*f)),yy=height/2*curve;g.fillStyle=game.exitReady?'#64e8cd':'#614279';g.globalAlpha=.75;g.fillRect(xx,y+height/2-yy,1,yy*2);g.fillStyle='#091d25';g.globalAlpha=.8;g.fillRect(xx,y+height/2-yy*.82,1,yy*1.64);g.fillStyle=game.exitReady?'#b9ff53':'#bc89e8';g.globalAlpha=.4;for(let k=0;k<6;k++){const py=y+height/2-yy+((this.lastTime*.2+k/6)%1)*yy*2;g.fillRect(xx,py,1,1);}}g.globalAlpha=1;return;
     }
     if(o.type==='projectile'){if(s.depth<this.depth[clamp(Math.floor(s.x),0,w-1)]){g.fillStyle=o.color;g.fillRect(s.x-width/2,horizon-height/2,width,height);g.fillStyle='#fff9d5';g.fillRect(s.x-width/6,horizon-height/6,width/3,height/3);}return;}
-    let sprite=o.e?.pain>0?this.assets.pain[o.type]:this.assets.sprites[o.type];if(Array.isArray(sprite))sprite=sprite[o.frame??0];if(!sprite)return;
+    let sprite=o.e?.pitBoss?pitBossSprite(o.e.pitBoss,o.e.exposed>0):o.e?.pain>0?this.assets.pain[o.type]:this.assets.sprites[o.type];if(Array.isArray(sprite))sprite=sprite[o.frame??0];if(!sprite)return;
     const recoil=this.reducedMotion?0:o.e?.recoil||0,lean=recoil*height*.3,tell=!this.reducedMotion&&o.e?.tell>0?Math.sin(this.lastTime*20)*height*.015:0;
     for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++)if(s.depth<this.depth[xx]){const tx=clamp(Math.floor((xx-x)/width*sprite.width),0,sprite.width-1);g.drawImage(sprite,tx,0,1,sprite.height,xx+tell,y+lean,1,height-lean);}
     // Telegraphs and health bars are drawn only when their world position is visible.

@@ -47,7 +47,7 @@ export class SignalPresentation {
  update(b, game, rig, dt, settings, quality) {
   const l = game.level, eye = rig.eye, s = WORLD_SCALE, still = settings.reducedMotion;
   if (this.level !== l) {
-   this.level = l; this.fixtures = signalFixtures(l); this.palette = signalPalette(l.index);
+   this.level = l; this.fixtures = signalFixtures(l); this.palette = signalPalette(l);
    this.flight.reset();this.ori.set([game.ori.x * s, 1.25, game.ori.y * s]); this.pulse = 0; this.clock = 0;
   }
   if (game.mode === 'playing') { this.clock += dt; this.pulse = Math.max(0, this.pulse - dt); }

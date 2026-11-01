@@ -1,16 +1,17 @@
 {
   "name": "michael-wave-ori-break-the-matrix",
-  "version": "0.8.0-rc.1",
+  "version": "0.9.0-rc.1",
   "private": true,
   "type": "module",
-  "description": "Ori Reborn: peripheral Quest equipment, optional communications and finite-energy Survival in the native BTM simulation.",
+  "description": "Pit of Despair: twelve separate Survival trials and four phased bosses in native Canvas/WebGL/WebXR.",
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.mjs",
     "check": "node scripts/check.mjs",
     "playtest": "node scripts/playthrough.mjs",
-    "playtest:immersive": "node scripts/playthrough-immersive.mjs"
+    "playtest:immersive": "node scripts/playthrough-immersive.mjs",
+    "playtest:pit": "node scripts/playthrough-pit.mjs"
   },
   "engines": {
     "node": ">=20"

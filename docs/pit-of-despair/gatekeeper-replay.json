@@ -1,0 +1,43 @@
+{
+  "passed": true,
+  "metrics": {
+    "stage": 3,
+    "name": "GATEKEEPER",
+    "campaign": "pit",
+    "time": 23.949999999999708,
+    "health": 100,
+    "charge": 86,
+    "reserve": 88,
+    "boss": [
+      {
+        "id": "gatekeeper",
+        "phase": 3,
+        "hp": 90.30000000000001,
+        "exposed": 1.7750000000000001,
+        "dead": false
+      }
+    ],
+    "glError": 0,
+    "leftHash": -1472984020,
+    "rightHash": -1865118277,
+    "lit": 7144,
+    "stats": {
+      "drawCalls": 16,
+      "visibleChunks": 14,
+      "triangles": 11948,
+      "frameMs": 20.600000000558794,
+      "renderer": "native WebGL world",
+      "entities": {
+        "enemies": 2,
+        "objects": 14,
+        "particles": 0,
+        "projectiles": 0,
+        "vertices": 14508,
+        "dropped": 0,
+        "trails": 0,
+        "fixtures": 28
+      }
+    }
+  },
+  "method": "Unmodified checkpoint captured during a successful actual Act I driver run, restored through Game.restore and drawn by the production Canvas and WebGL renderers. Chosen for a clear foreground; no staged HP/position/objective edits. Synthetic stereo, not physical Quest."
+}

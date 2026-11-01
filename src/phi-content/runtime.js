@@ -34,7 +34,7 @@ export function enterPhiWadMission(game,bytes){
       layout.cells.some(row=>!Array.isArray(row)||row.length!==29||row.some(cell=>cell!==0&&cell!==1)))
     throw Error('Unsupported ΦWAD layout');
   const sector=sectorFromHandoff(layout,manifest.title);
-  const previousEnergyMode=game.energyMode;game.energyMode='legacy';
+  const previousEnergyMode=game.energyMode,previousCampaign=game.campaign;game.campaign='original';game.energyMode='legacy';
   SECTORS.push(sector);
   try{
     game.totalFreed=0;game.totalArtifacts=0;game.totalSecrets=0;
@@ -49,12 +49,12 @@ export function enterPhiWadMission(game,bytes){
     game.player.x=layout.spawn.x;game.player.y=layout.spawn.y;game.player.a=layout.spawn.a;
     if(!canOccupy(game.level,game.player.x,game.player.y))throw Error('Unsafe custom spawn');
     game.unlocked=6;game.weapon=1;
-    game.phiwadCustom=Object.freeze({id:manifest.id,title:sector.name,baseCount:ORIGINAL_SECTORS,previousEnergyMode});
+    game.phiwadCustom=Object.freeze({id:manifest.id,title:sector.name,baseCount:ORIGINAL_SECTORS,previousEnergyMode,previousCampaign});
     game.checkpoint=game.snapshot();
     game.events.length=0;
     return game.phiwadCustom;
   }catch(error){
-    game.energyMode=previousEnergyMode;game.phiwadCustom=null;SECTORS.pop();
+    game.campaign=previousCampaign;if(game.campaign==='pit')game.pitRecord=[];game.energyMode=previousEnergyMode;game.phiwadCustom=null;SECTORS.pop();
     game.loadLevel(0,false);game.mode='title';game.events.length=0;
     throw error;
   }
@@ -63,7 +63,7 @@ export function leavePhiWadMission(game){
   if(!game.phiwadCustom)return false;
   if(SECTORS.length!==ORIGINAL_SECTORS+1||game.levelIndex!==ORIGINAL_SECTORS)
     throw Error('Cannot safely detach custom sector: campaign state changed');
-  game.energyMode=game.phiwadCustom.previousEnergyMode;game.phiwadCustom=null;
+  game.campaign=game.phiwadCustom.previousCampaign;if(game.campaign==='pit')game.pitRecord=[];game.energyMode=game.phiwadCustom.previousEnergyMode;game.phiwadCustom=null;
   SECTORS.pop();
   game.loadLevel(0,false);game.mode='title';game.events.length=0;
   return true;
