@@ -1,0 +1,116 @@
+{
+  "schema": "btm.soundtrack/1",
+  "title": "Break the Matrix: The Soundtrack",
+  "artist": "michaelwave369",
+  "filesOptionalUntilInstalled": true,
+  "tracks": [
+    {
+      "track": 1,
+      "title": "Wake Up Runner",
+      "filename": "01-Wake Up Runner.mp3",
+      "durationSeconds": 166.4
+    },
+    {
+      "track": 2,
+      "title": "The First Crack",
+      "filename": "02-The First Crack.mp3",
+      "durationSeconds": 227.7
+    },
+    {
+      "track": 3,
+      "title": "Ghost In the Circuit",
+      "filename": "03-Ghost In the Circuit.mp3",
+      "durationSeconds": 217
+    },
+    {
+      "track": 4,
+      "title": "Phantom Protocol",
+      "filename": "04-Phantom Protocol.mp3",
+      "durationSeconds": 170.7
+    },
+    {
+      "track": 5,
+      "title": "System Breach",
+      "filename": "05-System Breach.mp3",
+      "durationSeconds": 167.2
+    },
+    {
+      "track": 6,
+      "title": "Firewall Zero",
+      "filename": "06-Firewall Zero.mp3",
+      "durationSeconds": 151.1
+    },
+    {
+      "track": 7,
+      "title": "No Gods in the Machine",
+      "filename": "07-No Gods in the Machine.mp3",
+      "durationSeconds": 187.8
+    },
+    {
+      "track": 8,
+      "title": "False Prophet Protocol",
+      "filename": "08-False Prophet Protocol.mp3",
+      "durationSeconds": 213.1
+    },
+    {
+      "track": 9,
+      "title": "Pit of Despair",
+      "filename": "09-Pit of Despair.mp3",
+      "durationSeconds": 136.8
+    },
+    {
+      "track": 10,
+      "title": "There is No Exit",
+      "filename": "10-There is No Exit.mp3",
+      "durationSeconds": 144.3
+    },
+    {
+      "track": 11,
+      "title": "Last Life Last Round",
+      "filename": "11- Last Life Last Round.mp3",
+      "durationSeconds": 172.9
+    },
+    {
+      "track": 12,
+      "title": "Zero Respawns Left",
+      "filename": "12-Zero Respawns Left.mp3",
+      "durationSeconds": 114
+    },
+    {
+      "track": 13,
+      "title": "BBS LAN Clan",
+      "filename": "13-BBS LAN Clan.mp3",
+      "durationSeconds": 137.4
+    },
+    {
+      "track": 14,
+      "title": "Frag the System",
+      "filename": "14-Frag the System.mp3",
+      "durationSeconds": 177.7
+    },
+    {
+      "track": 15,
+      "title": "Break the Matrix",
+      "filename": "15-Break the Matrix.mp3",
+      "durationSeconds": 189.9
+    },
+    {
+      "track": 16,
+      "title": "We Are the Glitch",
+      "filename": "16-We Are the Glitch.mp3",
+      "durationSeconds": 177.4
+    },
+    {
+      "track": 17,
+      "title": "The Final Frequency",
+      "filename": "17-The Final Frequency.mp3",
+      "durationSeconds": 207
+    },
+    {
+      "track": 18,
+      "title": "System Collapse",
+      "filename": "18-System Collapse.mp3",
+      "durationSeconds": 172.7
+    }
+  ]
+}
