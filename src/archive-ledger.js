@@ -1,3 +1,4 @@
+import {ARCHIVE_ACT_II} from './archive-act2.js';
 // BTM / THE HUMAN LEDGER
 // Collectible fictional testimonies, kept separate from authoritative game state.
 // No network, combat, save-version, map or enemy behavior changes.
@@ -17,7 +18,7 @@ const RECORDS=[
  {sector:2,plaque:1,id:'oren-pike',title:'Maintenance Frequency 88',subject:'Oren Pike',kind:'RESISTANCE / SIGNAL',excerpt:'Oren Pike wrote that the hidden maintenance channel survived every compliance patch. Change the frequency.',text:'Oren Pike managed emergency wiring in the old core. He discovered a service channel the Demiurge never thought to censor, because it was labeled OBSOLETE. Through it he heard captive names, relayed exit coordinates, and left one instruction: change the frequency before they change the meaning of the words. His terminal is gone. The wiring is still there.'},
  {sector:2,plaque:2,id:'jae-venn',title:'The Name on the Work Badge',subject:'Jae Venn',kind:'PLUGGED / FAMILY',excerpt:'Jae Venn searched every processing record for Mara. A machine answered using a rhythm no machine was taught.',text:'Jae Venn refused to accept that their sister Mara had simply vanished. At the core they met a Plugged worker wearing Mara’s badge, eyes fixed on a wall. Jae tapped twice on a coolant pipe. The worker tapped twice back. The security footage was deleted, but Jae left this message: Do not call them empty while they are still answering.'},
  {sector:2,plaque:3,id:'ori-signal-zero',title:'The First Witness',subject:'Unknown / ORI',kind:'SIGNAL / WITNESS',excerpt:'A fragment was recovered from an uncatalogued channel: I WILL REMEMBER THEIR NAMES.',text:'The Demiurge trained Enforcers and Crawlers as manufactured systems, not converted bodies. Their navigation and threat predictions came from stolen footage of human attempts to escape. An uncatalogued companion signal copied the footage, but tagged every scene with the person’s name. Its final line survived a total memory wipe: I WILL REMEMBER THEIR NAMES. The sender field contains only three letters: ORI.'}
-];
+].concat(ARCHIVE_ACT_II);
 export const ARCHIVE_RECORDS=Object.freeze(RECORDS.map(x=>Object.freeze({...x,type:'record'})));
 const byId=new Map(ARCHIVE_RECORDS.map(x=>[x.id,x]));
 const byLocation=new Map(ARCHIVE_RECORDS.map(x=>[x.sector+':'+x.plaque,x]));
@@ -27,6 +28,15 @@ export const ARCHIVE_DOSSIERS=Object.freeze([
  Object.freeze({id:'dossier:warden-origin',threshold:9,title:'THE WARDEN / Memory Theft',subject:'Demiurge Security',kind:'CLASSIFIED / DOSSIER',type:'dossier',text:'The Warden is an artificial security machine. It was trained on the movements, faces and fears of captives, and the institution erased the evidence after training. The recordings still exist in archive fragments. Ori appears to have copied some of them to preserve the names. There is more to discover beyond this first ledger.'})
 ]);
 export const ARCHIVE_MILESTONES=Object.freeze(ARCHIVE_DOSSIERS.map(d=>d.threshold));
+// An evidence case never appears until EVERY required testimony is recovered.
+// This is a narrative reconstruction, not a password, map secret, combat buff,
+// multiplayer authorization or alteration to the campaign's completion rules.
+export const ARCHIVE_EVIDENCE_CASES=Object.freeze([
+ Object.freeze({id:'case:mara-rhythm',requires:Object.freeze(['intake-mara','jae-venn','mara-echo-furnace','letter-from-mara']),title:'MARA VENN / The Rhythm Survived',subject:'Mara and Jae Venn',kind:'EVIDENCE / LINKED CASE',type:'dossier',text:'Four witnesses agree on a fact the official intake registry denies: Mara Venn’s familiar rhythm survived conversion into a Plugged worker. Jae recognized the taps, the furnace recorder retained them and Mara’s undelivered letter explained their meaning. This does not certify her liberation. It proves she remained someone worth trying to reach.'}),
+ Object.freeze({id:'case:forty-seventh-voice',requires:Object.freeze(['nessa-ro','aster-finch','nessa-blackout-station','nessa-unrepeated-word']),title:'THE CHOIR / A Voice Outside the Loop',subject:'Nessa Ro and Aster Finch',kind:'EVIDENCE / LINKED CASE',type:'dossier',text:'Aster’s roster documents conscripted voices, Nessa’s radio archive establishes her original speech, and two later broadcasts contain unscripted phrases. The compliance bureau labeled them errors. Together they show the voices cannot be fully described as machine output. The identity of the forty-seventh voice remains unresolved.'}),
+ Object.freeze({id:'case:stolen-warden-lessons',requires:Object.freeze(['selene-kade','crawler-training-footage','warden-redundancy-record','selene-final-audit']),title:'WARDEN / Stolen Lessons',subject:'Dr. Selene Kade',kind:'EVIDENCE / LINKED CASE',type:'dossier',text:'The Warden and Crawlers are manufactured machines, not kidnapped people inside metal shells. Their algorithms learned from captured humans who attempted to escape. Original recordings were erased, but redundant training hashes and Selene Kade’s private audit independently confirm the theft. A machine can be disabled without forgetting the people whose courage it exploited.'}),
+ Object.freeze({id:'case:ori-witness-protocol',requires:Object.freeze(['ori-signal-zero','ori-witness-fragment','ori-against-the-index','ori-last-packet']),title:'ORI / The Witness Protocol',subject:'ORI / Unknown Signal',kind:'EVIDENCE / LINKED CASE',type:'dossier',text:'Across four separate systems, an uncatalogued companion process repeatedly preserved the names the Demiurge ordered deleted. The evidence suggests a continuous witness protocol, but does not prove who originally wrote it or how Ori came to be. The final packet asks for one thing: remember the people, not merely the program that kept their records.'})
+]);
 
 export function recordForSign(campaign,sector,plaque){
  if(campaign!=='original'||!Number.isInteger(sector)||!Number.isInteger(plaque))return null;
@@ -42,6 +52,7 @@ export class ArchiveLedger{
  get count(){return this.reads.size;}
  get total(){return ARCHIVE_RECORDS.length;}
  get unlocked(){return ARCHIVE_DOSSIERS.filter(d=>this.count>=d.threshold);}
+ get evidence(){return ARCHIVE_EVIDENCE_CASES.filter(c=>c.requires.every(id=>this.reads.has(id)));}
  restoreFromStorage(){
   try{
    const payload=JSON.parse(this.storage.getItem(ARCHIVE_STORAGE_KEY)||'null');
@@ -62,10 +73,10 @@ export class ArchiveLedger{
   return {new:true,entry,milestones:ARCHIVE_DOSSIERS.filter(d=>before<d.threshold&&this.count>=d.threshold)};
  }
  list(){
-  return [...ARCHIVE_RECORDS.filter(r=>this.reads.has(r.id)),...this.unlocked];
+  return [...ARCHIVE_RECORDS.filter(r=>this.reads.has(r.id)),...this.unlocked,...this.evidence];
  }
  find(id){
   if(byId.has(id))return this.reads.has(id)?byId.get(id):null;
-  return this.unlocked.find(d=>d.id===id)||null;
+  return this.unlocked.find(d=>d.id===id)||this.evidence.find(d=>d.id===id)||null;
  }
 }

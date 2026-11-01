@@ -20,7 +20,28 @@ export class RaidPlanner{
   const door=l.doors[Math.floor(point.x)+','+Math.floor(point.y)];if(door&&door.open<.84&&distance(p,{x:door.x+.5,y:door.y+.5})<1.7){m.use=true;dx=dy=0;aim=Math.atan2(door.y+.5-p.y,door.x+.5-p.x);}
   const mag=Math.hypot(dx,dy)||1;m.angle=aim;m.move=clamp((Math.cos(aim)*dx+Math.sin(aim)*dy)/mag,-1,1);m.strafe=clamp((-Math.sin(aim)*dx+Math.cos(aim)*dy)/mag,-1,1);m.sprint=!channel;m.fire=!!target&&d<(m.weapon===0?1.8:24)&&raid.state!=='escape';
   if(p.energy<55&&p.reserve>0&&p.vent<=0&&p.recharge<=0)m.actions.push('reload');if(target&&d<7&&p.ori>=30&&p.oriCooldown<=0&&raid.phase!==3)m.actions.push('ori');
-  if(!channel&&p.dodgeCooldown<=0&&(d<1.5||s.world.projectiles.some(b=>b.enemy&&distance(p,b)<1.5))){m.actions.push('dash');m.dashAngle=angleDiff(aim+(d<1.5?0:Math.PI/2),0);}
+  // The finale advertises actual marked-floor attacks in the authoritative
+  // dynamic world snapshot. Input-only browser players must move before those
+  // charges detonate, rather than camping on a resonator until both are down.
+  // Never mutate the world, grant health, or skip the final boss objective.
+  const imminent=(l.blasts||[]).filter(b=>!b.hit&&Number.isFinite(b.at)&&b.at>=s.time&&
+   b.at-s.time<.85&&distance(p,b)<(b.radius||.72)+.48).sort((a,b)=>distance(p,a)-distance(p,b))[0];
+  if(imminent&&raid.state!=='escape'){
+   const away=Math.atan2(p.y-imminent.y,p.x-imminent.x),side=index?1:-1;
+   const candidates=[away,away+side*Math.PI/2,away-side*Math.PI/2];
+   // At the middle of a targeted blast choose a consistent side lane.
+   const angles=distance(p,imminent)<.08?[aim+side*Math.PI/2,...candidates]:candidates;
+   const dodge=angles.find(a=>canOccupy(l,p.x+Math.cos(a)*.65,p.y+Math.sin(a)*.65));
+   if(dodge!==undefined){
+    m.angle=aim;
+    m.move=clamp(Math.cos(aim)*Math.cos(dodge)+Math.sin(aim)*Math.sin(dodge),-1,1);
+    m.strafe=clamp(-Math.sin(aim)*Math.cos(dodge)+Math.cos(aim)*Math.sin(dodge),-1,1);
+    m.use=false;m.sprint=true;
+    if(p.dodgeCooldown<=0){m.actions.push('dash');m.dashAngle=angleDiff(dodge,0);}
+   }
+  }else if(!channel&&p.dodgeCooldown<=0&&(d<1.5||s.world.projectiles.some(b=>b.enemy&&distance(p,b)<1.5))){
+   m.actions.push('dash');m.dashAngle=angleDiff(aim+(d<1.5?0:Math.PI/2),0);
+  }
   return m;
  }
 }

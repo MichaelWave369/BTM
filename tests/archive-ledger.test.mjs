@@ -2,20 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {Game,createLevel} from '../src/core.js';
-import {ARCHIVE_RECORDS,ARCHIVE_DOSSIERS,ARCHIVE_SCHEMA,ARCHIVE_STORAGE_KEY,ArchiveLedger,recordForSign,recordById} from '../src/archive-ledger.js';
+import {ARCHIVE_RECORDS,ARCHIVE_DOSSIERS,ARCHIVE_SCHEMA,ARCHIVE_STORAGE_KEY,ArchiveLedger,recordForSign,recordById,ARCHIVE_EVIDENCE_CASES} from '../src/archive-ledger.js';
 
 function storage(){
  const values=new Map();
  return {values,getItem:key=>values.get(key)||null,setItem:(key,value)=>values.set(key,value)};
 }
-test('first 12 Human Ledger records are unique, authored, tied to original-sector wall plaques',()=>{
- assert.equal(ARCHIVE_RECORDS.length,12);
+test('all 48 Human Ledger records are unique, authored, tied to 12 original-sector wall plaques',()=>{
+ assert.equal(ARCHIVE_RECORDS.length,48);
  assert.deepEqual(ARCHIVE_DOSSIERS.map(d=>d.threshold),[3,6,9]);
- assert.equal(new Set(ARCHIVE_RECORDS.map(r=>r.id)).size,12);
+ assert.equal(new Set(ARCHIVE_RECORDS.map(r=>r.id)).size,48);
  assert.ok(ARCHIVE_RECORDS.some(r=>r.kind.includes('PLUGGED')));
  assert.ok(ARCHIVE_RECORDS.some(r=>r.kind.includes('REPEATER')));
  assert.ok(ARCHIVE_RECORDS.some(r=>r.kind.includes('WARDEN')));
- for(let sector=0;sector<3;sector++){
+ for(let sector=0;sector<12;sector++){
   const level=createLevel(sector);
   assert.equal(level.signs.length,4);
   for(let plaque=0;plaque<4;plaque++){
@@ -27,7 +27,7 @@ test('first 12 Human Ledger records are unique, authored, tied to original-secto
   }
  }
  assert.equal(recordForSign('pit',0,0),null);
- assert.equal(recordForSign('original',8,0),null);
+ assert.equal(recordForSign('original',12,0),null);
  assert.equal(recordById('unknown'),null);
 });
 test('3/6/9 dossiers unlock once from unique readings; no unrecovered content leaks',()=>{
@@ -109,4 +109,41 @@ test('the readable archive UI works offline in Classic and Quest, while gameplay
  assert.match(ui,/HUMAN LEDGER/);
  assert.match(core,/recordForSign\(this\.campaign,this\.levelIndex,sign\.id\)/);
  assert.match(build,/src\/archive-ledger\.js/);
+});
+
+
+test('four cross-sector evidence cases unlock only from their complete distinct witness chains',()=>{
+ assert.equal(ARCHIVE_EVIDENCE_CASES.length,4);
+ const allIds=new Set(ARCHIVE_RECORDS.map(r=>r.id));
+ for(const c of ARCHIVE_EVIDENCE_CASES){
+  assert(c.requires.length>=3);
+  assert(c.requires.every(id=>allIds.has(id)));
+  assert.equal(new Set(c.requires).size,c.requires.length);
+  const store=storage(),ledger=new ArchiveLedger(store);
+  assert.equal(ledger.find(c.id),null,'unearned evidence must not leak '+c.id);
+  for(const id of c.requires.slice(0,-1))ledger.collect(id);
+  assert.equal(ledger.find(c.id),null,'partial evidence must remain secret '+c.id);
+  assert(!ledger.list().some(item=>item.id===c.id));
+  const last=c.requires.at(-1),awarded=ledger.collect(last);
+  assert(awarded.new);
+  assert.equal(ledger.find(c.id)?.title,c.title);
+  assert.equal(ledger.list().filter(item=>item.id===c.id).length,1);
+  assert.equal(ledger.collect(last).new,false);
+  assert.equal(new ArchiveLedger(store).find(c.id)?.id,c.id,'case must reconstruct after reload');
+ }
+});
+test('the full 48-record archive remains optional and safe to import through existing browser saves',()=>{
+ const store=storage(),ledger=new ArchiveLedger(store),before=JSON.stringify(new Game().snapshot());
+ for(const record of ARCHIVE_RECORDS){
+  assert(record.text.length>150&&record.excerpt.length>30,record.id);
+  assert.equal(ledger.collect(record.id).new,true);
+ }
+ assert.equal(ledger.count,48);
+ assert.equal(ledger.total,48);
+ assert.equal(ledger.unlocked.length,3,'the original 3/6/9 dossiers remain in place');
+ assert.equal(ledger.evidence.length,4);
+ assert.equal(ledger.list().length,55,'48 records, 3 original dossiers and 4 evidence cases');
+ assert.equal(new ArchiveLedger(store).count,48);
+ assert.equal(JSON.stringify(new Game().snapshot()),before,'collectibles cannot mutate campaign state');
+ assert.equal(recordForSign('pit',8,2),null,'Pit campaign keeps a separate story mapping');
 });
