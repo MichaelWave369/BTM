@@ -54,6 +54,8 @@ export class SoundtrackDeck {
     if(this.mode===mode&&this.choice===choice)return;
     const oldMode=this.mode,oldChoice=this.choice;
     this.mode=mode;this.choice=choice;
+    if(this.current)this.current.media.loop=choice!=='album';
+    if(this.pending)this.pending.media.loop=choice!=='album';
     if(oldChoice!==choice&&choice==='album')this.albumIndex=1;
     if(mode==='procedural'){this.stop();this.status='procedural synthesizer';return;}
     if(oldMode!==mode||oldChoice!==choice)this.sync();
