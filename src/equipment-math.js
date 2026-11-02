@@ -99,10 +99,17 @@ export class WristComputer{
   }
   p.width=s.vrWristSize*(.96+.04*this.open);
   p.height=p.width/1.45;
-  // Place directly above the cuff, not on a distant depth-clamped plane.
-  // Its orientation faces the eyes while its position follows the watch.
+  // Watch-anchored screen: the lower edge clears the glove's approximate
+  // local bounds, even when the cosmetic palm is tilted or inverted. This
+  // moves UP over the cuff only, never outward to a distant viewing plane.
+  const up=[head[4],head[5],head[6]];
+  const localAxis=k=>[visual[k],visual[k+1],visual[k+2]];
+  const delta=[visual[12]-status.center[0],visual[13]-status.center[1],visual[14]-status.center[2]];
+  const gloveTop=dot(delta,up)+.085*Math.abs(dot(localAxis(0),up))+
+   .115*Math.abs(dot(localAxis(4),up))+.185*Math.abs(dot(localAxis(8),up));
+  const lift=Math.max(s.vrWristOffset,gloveTop+.018);
   for(let i=0;i<3;i++)
-   p.center[i]=status.center[i]+head[4+i]*(s.vrWristOffset+p.height*.5)-head[8+i]*.02;
+   p.center[i]=status.center[i]+head[4+i]*(lift+p.height*.5)-head[8+i]*.02;
   return this;
  }
 }
