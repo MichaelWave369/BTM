@@ -116,7 +116,7 @@ function showScreen(id){
 }
 function lockMouse(){if(touch||vr.active||inputMode!=='keyboard'||settings.controlMode!=='auto')return;canvas.focus({preventScroll:true});void capture.capture();}
 function play(fresh=false){if(fresh){communications.reset();game.start({energyMode:settings.energyMode});mapOpen=false;}else game.mode='playing';showScreen('');audio.pitAct=game.campaign==='pit'?game.definition.act:null;audio.sector=game.levelIndex;updateSoundtrackCue();audio.start();audio.pause(false);canvas.focus({preventScroll:true});lockMouse();processEvents();updateHUD();}
-function pause(){if(game.mode!=='playing')return;game.mode='paused';audio.pause(true);showScreen('pause-screen');}
+function pause(){if(game.mode!=='playing')return;game.mode='paused';audio.pause(true);showScreen('pause-screen');updateHUD();}
 function home(){if(game.phiwadCustom)leavePhiWadMission(game);else if(!game.gallery&&(game.mode==='playing'||game.mode==='paused')){game.saveCheckpoint();saveCheckpoint();}game.gallery=null;game.mode='title';audio.pause(true);audio.setScore({kind:'title'});showScreen('title-screen');$('continue-btn').hidden=!saved;$('continue-pit-btn').hidden=!pitSaved;}
 function openSettings(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('settings-screen');}
 function openHelp(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('help-screen');}
