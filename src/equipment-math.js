@@ -1,10 +1,10 @@
 import {WORLD_SCALE,entityHeight} from './spatial.js';
 // Meter-based equipment layout and sanitized optional settings. No simulation writes.
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-export const EQUIPMENT_DEFAULTS=Object.freeze({captions:true,spokenDialogue:false,speechVolume:.7,vrHandStyle:'combat',vrLeftHandPresentation:'palm',vrWristSize:.36,vrWristOffset:.065,vrWristActivation:'gaze',vrWristSensitivity:.4,vrHudVisible:true,vrHologramBrightness:.85,vrSubtitleSize:1,vrSubtitleMode:'comfort',vrSubtitleDuration:1,vrGripX:0,vrGripY:0,vrGripZ:0,vrLeftHandPitch:20,vrLeftHandYaw:0,vrLeftHandRoll:0,vrWristTopOffset:.03,vrOriScale:.65,vrOriPeripheral:true,vrInterfaceMotion:true});
+export const EQUIPMENT_DEFAULTS=Object.freeze({captions:true,spokenDialogue:false,speechVolume:.7,vrHandStyle:'combat',vrLeftHandPresentation:'palm',vrWristSize:.36,vrWristOffset:.065,vrWristActivation:'button',vrWristSensitivity:.4,vrHudVisible:true,vrHologramBrightness:.85,vrSubtitleSize:1,vrSubtitleMode:'comfort',vrSubtitleDuration:1,vrGripX:0,vrGripY:0,vrGripZ:0,vrLeftHandPitch:20,vrLeftHandYaw:0,vrLeftHandRoll:0,vrWristTopOffset:.03,vrOriScale:.65,vrOriPeripheral:true,vrInterfaceMotion:true});
 export function equipmentSettings(s={}){
  const out={...EQUIPMENT_DEFAULTS};
- for(const [key,options]of Object.entries({vrHandStyle:['combat','neon','tactical'],vrLeftHandPresentation:['palm','classic'],vrWristActivation:['gaze','raised','manual'],vrSubtitleMode:['comfort','ori']}))if(options.includes(s[key]))out[key]=s[key];
+ for(const [key,options]of Object.entries({vrHandStyle:['combat','neon','tactical'],vrLeftHandPresentation:['palm','classic'],vrWristActivation:['button'],vrSubtitleMode:['comfort','ori']}))if(options.includes(s[key]))out[key]=s[key];
  for(const [key,min,max]of [['speechVolume',0,1],['vrWristSize',.24,.38],['vrWristOffset',.035,.10],['vrWristSensitivity',.35,.8],['vrHologramBrightness',.4,1.1],['vrSubtitleSize',.8,1.3],['vrSubtitleDuration',.75,2],['vrGripX',-.04,.04],['vrGripY',-.04,.04],['vrGripZ',-.04,.04],['vrLeftHandPitch',-65,65],['vrLeftHandYaw',-65,65],['vrLeftHandRoll',-90,90],['vrWristTopOffset',0,.08],['vrOriScale',.4,1]])if(Number.isFinite(s[key]))out[key]=clamp(s[key],min,max);
  for(const key of ['captions','spokenDialogue','vrHudVisible','vrInterfaceMotion','vrOriPeripheral'])if(typeof s[key]==='boolean')out[key]=s[key];return out;
 }
@@ -14,20 +14,18 @@ export function equipmentPanel(width=.32,height=width/1.5){return{center:[0,0,0]
 function at(out,m,x,y,z){for(let i=0;i<3;i++)out[i]=m[12+i]+m[i]*x+m[4+i]*y+m[8+i]*z;}
 export class WristComputer{
  constructor(){
-  this.status=equipmentPanel(.064,.028);this.panel=equipmentPanel();this.toEye=[0,0,0];
+  this.status=equipmentPanel(.112,.049);this.panel=equipmentPanel();this.toEye=[0,0,0];
   this.open=0;this.pinned=false;this.last=-1;this.attentionSince=-1;this.lostSince=-1;
   this.guardUntil=0;this.requested=false;this.guard=false;this.visible=false;this.statusVisible=false;
   this.suppressAutoUntilLower=false;this.watchFacing=0;this.watchGaze=0;this.watchDistance=0;
   this.watchRaised=false;this.watchReady=false;this.trackedWrist=[0,0,0];
  }
- // A tap on the cuff, or a left grip with the wrist raised in front of the
- // headset, deliberately pins/unpins the expanded menu. Unpinning must not
- // immediately re-trigger a saved automatic-gaze preference.
+ // The physical watch-face button is the only menu summon. Wrist motion
+ // never opens the menu or takes over the locomotion controls.
  togglePin(){
   this.pinned=!this.pinned;
-  this.suppressAutoUntilLower=!this.pinned;
-  this.attentionSince=this.lostSince=-1;
-  this.last=-1;
+  this.lostSince=-1;
+  this.guardUntil=this.pinned?this.last+220:0;
   return this.pinned;
  }
  canToggle(rig,settings={}){
@@ -78,20 +76,17 @@ export class WristComputer{
   const wristY=tracked[13];
   this.watchRaised=wristY>=eye[1]-.33;
   const inRange=d>=.32&&d<=.98;
-  this.watchReady=inRange&&wristY>=eye[1]-.39&&this.watchGaze>.57;
-  if(wristY<eye[1]-.47)this.suppressAutoUntilLower=false;
   const aligned=this.watchFacing>Math.max(.57,s.vrWristSensitivity+.12);
-  const eligible=!this.suppressAutoUntilLower&&s.vrWristActivation!=='manual'&&
-   inRange&&this.watchRaised&&aligned&&
-   (s.vrWristActivation==='raised'||this.watchGaze>.60);
-  if(eligible){if(this.attentionSince<0)this.attentionSince=now;this.lostSince=-1;}
-  else{this.attentionSince=-1;if(this.lostSince<0)this.lostSince=now;}
+  this.watchReady=inRange&&wristY>=eye[1]-.39&&this.watchGaze>.57&&aligned;
+  // Only a real click can open; lowering/turning away hides the menu.
+  // Short tracking losses have a grace period before clearing the click.
+  if(this.pinned&&!this.watchReady){
+   if(this.lostSince<0)this.lostSince=now;
+   if(now-this.lostSince>280)this.pinned=false;
+  }else this.lostSince=-1;
   const previous=this.requested;
-  const auto=!this.suppressAutoUntilLower&&s.vrWristActivation!=='manual'&&
-   (eligible&&now-this.attentionSince>=350||
-   previous&&!this.pinned&&this.lostSince>=0&&now-this.lostSince<280);
-  this.requested=this.pinned||auto;
-  if(this.requested&&!previous)this.guardUntil=now+260;
+  this.requested=this.pinned&&this.watchReady;
+  if(this.requested&&!previous)this.guardUntil=Math.max(this.guardUntil,now+220);
   this.guard=this.requested&&now<this.guardUntil;
   const motion=s.vrInterfaceMotion&&!settings.reducedMotion;
   this.open=motion?this.open+((this.requested?1:0)-this.open)*(1-Math.exp(-dt*17)):(this.requested?1:0);
@@ -104,28 +99,10 @@ export class WristComputer{
   }
   p.width=s.vrWristSize*(.96+.04*this.open);
   p.height=p.width/1.45;
-  if(this.pinned){
-   // Accessible fallback: a pinned menu remains comfortably in view even
-   // after lowering the watch, rather than drifting outside the frustum.
-   for(let i=0;i<3;i++)
-    p.center[i]=eye[i]-head[8+i]*.78-head[i]*.18+head[4+i]*.13;
-  }else{
-   // A compact watch tray sits just beyond the cuff rather than floating a
-   // quarter meter above the arm. Only visibility bounds may adjust it.
-   // Keep a predictable small wrist offset; never compute a huge "lift" that
-   // ejects the display above the player's view on different Touch poses.
-   for(let i=0;i<3;i++)
-    p.center[i]=status.center[i]-head[8+i]*.055+
-     head[4+i]*(.045+p.height*.5+s.vrWristTopOffset);
-   // Fit the *whole* screen into binocular view by clamping angular offsets
-   // rather than hiding it when a corner leaves one eye's frustum.
-   const dx=[p.center[0]-eye[0],p.center[1]-eye[1],p.center[2]-eye[2]];
-   const depth=Math.max(.68,-dot(dx,[head[8],head[9],head[10]]));
-   const side=clamp(dot(dx,[head[0],head[1],head[2]]),-depth*.32,depth*.32);
-   const vertical=clamp(dot(dx,[head[4],head[5],head[6]]),-depth*.25,depth*.23);
-   for(let i=0;i<3;i++)
-    p.center[i]=eye[i]-head[8+i]*depth+head[i]*side+head[4+i]*vertical;
-  }
+  // Place directly above the cuff, not on a distant depth-clamped plane.
+  // Its orientation faces the eyes while its position follows the watch.
+  for(let i=0;i<3;i++)
+   p.center[i]=status.center[i]+head[4+i]*(s.vrWristOffset+p.height*.5)-head[8+i]*.02;
   return this;
  }
 }
