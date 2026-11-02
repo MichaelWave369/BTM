@@ -31,6 +31,11 @@ test('open palm is the default visual profile and Classic restores the previous 
  assert.deepEqual(Array.from(palm.slice(12,16)),Array.from(tracked.slice(12,16)));
  assert.deepEqual(Array.from(classic.slice(12,16)),Array.from(tracked.slice(12,16)));
  assert(Math.abs(palm[5]-classic[5])>.1,'palm rendering must not be the same gun-pose transform');
+ const toward=[.22,.25,.5],norm=Math.hypot(...toward);
+ const facing=m=>(m[4]*toward[0]+m[5]*toward[1]+m[6]*toward[2])/norm;
+ assert(facing(palm)>facing(classic)+.15,'the open palm must face the viewer better than the gun posture');
+ const watch=matIdentity();visualLeftPose(watch,tracked,a,1);
+ assert.deepEqual(Array.from(watch),Array.from(classic),'full physical watch turn hands control back to the tracked grip');
  const noAdjust=matIdentity();visualLeftPose(noAdjust,tracked,{vrLeftHandPitch:0,vrLeftHandYaw:0,vrLeftHandRoll:0});
  assert.deepEqual(Array.from(noAdjust),original,'legacy caller with explicit zero calibration stays neutral');
 });
@@ -54,7 +59,7 @@ test('only physical tracked wrist turn, not cosmetic palm tilt, reveals the menu
  const turn=65*Math.PI/180;
  tracked[5]=Math.cos(turn);tracked[6]=Math.sin(turn);
  tracked[9]=-Math.sin(turn);tracked[10]=Math.cos(turn);
- visualLeftPose(r.leftVisualWorld,tracked,equipmentSettings());
+ visualLeftPose(r.leftVisualWorld,tracked,equipmentSettings(),1);
  advance(w,r,{},700,1400);
  assert(w.visible&&w.watchFacing>.57,'tracked wrist orientation must activate after dwell');
  assert(w.open>.8);
