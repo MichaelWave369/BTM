@@ -113,6 +113,11 @@ body[data-input=controller] #game,body[data-input=vr] #game{cursor:none}.reduced
 .archive-detail strong{color:var(--gold)}
 
 
+/* Instant, completely local Bot Arena launch. */
+.solo-bots-choice{border-left-color:#7ff7bb;background:linear-gradient(105deg,#143c33ee,#132743ee)}
+.solo-bots-choice .choice-code{color:#a8ffd0}
+.solo-bots-choice:hover,.solo-bots-choice:focus-visible{border-color:#92ffcc;box-shadow:0 0 22px #3ddfa72b}
+
 /* The Living Arcade / Trophy Room. No remote avatars, tracking or external art.
    This is a scrollable, controller-friendly holographic cabinet, not a gameplay
    overlay, so the same content works on desktop, mobile and Quest flat panels. */
