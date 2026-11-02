@@ -97,4 +97,7 @@ test('Trophy Room has keyboard, gamepad, Quest navigation and no gameplay/save w
  assert(!readFileSync(new URL('../src/trophy-room.js',import.meta.url),'utf8').includes('setItem('));
  for(const id of ['trophy-btn','pause-trophy','trophy-back','trophy-medals','trophy-stat-panels','trophy-open-ledger','trophy-open-range'])assert(html.includes('id="'+id+'"'));
  assert(html.includes('VERIFIED MATCH RECORDS'));
+ const bbs=readFileSync(new URL('../public/bbs.html',import.meta.url),'utf8');
+ assert(bbs.includes('href="./#trophy-room"'));
+ assert(app.includes("location.hash==='#trophy-room'"));
 });
