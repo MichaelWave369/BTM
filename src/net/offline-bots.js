@@ -19,7 +19,7 @@ export function validateOfflineArena(config){
 export function createOfflineArena(config){
  const settings=validateOfflineArena(config);
  const room=new Room({code:'SOLOBOTS',mode:settings.mode,arena:settings.arena,
-  limit:settings.limit,capacity:settings.capacity,finaleEnabled:false});
+  limit:settings.limit,capacity:settings.capacity,finaleEnabled:false,localBots:true});
  const player=room.add({id:'local-human',nickname:settings.nickname,token:'local-only'});
  for(let n=0;n<settings.bots;n++)room.addBot('local-only');
  // Only locally spawned, explicitly marked bots count as additional actors.
