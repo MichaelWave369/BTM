@@ -40,7 +40,7 @@ export class VRWorldRenderer {
   // Show the ray/cursor while the menu is animating, but block a click until
   // the opening safety guard expires. This preserves aim feedback in both eyes.
   if(ui.wrist.guard)return ui.blocker;
-  if(panel===ui.statusPanel)return ui.statusTarget;
+  if(panel===ui.statusPanel)return selected.u>=.50&&selected.v>=.70&&selected.v<=.97?ui.statusTarget:null;
   return ui.wrist.open>.8?(ui.targetAt(selected)||ui.blocker):ui.blocker;
  }
  renderWorld(views,game,rig,dt,data,framebuffer=null){
