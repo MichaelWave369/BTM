@@ -70,11 +70,14 @@ try{
  // Real BBS lobby should link directly into the Trophy Room on the same origin
  // without requiring a running LAN node or silently granting competitive stats.
  await page.goto('http://127.0.0.1:5184/bbs.html');
- // Exercise the visible BBS header doorway with a genuine user click.
- // The previous edit accidentally included literal backslash-n in this comment,
- // commenting out the click. The old wait also passed when the element was absent.
+ // Use an actual keyboard activation of the BBS header doorway. Animated
+ // production BBS canvases can prevent Playwright's mouse-click stability
+ // check from settling; focus + trusted Enter proves the same real link works.
+ // Do not substitute page.goto or a synthetic DOM click.
  assert.equal(await page.locator('a[href="./#trophy-room"]').count(),2);
- await page.locator('#trophy-link').click();
+ await page.locator('#trophy-link').focus();
+ assert.equal(await page.evaluate(()=>document.activeElement?.id),'trophy-link');
+ await page.keyboard.press('Enter');
  await page.locator('#trophy-screen').waitFor({state:'visible',timeout:20000});
  assert.equal(new URL(page.url()).pathname,'/','BBS doorway loads the solo app');
  assert.equal(await page.locator('#trophy-screen').isVisible(),true,'BBS doorway opens actual cabinet');
