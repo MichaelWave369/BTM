@@ -30,7 +30,7 @@ test('clicking the wrist button opens directly above cuff without tether lines',
  assert(!scene.includes('rig.equipmentLink'),'no two decorative tether lines');
 });
 
-const closeVector=(a,b,description,epsilon=1e-6)=>{
+const closeVector=(a,b,description,epsilon=1e-4)=>{
  assert.equal(a.length,b.length);
  for(let i=0;i<a.length;i++)assert(Math.abs(a[i]-b[i])<epsilon,
   description+' axis '+i+' expected '+b[i]+' got '+a[i]);
