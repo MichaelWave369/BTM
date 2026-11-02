@@ -378,4 +378,5 @@ mountSoundtrackControls({audio,settings,apply:applySettings,save:storeSettings})
 applySettings();showScreen('title-screen');if(location.hash==='#trophy-room'){openTrophyRoom();history.replaceState(null,'',location.pathname+location.search);}updateHUD();desktopFrame=requestAnimationFrame(frame);
 if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').then(()=>navigator.serviceWorker.ready).then(()=>{$('offline-status').textContent='OFFLINE READY';}).catch(()=>{$('offline-status').textContent='ONLINE';$('offline-status').title='Offline caching unavailable here. Keep the source download for local play.';});else $('offline-status').textContent='LOCAL BUILD';
 
+$('solo-bots-btn').addEventListener('click',async()=>{if(vr.active)await vr.exit();window.location.assign('./bbs.html#solo-bots');});
 $('bbs-btn').addEventListener('click',async()=>{if(vr.active)await vr.exit();window.location.assign('./bbs.html');});
