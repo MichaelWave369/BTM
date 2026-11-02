@@ -5,6 +5,7 @@ import {PIT_STAGES,PIT_HOSTS} from '../pit.js';
 import {safeTrackedAim,entityHeight,WALL_HEIGHT} from '../spatial.js';
 import {hazardState} from '../pit-combat.js';
 import {createArena} from './arenas.js';
+import {botIntent} from './bot-pilot.js';
 import {freshControlState,controlZone,controlSnapshot,advanceControl} from './control-zones.js';
 import {neutralInput,TICK_RATE} from './protocol.js';
 export const AVATAR_FIELDS=['damageDirection','weapon','cooldown','recharge','vent','shotAnim','hurt','shake','dodgeCooldown','dodgeFlash','shieldTime','shieldCharge','oriCooldown','objectiveTime','hitPulse','assistTime','scanTime','equipAnim','portraitTime','speechCooldown','muzzle','shift','charge','stats','playerMotion','combatPose','lessonDistance','footDistance','moving','sprinting','bufferedFire','nav','navTime'];
@@ -82,13 +83,20 @@ export class Room{
  constructor({code,mode='deathmatch',arena='no-carrier',limit=10,capacity=2,finaleEnabled=true}){
   this.finaleEnabled=finaleEnabled;this.raid=null;this.control=null;this.code=code;this.mode=mode;this.arena=arena;this.limit=limit;this.capacity=capacity;this.competitive=mode!=='coop';this.actors=new Map();this.owner=null;this.state='lobby';this.tick=0;this.elapsed=0;this.revision=0;this.eventId=0;this.events=[];this.stage=0;this.receipts=[];this.teamScore={cyan:0,pink:0};this.round=1;this.dirty=false;this.game=new SharedWorld(this);this.game.events=[];
  }
+ addBot(token){
+  if(this.state!=='lobby'||this.started||this.actors.size>=this.capacity)throw Error('Bots may only fill lobby slots');
+  const index=[...this.actors.values()].filter(a=>a.bot).length+1;
+  const actor=this.add({id:'bot_'+index,nickname:'PHI BOT '+index,token});
+  actor.bot=true;actor.botIndex=index;actor.ready=true;
+  return actor;
+ }
  add({id,nickname,token}){
   if(this.state!=='lobby'||!this.competitive&&this.started)throw Error('Campaign in progress; use your reconnect token');if(this.actors.size>=this.capacity)throw Error('Room full');
   const a={id,nickname,token,connected:true,ready:false,team:this.mode==='coop'?'cyan':this.actors.size%2?'pink':'cyan',status:'lobby',frags:0,deaths:0,lastSeq:0,lastInput:-99,input:neutralInput(),actions:[],player:null,feel:{},lastEvent:0};this.actors.set(id,a);this.owner??=id;this.event('joined',{player:id});return a;
  }
- disconnect(id){const a=this.actors.get(id);if(!a)return;a.connected=false;a.disconnectedAt=this.elapsed;a.input=neutralInput();a.actions=[];if(this.owner===id)this.owner=[...this.actors.values()].find(p=>p.connected)?.id||id;this.event('disconnected',{player:id});this.dirty=true;}
+ disconnect(id){const a=this.actors.get(id);if(!a)return;a.connected=false;a.disconnectedAt=this.elapsed;a.input=neutralInput();a.actions=[];if(this.owner===id)this.owner=[...this.actors.values()].find(p=>p.connected&&!p.bot)?.id||id;this.event('disconnected',{player:id});this.dirty=true;}
  reconnect(a){a.connected=true;a.input=neutralInput();a.actions=[];a.lastInput=this.elapsed;this.event('reconnected',{player:a.id});return a;}
- remove(id){this.actors.delete(id);if(this.owner===id)this.owner=[...this.actors.values()].find(a=>a.connected)?.id||this.actors.keys().next().value||null;this.event('left',{player:id});}
+ remove(id){this.actors.delete(id);if(this.owner===id)this.owner=[...this.actors.values()].find(a=>a.connected&&!a.bot)?.id||[...this.actors.values()].find(a=>!a.bot)?.id||null;this.event('left',{player:id});}
  live(){return [...this.actors.values()].filter(a=>a.status==='alive');}
  withActor(a,fn){
   const g=this.game;if(g.actorId===a.id)return fn();const old={player:g.player,actorId:g.actorId};for(const k of AVATAR_FIELDS)old[k]=g[k];
@@ -135,6 +143,7 @@ export class Room{
   g.setCombatPose({head,aim});
  }
  input(a,m){
+  if(a.bot)return false; // only the host's fixed-step bot pilot controls this actor
   if(m.seq<=a.lastSeq||m.seq>a.lastSeq+120)return false;if(a.actions.length+m.actions.length>8)return false;
   a.lastSeq=m.seq;a.lastInput=this.elapsed;a.input={...m,actions:[]};a.actions.push(...m.actions);return true;
  }
@@ -177,8 +186,16 @@ export class Room{
  step(dt=1/TICK_RATE){
   this.tick++;this.elapsed+=dt;
   for(const a of this.actors.values()){if(!a.connected&&this.elapsed-a.disconnectedAt>90&&this.state==='lobby')this.remove(a.id);if(a.status==='downed'&&this.game.time>=a.bleedAt)a.status='dead';}
-  if(this.state!=='playing'||![...this.actors.values()].some(a=>a.connected))return;
+  if(this.state!=='playing'||![...this.actors.values()].some(a=>a.connected&&!a.bot))return;
   const g=this.game;g.time+=dt;
+  // Bots are actual actors in the existing server simulation and emit normal
+  // bounded intent. No fake WebSocket, teleports, score setters or free damage.
+  for(const actor of this.actors.values())if(actor.bot&&actor.connected&&actor.status==='alive'){
+   const planned=botIntent(this,actor);
+   actor.input={...planned,actions:[]};
+   actor.actions.push(...planned.actions);
+   actor.lastInput=this.elapsed;
+  }
   if(this.competitive)for(const a of this.actors.values())if(a.connected&&a.status==='dead'&&this.mode!=='clan'&&g.time>=a.respawnAt)this.spawn(a,this.tick);
   for(const a of this.live()){
    if(this.state!=='playing')break;if(a.status!=='alive')continue;
@@ -219,20 +236,20 @@ export class Room{
  advanceIntermission(dt){if(this.state==='round'){this.game.time+=dt;if(this.game.time>=this.nextRound){if(Object.values(this.teamScore).some(s=>s>=this.limit))this.state='results';else{this.round++;this.load(false);}}}}
  flushEvents(){for(const e of this.game.events.splice(0)){if(e.type==='checkpoint'||e.type==='complete'||e.type==='dead')continue;this.event(e.type,e);}}
  event(type,data={}){this.events.push({...data,type,id:++this.eventId});if(this.events.length>96)this.events.shift();}
- roster(){return [...this.actors.values()].map(a=>({id:a.id,nickname:a.nickname,connected:a.connected,ready:a.ready,team:a.team,status:a.status,frags:a.frags,deaths:a.deaths}));}
+ roster(){return [...this.actors.values()].map(a=>({id:a.id,nickname:a.nickname,bot:!!a.bot,connected:a.connected,ready:a.ready,team:a.team,status:a.status,frags:a.frags,deaths:a.deaths}));}
  init(){return{type:'world',revision:this.revision,definition:this.game.definition,level:structuredClone(this.game.level),stage:this.stage,competitive:this.competitive};}
  snapshot(a){
   const g=this.game,events=this.events.filter(e=>e.id>a.lastEvent);a.lastEvent=this.eventId;
-  const players=[...this.actors.values()].filter(a=>a.player).map(a=>({id:a.id,nickname:a.nickname,team:a.team,connected:a.connected,status:a.status,frags:a.frags,deaths:a.deaths,seq:a.lastSeq,revive:round(a.revive||0),respawn:round(Math.max(0,(a.respawnAt||0)-g.time)),...Object.fromEntries(Object.entries(a.player).map(([k,v])=>[k,typeof v==='number'?round(v):v])),pose:a.feel.combatPose?{eye:a.feel.combatPose.head.height,right:{x:round(a.feel.combatPose.aim.origin.x-a.player.x),y:round(a.feel.combatPose.aim.origin.y-a.player.y),height:round(a.feel.combatPose.aim.origin.height),dx:round(a.feel.combatPose.aim.direction.x),dy:round(a.feel.combatPose.aim.direction.y),dz:round(a.feel.combatPose.aim.direction.z)}}:null,weapon:a.feel.weapon,cooldown:round(a.feel.cooldown||0),recharge:round(a.feel.recharge||0),oriCooldown:round(a.feel.oriCooldown||0),dodgeCooldown:round(a.feel.dodgeCooldown||0),stats:a.feel.stats,hurt:round(a.feel.hurt||0),hitPulse:round(a.feel.hitPulse||0),assistTime:round(a.feel.assistTime||0),scanTime:round(a.feel.scanTime||0),damageDirection:a.feel.damageDirection??null,vent:round(a.feel.vent||0),shield:round(a.feel.shieldTime||0),shieldCharge:a.feel.shieldCharge||0,shotAnim:round(a.feel.shotAnim||0)}));
+  const players=[...this.actors.values()].filter(a=>a.player).map(a=>({id:a.id,nickname:a.nickname,bot:!!a.bot,team:a.team,connected:a.connected,status:a.status,frags:a.frags,deaths:a.deaths,seq:a.lastSeq,revive:round(a.revive||0),respawn:round(Math.max(0,(a.respawnAt||0)-g.time)),...Object.fromEntries(Object.entries(a.player).map(([k,v])=>[k,typeof v==='number'?round(v):v])),pose:a.feel.combatPose?{eye:a.feel.combatPose.head.height,right:{x:round(a.feel.combatPose.aim.origin.x-a.player.x),y:round(a.feel.combatPose.aim.origin.y-a.player.y),height:round(a.feel.combatPose.aim.origin.height),dx:round(a.feel.combatPose.aim.direction.x),dy:round(a.feel.combatPose.aim.direction.y),dz:round(a.feel.combatPose.aim.direction.z)}}:null,weapon:a.feel.weapon,cooldown:round(a.feel.cooldown||0),recharge:round(a.feel.recharge||0),oriCooldown:round(a.feel.oriCooldown||0),dodgeCooldown:round(a.feel.dodgeCooldown||0),stats:a.feel.stats,hurt:round(a.feel.hurt||0),hitPulse:round(a.feel.hitPulse||0),assistTime:round(a.feel.assistTime||0),scanTime:round(a.feel.scanTime||0),damageDirection:a.feel.damageDirection??null,vent:round(a.feel.vent||0),shield:round(a.feel.shieldTime||0),shieldCharge:a.feel.shieldCharge||0,shotAnim:round(a.feel.shotAnim||0)}));
   return{type:'snapshot',tick:this.tick,time:round(g.time),revision:this.revision,code:this.code,owner:this.owner,mode:this.mode,arena:this.arena,limit:this.limit,capacity:this.capacity,state:this.state,stage:this.stage,completed:this.receipts.length,raid:this.raid?.snapshot()||null,control:this.control?controlSnapshot(this.control,this.teamScore):null,finaleAvailable:this.finaleEnabled&&this.receipts.length===24&&!this.raid,round:this.round,teamScore:this.teamScore,result:this.result,roster:this.roster(),players,world:packWorld(g,a.id),events};
  }
  checkpoint(includeEntry=true){
   if(this.competitive)return null;const g=this.game,state=this.state==='suspended'?this.resumeState:this.state;g.pitRecord=this.receipts.filter(r=>r.campaign==='pit').map(r=>({...r,stage:r.index+1}));
   const world=g.snapshot();if(g.campaign==='pit'){world.pitCleared=['cleared','campaign-complete'].includes(state);}
-  return structuredClone({schema:'btm.coop/1',code:this.code,owner:this.owner,stage:this.stage,state,partySize:this.partySize,finale:this.raid?.snapshot()||null,receipts:structuredClone(this.receipts),world,actors:[...this.actors.values()].map(a=>({id:a.id,nickname:a.nickname,token:a.token,team:a.team,player:a.player,status:a.status,invulnerable:a.invulnerable,bleedAt:a.bleedAt,frags:a.frags,deaths:a.deaths,lastSeq:a.lastSeq,feel:Object.fromEntries(AVATAR_FIELDS.filter(k=>!['nav','combatPose','bufferedFire'].includes(k)).map(k=>[k,a.feel[k]]))})),...(includeEntry?{entry:this.stageStart}:{} )});
+  return structuredClone({schema:'btm.coop/1',code:this.code,owner:this.owner,stage:this.stage,state,partySize:this.partySize,finale:this.raid?.snapshot()||null,receipts:structuredClone(this.receipts),world,actors:[...this.actors.values()].map(a=>({id:a.id,nickname:a.nickname,bot:!!a.bot,botIndex:a.botIndex||0,token:a.token,team:a.team,player:a.player,status:a.status,invulnerable:a.invulnerable,bleedAt:a.bleedAt,frags:a.frags,deaths:a.deaths,lastSeq:a.lastSeq,feel:Object.fromEntries(AVATAR_FIELDS.filter(k=>!['nav','combatPose','bufferedFire'].includes(k)).map(k=>[k,a.feel[k]]))})),...(includeEntry?{entry:this.stageStart}:{} )});
  }
  restore(s){
-  if(!s||s.schema!=='btm.coop/1'||!Number.isInteger(s.stage)||s.stage<0||s.stage>23||!Array.isArray(s.receipts)||s.receipts.length!==(s.finale?24:s.stage+(['cleared','campaign-complete'].includes(s.state)?1:0))||s.receipts.some((r,i)=>r.stage!==i+1)||!Array.isArray(s.actors)||s.actors.length<2||s.actors.length>4)throw Error('Invalid cooperative checkpoint');
+  if(!s||s.schema!=='btm.coop/1'||!Number.isInteger(s.stage)||s.stage<0||s.stage>23||!Array.isArray(s.receipts)||s.receipts.length!==(s.finale?24:s.stage+(['cleared','campaign-complete'].includes(s.state)?1:0))||s.receipts.some((r,i)=>r.stage!==i+1)||!Array.isArray(s.actors)||s.actors.length<2||s.actors.length>4||s.actors.every(a=>a.bot))throw Error('Invalid cooperative checkpoint');
   const descriptor=STAGES[s.stage],states=['playing','cleared','ending'];
   if(s.code!==this.code||!states.includes(s.state)||s.state==='ending'&&!s.finale||!Number.isInteger(s.partySize)||s.partySize<2||s.partySize>4||s.partySize!==s.actors.length||!s.actors.some(a=>a.id===s.owner)||!Number.isFinite(s.world?.time)||s.world.time<0||s.world.time>86400||s.entry?.entry)throw Error('Invalid cooperative session metadata');
   const template=s.finale?createRaidLevel(s.partySize):createLevel(descriptor.index,descriptor.campaign),l=s.world.level;
@@ -250,7 +267,7 @@ export class Room{
    if(l?.campaign!=='raid'||JSON.stringify(l.cells)!==JSON.stringify(template.cells)||!Array.isArray(l.enemies)||l.enemies.length>64||l.enemies.filter(e=>e.raidRole==='core').length!==1||l.enemies.some(e=>!['plugged','repeater','enforcer','crawler','warden'].includes(e.type)||![e.x,e.y,e.hp,e.maxHp].every(Number.isFinite)||e.maxHp>50000||!canOccupy(template,e.x,e.y)))throw Error('Invalid finale world');
    Object.assign(game,world);game.level=structuredClone(l);game.campaign='original';game.levelIndex=0;game.ori={x:alive.player.x+.4,y:alive.player.y+.2};game.resetFeel();game.projectiles=[];game.events=[];
   }else{if((s.world.campaign==='pit')!==(descriptor.campaign==='pit')||s.world.levelIndex!==descriptor.index)throw Error('Checkpoint stage mismatch');game.restore(world,{campaign:descriptor.campaign});}
-  const actors=new Map();for(const a of s.actors){if(!/^[a-f0-9]{48}$/.test(a.token)||!a.player||!['x','y','health','energy','reserve','a'].every(k=>Number.isFinite(a.player[k]))||!canOccupy(game.level,a.player.x,a.player.y)||a.player.energy<0||a.player.energy>100||a.player.reserve<0||a.player.reserve>180||actors.has(a.id))throw Error('Invalid saved avatar');actors.set(a.id,{...structuredClone(a),connected:this.actors.get(a.id)?.connected||false,ready:false,lastEvent:0,lastInput:-99,input:neutralInput(),actions:[],feel:{...a.feel,nav:null,navTime:0,combatPose:null,bufferedFire:null},revive:0,usedAt:-1,chargeTime:0,disconnectedAt:this.elapsed});}
+  const actors=new Map();for(const a of s.actors){if(!/^[a-f0-9]{48}$/.test(a.token)||!a.player||!['x','y','health','energy','reserve','a'].every(k=>Number.isFinite(a.player[k]))||!canOccupy(game.level,a.player.x,a.player.y)||a.player.energy<0||a.player.energy>100||a.player.reserve<0||a.player.reserve>180||actors.has(a.id))throw Error('Invalid saved avatar');actors.set(a.id,{...structuredClone(a),connected:!!a.bot||this.actors.get(a.id)?.connected||false,ready:!!a.bot,lastEvent:0,lastInput:-99,input:neutralInput(),actions:[],feel:{...a.feel,nav:null,navTime:0,combatPose:null,bufferedFire:null},revive:0,usedAt:-1,chargeTime:0,disconnectedAt:this.elapsed});}
   for(const [id,value]of actors){const existing=this.actors.get(id);if(existing){const seq=existing.lastSeq;Object.assign(existing,value);existing.lastSeq=Math.max(seq,value.lastSeq);actors.set(id,existing);}}
   this.started=true;this.game=game;this._definition=s.finale?RAID_DEFINITION:null;this.raid=s.finale?new Finale(this):null;if(this.raid)this.raid.restore(s.finale);this.stage=s.stage;this.receipts=structuredClone(s.receipts);this.partySize=s.partySize;this.owner=s.owner;this.state=s.state;this.actors=actors;this.stageStart=s.entry||s;this.spawns=this.coopSpawns(game.definition.spawn);game.mode='playing';game.player=this.actors.get(alive.id).player;this.revision++;this.dirty=true;
  }
