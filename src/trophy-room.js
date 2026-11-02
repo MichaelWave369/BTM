@@ -15,11 +15,11 @@ export function readGalleryCard(storage){
   if(card?.schema!==GALLERY_SCHEMA)return null;
   const best=card.best;
   if(!best||best.drill!=='signal-60')return {
-   plays:bounded(card.plays,1000000),totalHits:bounded(card.totalHits,1e8),
+   plays:bounded(card.plays,1000000),totalHits:Math.min(bounded(card.totalHits,1e8),bounded(card.totalShots,1e8)),
    totalShots:bounded(card.totalShots,1e8),best:null
   };
   const shots=bounded(best.shots,1e8),hits=Math.min(shots,bounded(best.hits,1e8));
-  return {plays:bounded(card.plays,1000000),totalHits:bounded(card.totalHits,1e8),
+  return {plays:bounded(card.plays,1000000),totalHits:Math.min(bounded(card.totalHits,1e8),bounded(card.totalShots,1e8)),
    totalShots:bounded(card.totalShots,1e8),best:{
     score:bounded(best.score,1e8),shots,hits,
     accuracy:shots?Math.round(hits/shots*100):0
