@@ -7,14 +7,32 @@ import {OriFlight} from '../src/ori-comfort.js';
 import {Game} from '../src/core.js';
 import {WORLD_SCALE} from '../src/spatial.js';
 const dot=(a,b)=>a.reduce((n,v,i)=>n+v*b[i],0);
-test('seated, standing and inverted/tilted grips project the whole hologram above the worn glove',()=>{
+test('watch button stays manual and visible panel clears inverted glove poses',()=>{
  for(const eyeHeight of [1.4,1.65,1.8])for(const pitch of [-35,0,45])for(const roll of [-180,-90,0,90,180]){
-  const head=matIdentity(),tracked=matIdentity(),visual=matIdentity();head[13]=eyeHeight;tracked[12]=-.22;tracked[13]=eyeHeight-.25;tracked[14]=-.5;visualLeftPose(visual,tracked,{vrLeftHandPitch:pitch,vrLeftHandRoll:roll});
-  const original=Array.from(tracked),r={hasLeft:true,hasVisualLeft:true,leftWorld:tracked,leftVisualWorld:visual,eye:[0,eyeHeight,0],headWorld:head},w=new WristComputer();w.togglePin();for(let t=0;t<800;t+=25)w.update(r,{vrWristActivation:'manual'},t);
-  assert(w.visible,`pose ${eyeHeight}/${pitch}/${roll}`);assert(w.panel.up[1]>0);let gloveTop=-Infinity;
-  for(let i=0;i<handMesh('left').data.length;i+=9){const v=handMesh('left').data;gloveTop=Math.max(gloveTop,visual[1]*v[i]+visual[5]*v[i+1]+visual[9]*v[i+2]+visual[13]);}
-  const p=w.panel,bottom=p.center[1]-Math.abs(p.up[1])*p.height/2-Math.abs(p.right[1])*p.width/2;assert(bottom>gloveTop+.006,`hand intersection ${pitch}/${roll}`);
-  assert(p.center[0]<-.03);assert.deepEqual(Array.from(tracked),original);w.reset();assert(!w.visible&&!w.pinned);
+  const head=matIdentity(),tracked=matIdentity(),visual=matIdentity();head[13]=eyeHeight;
+  tracked[12]=-.22;tracked[13]=eyeHeight-.25;tracked[14]=-.5;
+  visualLeftPose(visual,tracked,{vrLeftHandPitch:pitch,vrLeftHandRoll:roll});
+  const r={hasLeft:true,hasVisualLeft:true,leftWorld:tracked,leftVisualWorld:visual,eye:[0,eyeHeight,0],headWorld:head},w=new WristComputer();
+  for(let t=0;t<300;t+=25)w.update(r,{},t);
+  assert(!w.visible&&!w.requested,'pose must never auto-open');
+  // Actual hardware watch is rotated toward the eyes before a button tap.
+  const turn=65*Math.PI/180;
+  tracked[5]=Math.cos(turn);tracked[6]=Math.sin(turn);
+  tracked[9]=-Math.sin(turn);tracked[10]=Math.cos(turn);
+  visualLeftPose(visual,tracked,{vrLeftHandPitch:pitch,vrLeftHandRoll:roll});
+  w.update(r,{},325);assert(w.canToggle(r,{}),`watch not ready ${eyeHeight}/${pitch}/${roll}`);
+  const original=Array.from(tracked);
+  w.togglePin();for(let t=350;t<=900;t+=25)w.update(r,{},t);
+  assert(w.visible,`clicked watch ${eyeHeight}/${pitch}/${roll}`);assert(w.panel.up[1]>0);
+  let gloveTop=-Infinity;
+  const mesh=handMesh('left').data;
+  for(let i=0;i<mesh.length;i+=9)
+   gloveTop=Math.max(gloveTop,visual[1]*mesh[i]+visual[5]*mesh[i+1]+visual[9]*mesh[i+2]+visual[13]);
+  const p=w.panel,bottom=p.center[1]-Math.abs(p.up[1])*p.height/2-Math.abs(p.right[1])*p.width/2;
+  assert(bottom>gloveTop+.005,`hand intersection ${eyeHeight}/${pitch}/${roll}`);
+  const distance=Math.hypot(...p.center.map((v,i)=>v-w.status.center[i]));
+  assert(distance<.56,'panel must remain attached just above the watch, not far-field projected');
+  assert.deepEqual(Array.from(tracked),original);w.reset();assert(!w.visible&&!w.pinned);
  }
 });
 test('peripheral communications preserve the central angular lane, wrist and real hand aim',()=>{

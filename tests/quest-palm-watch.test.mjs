@@ -49,40 +49,36 @@ test('left palm has open fingers and separate palm plating; right weapon glove s
  assert([...palm.data].every(Number.isFinite));
 });
 
-test('only physical tracked wrist turn, not cosmetic palm tilt, reveals the menu',()=>{
+test('rotating a wrist never opens Fieldlink without pressing its button',()=>{
  const tracked=pose(),r=rigFor(tracked),w=new WristComputer();
- advance(w,r,{},0,675);
- assert(!w.requested&&!w.visible);
- const eyeDistance=w.watchDistance;
- assert(eyeDistance>.32&&eyeDistance<.98);
- // Simulate turning the real left forearm toward the eyes, like checking a watch.
+ advance(w,r,{},0,675);assert(!w.requested&&!w.visible);
  const turn=65*Math.PI/180;
  tracked[5]=Math.cos(turn);tracked[6]=Math.sin(turn);
  tracked[9]=-Math.sin(turn);tracked[10]=Math.cos(turn);
  visualLeftPose(r.leftVisualWorld,tracked,equipmentSettings(),1);
  advance(w,r,{},700,1400);
- assert(w.visible&&w.watchFacing>.57,'tracked wrist orientation must activate after dwell');
- assert(w.open>.8);
- assert.equal(w.statusVisible,true);
- assert(w.panel.center.every(Number.isFinite));
- assert(w.panel.width<=.38);
- const distance=Math.hypot(...w.panel.center.map((x,i)=>x-w.status.center[i]));
- assert(distance<.40,'watch menu must remain near the left cuff, not float far above it');
- // Pure cosmetic changes cannot keep a watch open when the actual wrist rolls away.
+ assert(w.watchFacing>.57&&w.watchReady);
+ assert(!w.visible&&!w.requested,'watch turning must NOT open the menu');
+ w.togglePin();advance(w,r,{},1425,1925);
+ assert(w.visible&&w.requested);
+ const delta=w.panel.center.map((x,i)=>x-w.status.center[i]);
+ assert(Math.hypot(...delta)<.56&&delta[1]>.12,'menu must be directly above its cuff');
  tracked[5]=1;tracked[6]=0;tracked[9]=0;tracked[10]=1;
- visualLeftPose(r.leftVisualWorld,tracked,equipmentSettings({vrLeftHandPresentation:'classic'}));
- advance(w,r,{},1425,2075);
- assert(!w.requested&&!w.visible);
+ advance(w,r,{},1950,2550);
+ assert(!w.requested&&!w.visible&&!w.pinned);
 });
 
-test('manual watch access survives glove presentation choices without tracking or right-hand edits',()=>{
- const tracked=pose(),original=Array.from(tracked),r=rigFor(tracked,'classic'),w=new WristComputer();
+test('explicit watch button survives glove choice without changing controller poses',()=>{
+ const tracked=pose(),r=rigFor(tracked,'classic'),w=new WristComputer();
  const rightRay=matIdentity(),savedRight=Array.from(rightRay);
- advance(w,r,{vrWristActivation:'manual'},0,650);
- assert(!w.visible);
- assert(w.canToggle(r,{vrWristActivation:'manual'}));
- w.togglePin();
- advance(w,r,{vrWristActivation:'manual'},675,1225);
+ advance(w,r,{},0,650);assert(!w.visible);
+ const turn=65*Math.PI/180;
+ tracked[5]=Math.cos(turn);tracked[6]=Math.sin(turn);
+ tracked[9]=-Math.sin(turn);tracked[10]=Math.cos(turn);
+ advance(w,r,{},675,750);
+ assert(w.canToggle(r,{}));
+ const original=Array.from(tracked);
+ w.togglePin();advance(w,r,{},775,1225);
  assert(w.visible&&w.pinned);
  assert.deepEqual(Array.from(tracked),original);
  assert.deepEqual(Array.from(rightRay),savedRight);

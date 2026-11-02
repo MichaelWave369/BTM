@@ -15,6 +15,13 @@ export function stepImmersive(game, spatial, pad, settings, dt, {map = () => {},
  const input = rig.prepare(game, pose, pad, settings, dt, playing, () => {
   target = playing ? spatial.pointerTarget?.(pad) : null;
   rig.uiCaptured = !!target || !!rig.uiCaptured && !immersivePadNeutral(pad);
+  // Resume held walking when the watch is closed and fire/abilities have
+  // been released. No phantom menu may strand the movement stick.
+  if(rig.uiWristOpen)rig.wristRearm=true;
+  else if(rig.wristRearm&&!pad?.fire&&!pad?.firePressed&&!pad?.pointerPressed&&
+          !(pad?.charge>0)&&pad?.alternate==null&&!pad?.actions?.length){
+   rig.uiCaptured=!!target;rig.wristRearm=false;
+  }
   captured = rig.uiCaptured;
   return captured;
  });
@@ -26,6 +33,9 @@ export function stepImmersive(game, spatial, pad, settings, dt, {map = () => {},
   pad = null;
  }
  if (game.mode !== 'playing') { rig.finish(game, pose, false); return {updated: false}; }
+ // The watch itself is a deliberate tactical pause. Controls stay clickable
+ // while enemies, projectiles, timers and damage stop advancing.
+ if(rig.uiWristOpen){game.bufferedFire=null;game.charge=0;return {updated:false,uiCaptured:true,wristPaused:true};}
  game.charge = pad?.charge || 0;
  input.fire = !!pad?.fire;
  game.update(dt, input); rig.finish(game, pose, game.mode === 'playing');

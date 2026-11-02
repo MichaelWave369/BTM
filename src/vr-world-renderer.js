@@ -24,17 +24,14 @@ export class VRWorldRenderer {
  interfaceTarget(pose,rig,game,now=performance.now(),pad=null){
   const ui=this.ui;ui.cursor=null;rig.uiPointer=null;
   ui.placeWrist(rig,rig.settings||{},now);
-  // Left grip is still Ori in combat. Only redirect an intentional grip tap
-  // while the left cuff is raised in front of the headset (or already pinned).
-  if(pad?.actions?.includes('ori')&&ui.wrist.canToggle(rig,rig.settings)){
-   ui.wrist.togglePin();ui.placeWrist(rig,rig.settings||{},now);
-   ui.lastPaint=-Infinity;return ui.blocker;
-  }
+  // Left grip always remains Ori. Only right-trigger on the small watch
+  // face can open or close the larger Fieldlink interface.
+  rig.uiWristOpen=ui.wrist.requested;
   // A visible menu owns gameplay input, even if the right ray briefly misses
   // a tiny button or leaves the panel. No accidental shots behind the menu.
   if(!pose.rightRay)return ui.wrist.requested?ui.blocker:null;
   matMultiply(this.rayWorld,rig.root,pose.rightRay);let selected=null,panel=null;
-  for(const candidate of [ui.wristPanel,ui.statusPanel]){if(!candidate)continue;const hit=hitPanel(this.rayWorld,candidate);if(hit&&(!selected||hit.distance<selected.distance)){selected=hit;panel=candidate;}}
+  for(const candidate of [ui.wristPanel,ui.wrist.watchReady?ui.statusPanel:null]){if(!candidate)continue;const hit=hitPanel(this.rayWorld,candidate);if(hit&&(!selected||hit.distance<selected.distance)){selected=hit;panel=candidate;}}
   if(!selected)return ui.wrist.requested?ui.blocker:null;
   const origin={x:this.rayWorld[12]/WORLD_SCALE,y:this.rayWorld[14]/WORLD_SCALE,height:this.rayWorld[13]/WORLD_SCALE},direction={x:-this.rayWorld[8],y:-this.rayWorld[10],z:-this.rayWorld[9]},wall=traceEnvironment(game.level,origin,direction,selected.distance/WORLD_SCALE);
   if(wall.distance*WORLD_SCALE<selected.distance-.04)return ui.wrist.requested?ui.blocker:null;
@@ -43,7 +40,7 @@ export class VRWorldRenderer {
   // Show the ray/cursor while the menu is animating, but block a click until
   // the opening safety guard expires. This preserves aim feedback in both eyes.
   if(ui.wrist.guard)return ui.blocker;
-  if(panel===ui.statusPanel)return ui.statusTarget;
+  if(panel===ui.statusPanel)return selected.u>=.50&&selected.v>=.70&&selected.v<=.97?ui.statusTarget:null;
   return ui.wrist.open>.8?(ui.targetAt(selected)||ui.blocker):ui.blocker;
  }
  renderWorld(views,game,rig,dt,data,framebuffer=null){

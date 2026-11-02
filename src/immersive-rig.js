@@ -14,7 +14,7 @@ export class ImmersiveRig {
   this.root=matIdentity();this.inverse=matIdentity();this.rightWorld=matIdentity();this.weaponWorld=matIdentity();this.equipmentEpoch=0;this.rightGripWorld=matIdentity();this.leftWorld=matIdentity();this.leftVisualWorld=matIdentity();this.hasVisualLeft=false;this.headWorld=matIdentity();this.level=null;this.calibrated=false;this.snapReady=true;this.fade=0;this.blocked=false;this.eye=[0,0,0];this.menuPosition={x:0,y:0};
   this.input={moveForward:0,moveStrafe:0,sprint:false,fire:false,deferFire:true,afterMovement:()=>this.finish(this.game,this.pose,this.game.mode==='playing')};
  }
- recenter(){this.equipmentEpoch++;this.uiCaptured=false;this.calibrated=false;this.snapReady=false;this.fade=.18;}
+ recenter(){this.equipmentEpoch++;this.uiCaptured=false;this.uiWristOpen=false;this.wristRearm=false;this.calibrated=false;this.snapReady=false;this.fade=.18;}
  calibrate(game,pose){this.equipmentEpoch++;this.yaw=directionAngle(pose.head)-game.player.a;this.headBase=pose.head[13];this.lastX=pose.head[12];this.lastZ=pose.head[14];this.calibrated=true;this.level=game.level;this.menuActive=false;this.menuPosition={x:game.player.x,y:game.player.y};this.fade=.18;}
  prepare(game,pose,pad,settings={},dt=.014,playing=true,beforeInput=null){
   this.game=game;this.pose=pose;this.settings=immersiveSettings(settings);settings=this.settings;this.fade=Math.max(0,this.fade-dt);this.trackingJump=false;
