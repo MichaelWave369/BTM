@@ -19,3 +19,8 @@ This focused change responds to three screenshots from a **physical Quest 3 imme
 6. Check **Classic** posture setting and return to **Palm Up / Watch Ready**. Compare cosmetics without losing calibrations or affecting your original/Pit save data.
 
 Automated tests cover pose isolation, real tracked roll gating, transition math, independent right hand, and panel proximity. They cannot determine whether a physical Quest controller's grip basis matches every user's comfortable wrist roll; that remains a human field test. Report a screenshot from neutral hand and watch-open hand after merge before signing off #16.
+
+
+## Update: explicit watch button (2026-11-02)
+
+The old automatic 350 ms watch-check summon and left-grip pin path are superseded. The small status watch now shows a distinct OPEN MENU button. Turn the cuff toward your eyes, aim the right ray at that button, and press the right trigger. The menu appears immediately above the wrist without connecting lines and operates as a tactical pause. It closes by pressing CLOSE MENU, tapping the watch again, or lowering/turning away. Left grip is Ori, never an accidental menu summon. Earlier sections above document the older behavior and are retained as design history; follow [the current field test](quest3-wrist-button-acceptance.md) for acceptance.
