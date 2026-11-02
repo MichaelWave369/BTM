@@ -67,6 +67,15 @@ try{
  assert.equal(await page.locator('#title-screen').isVisible(),true);
  let after=await page.evaluate(ks=>ks.map(k=>localStorage.getItem(k)),keys);
  assert.deepEqual(after,before,'a Trophy Room visit must not write any save, achievement or private record');
+ // Real BBS lobby should link directly into the Trophy Room on the same origin
+ // without requiring a running LAN node or silently granting competitive stats.
+ await page.goto('http://127.0.0.1:5184/bbs.html');
+ await page.locator('a[href="./#trophy-room"]').click();
+ await page.waitForFunction(()=>!document.querySelector('#trophy-screen')?.hidden);
+ assert.equal(await page.locator('#trophy-screen').isVisible(),true,'BBS doorway opens actual cabinet');
+ assert.match(await page.locator('.trophy-network').textContent(),/not online ranks/);
+ await page.locator('#trophy-back').click();
+ assert.equal(await page.locator('#title-screen').isVisible(),true);
  // During a real paused campaign, returning from the room must remain paused.
  await page.locator('#start-btn').click();
  await page.waitForFunction(()=>document.querySelector('#objective')?.textContent.includes('BREAK CONTROL'));
@@ -85,7 +94,7 @@ try{
  assert.equal(await page.locator('#overlay').isHidden(),true);
  assert.deepEqual(errors,[],'no game page errors');
  const report={passed:true,medals:12,earned:3,wingCounts:true,privacyVerified:true,
-  responsiveCabinetScreens:screens,mainAndPauseNavigation:true,
+  responsiveCabinetScreens:screens,mainAndPauseNavigation:true,bbsDoorway:true,
   savedSlotsBitwiseUnchanged:true,pageErrors:errors,
   method:'Production Chromium, real DOM and native validated campaign/Pit snapshots. Archive and gallery seeded from real schema in test-only browser fixture. Visited cabinet, collected actual compositor pixels, navigated Ledger return, paused real game and checked save bytes. No test-only gameplay overrides or fake online leaderboard.'};
  await writeFile(out+'/trophy-browser.json',JSON.stringify(report,null,2)+'\n');
