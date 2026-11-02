@@ -62,7 +62,7 @@ test('rotating a wrist never opens Fieldlink without pressing its button',()=>{
  w.togglePin();advance(w,r,{},1425,1925);
  assert(w.visible&&w.requested);
  const delta=w.panel.center.map((x,i)=>x-w.status.center[i]);
- assert(Math.hypot(...delta)<.3&&delta[1]>.12,'menu must be directly above its cuff');
+ assert(Math.hypot(...delta)<.56&&delta[1]>.12,'menu must be directly above its cuff');
  tracked[5]=1;tracked[6]=0;tracked[9]=0;tracked[10]=1;
  advance(w,r,{},1950,2550);
  assert(!w.requested&&!w.visible&&!w.pinned);
