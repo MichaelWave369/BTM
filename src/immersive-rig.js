@@ -47,7 +47,16 @@ export class ImmersiveRig {
   const x=body.x*WORLD_SCALE-(c*head[12]+s*head[14]),z=body.y*WORLD_SCALE-(-s*head[12]+c*head[14]),y=height-head[13];
   rigidY(this.root,this.yaw,x,y,z);inverseRigidY(this.inverse,this.yaw,x,y,z);transformPoint(this.eye,this.root,head[12],head[13],head[14]);matMultiply(this.headWorld,this.root,head);
   this.headAngle=directionAngle(head,this.yaw);this.head={x:body.x,y:body.y,height:height/WORLD_SCALE,angle:this.headAngle};this.aim=null;this.hasLeft=!!pose.leftGrip;this.hasVisualLeft=false;this.hasRightGrip=!!(pose.rightGrip||pose.rightRay);
-  if(pose.leftGrip){matMultiply(this.leftWorld,this.root,pose.leftGrip);this.clipGrip(game,this.leftWorld);visualLeftPose(this.leftVisualWorld,this.leftWorld,settings);this.hasVisualLeft=true;}
+  if(pose.leftGrip){
+   matMultiply(this.leftWorld,this.root,pose.leftGrip);this.clipGrip(game,this.leftWorld);
+   // Measure the WATCH turn from real tracking. The rest-palm model changes
+   // only the rendered glove; no matrix for combat, Ori or UI input is moved.
+   const wrist=this.leftWorld,dx=this.eye[0]-wrist[12],dy=this.eye[1]-wrist[13],dz=this.eye[2]-wrist[14];
+   const near=Math.max(.001,Math.hypot(dx,dy,dz));
+   const facing=(wrist[4]*dx+wrist[5]*dy+wrist[6]*dz)/near;
+   const blend=wrist[13]>=this.eye[1]-.39?clamp((facing-.45)/.32,0,1):0;
+   visualLeftPose(this.leftVisualWorld,wrist,settings,blend);this.hasVisualLeft=true;
+  }
   if(this.hasRightGrip){matMultiply(this.rightGripWorld,this.root,pose.rightGrip||pose.rightRay);this.clipGrip(game,this.rightGripWorld);}
   if(pose.rightRay){
    matMultiply(this.rightWorld,this.root,pose.rightRay);

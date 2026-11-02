@@ -4,10 +4,15 @@
  * Rotations are local to the tracked grip, applied without allocations.
  */
 const radians = n => (Number.isFinite(n)?n:0)*Math.PI/180;
-export function visualLeftPose(out,tracked,settings={}){
+export function visualLeftPose(out,tracked,settings={},watchBlend=0){
  if(!out||!tracked||out.length!==16||tracked.length!==16)throw Error('Expected 4x4 poses');
  if(out!==tracked)out.set(tracked);
- const pitch=radians(settings.vrLeftHandPitch??20);
+ // In normal combat the left fingers gently rise and show the palm instead
+ // of mimicking the right gun grip. As a real watch-check rotation approaches,
+ // blend away this *cosmetic* rest offset so the glove stays aligned with its
+ // wrist computer. Neither change touches the tracked Touch grip matrix.
+ const wristBlend=Math.max(0,Math.min(1,Number.isFinite(watchBlend)?watchBlend:0));
+ const pitch=radians((settings.vrLeftHandPitch??20)+(settings.vrLeftHandPresentation==='palm'?35*(1-wristBlend):0));
  const yaw=radians(settings.vrLeftHandYaw??0);
  const roll=radians(settings.vrLeftHandRoll??0);
  if(pitch){

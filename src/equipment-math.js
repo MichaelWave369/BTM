@@ -1,10 +1,10 @@
 import {WORLD_SCALE,entityHeight} from './spatial.js';
 // Meter-based equipment layout and sanitized optional settings. No simulation writes.
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-export const EQUIPMENT_DEFAULTS=Object.freeze({captions:true,spokenDialogue:false,speechVolume:.7,vrHandStyle:'combat',vrWristSize:.36,vrWristOffset:.065,vrWristActivation:'gaze',vrWristSensitivity:.4,vrHudVisible:true,vrHologramBrightness:.85,vrSubtitleSize:1,vrSubtitleMode:'comfort',vrSubtitleDuration:1,vrGripX:0,vrGripY:0,vrGripZ:0,vrLeftHandPitch:20,vrLeftHandYaw:0,vrLeftHandRoll:0,vrWristTopOffset:.03,vrOriScale:.65,vrOriPeripheral:true,vrInterfaceMotion:true});
+export const EQUIPMENT_DEFAULTS=Object.freeze({captions:true,spokenDialogue:false,speechVolume:.7,vrHandStyle:'combat',vrLeftHandPresentation:'palm',vrWristSize:.36,vrWristOffset:.065,vrWristActivation:'gaze',vrWristSensitivity:.4,vrHudVisible:true,vrHologramBrightness:.85,vrSubtitleSize:1,vrSubtitleMode:'comfort',vrSubtitleDuration:1,vrGripX:0,vrGripY:0,vrGripZ:0,vrLeftHandPitch:20,vrLeftHandYaw:0,vrLeftHandRoll:0,vrWristTopOffset:.03,vrOriScale:.65,vrOriPeripheral:true,vrInterfaceMotion:true});
 export function equipmentSettings(s={}){
  const out={...EQUIPMENT_DEFAULTS};
- for(const [key,options]of Object.entries({vrHandStyle:['combat','neon','tactical'],vrWristActivation:['gaze','raised','manual'],vrSubtitleMode:['comfort','ori']}))if(options.includes(s[key]))out[key]=s[key];
+ for(const [key,options]of Object.entries({vrHandStyle:['combat','neon','tactical'],vrLeftHandPresentation:['palm','classic'],vrWristActivation:['gaze','raised','manual'],vrSubtitleMode:['comfort','ori']}))if(options.includes(s[key]))out[key]=s[key];
  for(const [key,min,max]of [['speechVolume',0,1],['vrWristSize',.24,.38],['vrWristOffset',.035,.10],['vrWristSensitivity',.35,.8],['vrHologramBrightness',.4,1.1],['vrSubtitleSize',.8,1.3],['vrSubtitleDuration',.75,2],['vrGripX',-.04,.04],['vrGripY',-.04,.04],['vrGripZ',-.04,.04],['vrLeftHandPitch',-65,65],['vrLeftHandYaw',-65,65],['vrLeftHandRoll',-90,90],['vrWristTopOffset',0,.08],['vrOriScale',.4,1]])if(Number.isFinite(s[key]))out[key]=clamp(s[key],min,max);
  for(const key of ['captions','spokenDialogue','vrHudVisible','vrInterfaceMotion','vrOriPeripheral'])if(typeof s[key]==='boolean')out[key]=s[key];return out;
 }
@@ -18,7 +18,7 @@ export class WristComputer{
   this.open=0;this.pinned=false;this.last=-1;this.attentionSince=-1;this.lostSince=-1;
   this.guardUntil=0;this.requested=false;this.guard=false;this.visible=false;this.statusVisible=false;
   this.suppressAutoUntilLower=false;this.watchFacing=0;this.watchGaze=0;this.watchDistance=0;
-  this.watchRaised=false;this.watchReady=false;
+  this.watchRaised=false;this.watchReady=false;this.trackedWrist=[0,0,0];
  }
  // A tap on the cuff, or a left grip with the wrist raised in front of the
  // headset, deliberately pins/unpins the expanded menu. Unpinning must not
@@ -59,6 +59,10 @@ export class WristComputer{
    status.normal[i]=visual[4+i];
    this.toEye[i]=eye[i]-status.center[i];
   }
+  // All activation/roll measurements use the actual tracked wrist point,
+  // not the cosmetic open-palm rotation of leftVisualWorld.
+  at(this.trackedWrist,tracked,0,.0415+s.vrWristTopOffset,.115);
+  for(let i=0;i<3;i++)this.toEye[i]=eye[i]-this.trackedWrist[i];
   const d=Math.hypot(...this.toEye)||1;
   this.watchDistance=d;
   normal(this.toEye);
@@ -106,12 +110,13 @@ export class WristComputer{
    for(let i=0;i<3;i++)
     p.center[i]=eye[i]-head[8+i]*.78-head[i]*.18+head[4+i]*.13;
   }else{
-   // The expanded hologram grows from above/in front of the left cuff.
+   // A compact watch tray sits just beyond the cuff rather than floating a
+   // quarter meter above the arm. Only visibility bounds may adjust it.
    // Keep a predictable small wrist offset; never compute a huge "lift" that
    // ejects the display above the player's view on different Touch poses.
    for(let i=0;i<3;i++)
-    p.center[i]=status.center[i]-head[8+i]*.065+
-     head[4+i]*(.11+p.height*.5+s.vrWristTopOffset);
+    p.center[i]=status.center[i]-head[8+i]*.055+
+     head[4+i]*(.045+p.height*.5+s.vrWristTopOffset);
    // Fit the *whole* screen into binocular view by clamping angular offsets
    // rather than hiding it when a corner leaves one eye's frustum.
    const dx=[p.center[0]-eye[0],p.center[1]-eye[1],p.center[2]-eye[2]];
