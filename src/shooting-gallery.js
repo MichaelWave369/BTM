@@ -16,8 +16,6 @@ export function galleryResult(gallery){
   accuracy:pct(hits,shots),score:cleanInt(gallery?.score)};
 }
 export function storeGalleryResult(storage,result){
- const r=galleryResult(result);
- // galleryResult normally expects session fields, not a stored result object.
  const entry={drill:'signal-60',seconds:GALLERY_DURATION,
   shots:cleanInt(result?.shots),hits:cleanInt(result?.hits),
   accuracy:pct(cleanInt(result?.hits),cleanInt(result?.shots)),
@@ -44,7 +42,7 @@ export function storeGalleryResult(storage,result){
 }
 function target(slot){
  const [x,y]=LANES[slot];
- return {id:'gallery-'+slot,galleryTarget:true,gallerySlot:slot,
+ return {id:'gallery-'+slot,galleryTarget:true,gallerySlot:slot,label:'PRACTICE UNIT',
   type:'enforcer',human:false,x,y,homeX:x,homeY:y,
   hp:1,maxHp:1,dead:false,state:'patrol',speed:0,damage:0,
   range:0,delay:999,cooldown:999,tell:0,stun:0,flash:0,
