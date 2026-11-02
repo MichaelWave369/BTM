@@ -99,8 +99,15 @@ try{
  assert.equal(new URL(page.url()).pathname,'/','BBS doorway loads the solo app');
  assert.equal(await page.locator('#trophy-screen').isVisible(),true,'BBS doorway opens actual cabinet');
  assert.match(await page.locator('.trophy-network').textContent(),/not online ranks/);
- await page.locator('#trophy-back').click();
- assert.equal(await page.locator('#title-screen').isVisible(),true);
+ // The accelerated title background sometimes never satisfies Playwright's
+ // mouse-pointer "stable" heuristic after a full BBS -> title navigation.
+ // Activate the *actual focused button* with a trusted keyboard event, as a
+ // Quest/keyboard player can. Do not navigate directly or invoke its handler.
+ await page.locator('#trophy-back').focus();
+ assert.equal(await page.evaluate(()=>document.activeElement?.id),'trophy-back');
+ await page.keyboard.press('Enter');
+ await page.locator('#title-screen').waitFor({state:'visible',timeout:20000});
+ assert.equal(await page.locator('#trophy-screen').isHidden(),true);
  // During a real paused campaign, returning from the room must remain paused.
  await page.locator('#start-btn').click();
  await page.waitForFunction(()=>document.querySelector('#objective')?.textContent.includes('BREAK CONTROL'));
