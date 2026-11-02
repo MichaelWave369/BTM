@@ -85,6 +85,7 @@ jobs:
           BTM_ARENA=kill-switch node scripts/verify-network-browser.mjs
           node scripts/verify-control-browser.mjs
           node scripts/verify-bot-browser.mjs
+          node scripts/verify-offline-bots-browser.mjs
       - name: Preserve public arena reports and stereo captures
         if: always()
         uses: actions/upload-artifact@v4
