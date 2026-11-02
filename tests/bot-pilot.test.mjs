@@ -86,3 +86,15 @@ test('a room without any connected real humans stops bot-only competition and sc
  assert.deepEqual(room.teamScore,prev.score);
  assert.equal(room.actors.get(bot.id).connected,true);
 });
+
+test('disconnecting the only human never makes a PHI BOT the SYSOP',()=>{
+ const {room,human,bot}=fixture('coop');
+ const original=room.owner;
+ room.disconnect(human.id);
+ assert.equal(room.owner,original,'bot must not inherit room ownership');
+ assert.notEqual(room.owner,bot.id);
+ room.reconnect(human);
+ assert.equal(room.owner,human.id);
+ const stranger=room.addBot?.bind(room);
+ assert.equal(typeof stranger,'function');
+});
