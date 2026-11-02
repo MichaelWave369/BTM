@@ -24,12 +24,12 @@ function styleColors(style){return style==='neon'?{body:rgb('#192038'),trim:C.ed
 export function handMesh(side='left',style='combat',pose='relaxed',detail=8){
  const key='hand:'+side+':'+style+':'+pose+':'+detail;if(cache.has(key))return cache.get(key);const b=new MeshBuilder(),s=side==='left'?1:-1,p=styleColors(style),curl=pose==='grip'?.85:pose==='point'?.18:pose==='palm'?.055:.4;
  // Palm and overlapping sleeve connect every finger to the forearm coupling.
- b.box([0,-.002,.002],[.076,.031,.087],C.rubber);b.box([0,.012,.005],[.066,.021,.071],p.body);b.box([0,.025,.008],[.043,.008,.049],p.trim);
+ b.box([0,-.002,.002],[.076,.031,.087],C.rubber);b.box([0,.012,.005],[.066,.021,.071],p.body);b.box([0,.025,.008],[.043,.008,.049],pose==='palm'?C.rubber:p.trim);
  // The left watch hand has real palm-side pads and open, near-straight
  // fingers. Unlike the weapon hand it is not a clenched trigger grip.
  if(side==='left'&&pose==='palm'){
-  b.box([0,-.021,-.004],[.058,.006,.056],p.trim,false,.35);
-  for(let i=0;i<4;i++)b.box([-.027+i*.018,-.011,-.046],[.013,.004,.017],C.rubber,false,.3);
+  b.box([0,.031,-.004],[.053,.004,.056],p.trim,false,.35);
+  for(let i=0;i<4;i++)b.box([-.027+i*.018,.028,-.046],[.013,.004,.017],p.second,false,.3);
  }
  b.box([0,-.002,.064],[.071,.043,.055],C.rubber,false,.6);b.box([0,0,.108],[.079,.048,.077],p.body,false,.6);b.tube([0,0,.139],[0,0,.158],[.0425,.0265],[.033,.0185],p.trim,false,detail);b.box([0,.029,.097],[.071,.014,.057],p.trim);b.box([0,.037,.097],[.061,.006,.045],C.rubber);
  for(const x of [-.032,.032])b.box([x,.024,.102],[.004,.005,.057],p.accent,true);for(let i=0;i<3;i++)b.box([-.012+i*.012,.028,.018],[.005,.003,.023],p.second,true);
