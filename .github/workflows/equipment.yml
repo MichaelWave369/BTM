@@ -56,6 +56,12 @@ jobs:
           BTM_SOFTWARE_WEBGL: '1'
           BTM_GALLERY_OUTPUT: docs/equipment/ci/gallery
         run: node scripts/verify-gallery-browser.mjs
+      - name: Real Trophy Room cabinet, local achievements and save-isolation proof
+        env:
+          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
+          BTM_SOFTWARE_WEBGL: '1'
+          BTM_TROPHY_OUTPUT: docs/equipment/ci/trophy
+        run: node scripts/verify-trophy-browser.mjs
       - name: Twelve Pit trials, isolated saves, production captures and offline resume
         env:
           BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
