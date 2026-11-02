@@ -7,7 +7,10 @@ const radians = n => (Number.isFinite(n)?n:0)*Math.PI/180;
 export function visualLeftPose(out,tracked,settings={}){
  if(!out||!tracked||out.length!==16||tracked.length!==16)throw Error('Expected 4x4 poses');
  if(out!==tracked)out.set(tracked);
- const pitch=radians(settings.vrLeftHandPitch??20);
+ // Correct the visual-only Quest Touch gun-grip posture into a relaxed,
+ // palm-presenting left hand. The player's calibrated pitch still applies;
+ // 'classic' restores its original appearance without moving tracked input.
+ const pitch=radians((settings.vrLeftHandPitch??20)+(settings.vrLeftHandPresentation==='palm'?-45:0));
  const yaw=radians(settings.vrLeftHandYaw??0);
  const roll=radians(settings.vrLeftHandRoll??0);
  if(pitch){
