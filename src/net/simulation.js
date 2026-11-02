@@ -80,8 +80,8 @@ class SharedWorld extends Game{
  }
 }
 export class Room{
- constructor({code,mode='deathmatch',arena='no-carrier',limit=10,capacity=2,finaleEnabled=true}){
-  this.finaleEnabled=finaleEnabled;this.raid=null;this.control=null;this.code=code;this.mode=mode;this.arena=arena;this.limit=limit;this.capacity=capacity;this.competitive=mode!=='coop';this.actors=new Map();this.owner=null;this.state='lobby';this.tick=0;this.elapsed=0;this.revision=0;this.eventId=0;this.events=[];this.stage=0;this.receipts=[];this.teamScore={cyan:0,pink:0};this.round=1;this.dirty=false;this.game=new SharedWorld(this);this.game.events=[];
+ constructor({code,mode='deathmatch',arena='no-carrier',limit=10,capacity=2,finaleEnabled=true,localBots=false}){
+  this.localBots=!!localBots;this.finaleEnabled=finaleEnabled;this.raid=null;this.control=null;this.code=code;this.mode=mode;this.arena=arena;this.limit=limit;this.capacity=capacity;this.competitive=mode!=='coop';this.actors=new Map();this.owner=null;this.state='lobby';this.tick=0;this.elapsed=0;this.revision=0;this.eventId=0;this.events=[];this.stage=0;this.receipts=[];this.teamScore={cyan:0,pink:0};this.round=1;this.dirty=false;this.game=new SharedWorld(this);this.game.events=[];
  }
  addBot(token){
   if(this.state!=='lobby'||this.started||this.actors.size>=this.capacity)throw Error('Bots may only fill lobby slots');
@@ -121,7 +121,7 @@ export class Room{
  }
  load(carry=true){
   const g=this.game;this.state='playing';this.result=null;this.revision++;g.events=[];g.projectiles=[];g.mode='playing';g.energyMode='survival';g.unlocked=6;g.totalArtifacts??=0;
-  if(this.competitive){const a=createArena(this.arena);this._definition=a.definition;g.campaign='original';g.levelIndex=0;g.level=a.level;g.time=0;this.spawns=a.spawns;this.control=this.mode==='control'?freshControlState(this.arena,g.level):null;if(this.control){const z=controlZone(this.control);g.level.raidNodes=[{x:z.x,y:z.y,active:false}];}}
+  if(this.competitive){const a=createArena(this.arena,this.localBots?12:8);this._definition=a.definition;g.campaign='original';g.levelIndex=0;g.level=a.level;g.time=0;this.spawns=a.spawns;this.control=this.mode==='control'?freshControlState(this.arena,g.level):null;if(this.control){const z=controlZone(this.control);g.level.raidNodes=[{x:z.x,y:z.y,active:false}];}}
   else{const d=STAGES[this.stage];this._definition=null;g.campaign=d.campaign;g.loadLevel(d.index,false);g.unlocked=6;g.level.items.forEach(i=>{if(i.type==='energy'){i.remaining=45*this.partySize;i.claims={};}});for(const e of g.level.enemies){e.hp=e.maxHp=Math.round(e.maxHp*(1+.45*(this.partySize-1))/Math.sqrt(d.campaign==='original'&&d.index>=6?g.definition.difficulty||1:1));e.damage*=1+.12*(this.partySize-1);}if(d.campaign==='original'&&d.index>=6)this.addSquadCaches();this.spawns=this.coopSpawns(g.definition.spawn);}
   let i=0;for(const a of this.actors.values())this.spawn(a,i++,carry&&!this.competitive);
   g.player=this.actors.values().next().value.player;g.resetFeel();g.mode='playing';g.events=[];this.stageStart=this.checkpoint(false);this.dirty=true;

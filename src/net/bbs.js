@@ -1,5 +1,6 @@
 import {endpoint,nickname,roomCode} from './protocol.js';
 import {NetworkClient,NetworkView} from './client.js';
+import {OfflineBotClient} from './offline-client.js';
 import {WEAPONS,clamp} from '../core.js';import{Renderer}from'../renderer.js';import{AudioEngine}from'../audio.js';
 import{VRArcade}from'../vr.js';import{stepImmersive}from'../immersive-play.js';import{IMMERSIVE_DEFAULTS,immersiveSettings}from'../immersive-rig.js';
 import{GamepadInput,ControllerMenu,controllerSettings,controllerActions,gameplayInput}from'../gamepad.js';import{Communications}from'../communications.js';import{PointerCapture,keyCode}from'../controls.js';import{destinationFor}from'../genewrist-bridge.js';
@@ -11,7 +12,9 @@ let statusText='',dialogue='',alert='',dialogueUntil=0,alertUntil=0,mapOpen=fals
 const keys=new Set(),logs=[];try{session=JSON.parse(sessionStorage.getItem('mwave-bbs-session-v1')||'null');}catch{}
 function log(text){logs.push(text);if(logs.length>50)logs.shift();$('log').textContent=logs.join('\n');$('log').scrollTop=$('log').scrollHeight;}
 function status(text){statusText=text;$('connection-status').textContent=text;}
-const net=new NetworkClient({onStatus:status,onMessage:message}),game=new NetworkView(net),controller=new GamepadInput();
+const soloBots=location.hash==='#solo-bots';
+const net=soloBots?new OfflineBotClient({onStatus:status,onMessage:message}):new NetworkClient({onStatus:status,onMessage:message});
+const game=new NetworkView(net),controller=new GamepadInput();
 const capture=new PointerCapture({request:()=>canvas.requestPointerLock?.(),onLost:()=>{if(game.inputEnabled)pause();}});
 const menu=new ControllerMenu({root:()=>document.querySelector('#bbs-app'),back:()=>game.inputEnabled?pause():resume(),resume:()=>game.inputEnabled?pause():resume()});
 const vr=new VRArcade({settings:()=>settings,onStatus:text=>$('vr-status').textContent=text,onStart:()=>{if(frameId)cancelAnimationFrame(frameId);frameId=0;clear();$('exit-vr').hidden=false;},onEnd:()=>{clear();pause();$('exit-vr').hidden=true;last=performance.now();if(!frameId)frameId=requestAnimationFrame(frame);},onPause:pause,onFrame:tick,data:()=>({game,scene:canvas,assets:renderer.assets,settings,map:mapOpen,screen:game.inputEnabled?'':game.netState?.state==='lobby'?'title-screen':'pause-screen',items:game.inputEnabled?[]:menu.items(),focused:document.activeElement,dialogue:performance.now()<dialogueUntil?dialogue:'',alert:performance.now()<alertUntil?alert:'',communications:comms.log,activate:vrAction})});
@@ -24,7 +27,7 @@ async function vrAction(action,element){if(action==='focus'){menu.focus(element)
 function message(m){
  if(m.type==='error'){log('NODE / '+m.message);status('NODE / '+m.message);if(reconnecting&&!resumeFallback&&m.message==='Room not found'){resumeFallback=true;net.send({type:'resume',nickname:$('nickname').value,code:session.code,token:session.token});}return;}
  if(m.type==='saved'){log('CO-OP CHECKPOINT SAVED BY HOST');saveResolve?.();return;}
- if(m.type==='welcome'){session={address:net.address,code:m.code,token:m.token,nickname:$('nickname').value};try{sessionStorage.setItem('mwave-bbs-session-v1',JSON.stringify(session));}catch{}$('room-code').value=m.code;log((m.reconnected?'SIGNAL RESTORED / ':'JOINED / ')+m.code+' / '+m.id);reconnecting=false;status('CARRIER LOCKED / '+m.code+' / '+m.id);}
+ if(m.type==='welcome'){if(!soloBots){session={address:net.address,code:m.code,token:m.token,nickname:$('nickname').value};try{sessionStorage.setItem('mwave-bbs-session-v1',JSON.stringify(session));}catch{}}$('room-code').value=m.code;log((m.reconnected?'SIGNAL RESTORED / ':'JOINED / ')+m.code+' / '+m.id);reconnecting=false;status('CARRIER LOCKED / '+m.code+' / '+m.id);}
  if(m.type==='disconnected'){pause();log('NO CARRIER / YOUR HOST RETAINS THE AVATAR');renderStatus();return;}
  if(m.type==='left'){game.netState=null;game.suspend();previousState='';log('LEFT THE ROOM');renderStatus();return;}
  game.accept(m);
@@ -39,10 +42,10 @@ function renderStatus(){
  document.body.classList.toggle('in-match',game.inputEnabled);
  const s=game.netState,connected=net.connected,joined=connected&&!!net.id&&!!s;$('connect-btn').disabled=connected;$('disconnect-btn').disabled=!connected;for(const id of ['create-btn','join-btn'])$(id).disabled=!connected||joined;$('reconnect-btn').disabled=!session||joined;$('export-pass').disabled=!session;
  $('resume-play-btn').hidden=!joined||s.state!=='playing'||game.inputEnabled;
- $('ready-btn').disabled=!joined||s.state!=='lobby';$('leave-btn').disabled=!joined;$('lobby-btn').hidden=!joined||['lobby','suspended'].includes(s.state)||s.owner!==net.id;$('lobby-btn').textContent=s?.mode==='coop'?'SAVE / SUSPEND SQUAD':'RETURN TO LOBBY';
+ $('ready-btn').disabled=!joined||s.state!=='lobby';$('leave-btn').disabled=!joined;$('lobby-btn').hidden=!joined||['lobby','suspended'].includes(s.state)||s.owner!==net.id;$('lobby-btn').textContent=soloBots?'RETURN TO SOLO SETUP':s?.mode==='coop'?'SAVE / SUSPEND SQUAD':'RETURN TO LOBBY';
  const me=s?.roster.find(a=>a.id===net.id);$('ready-btn').textContent=me?.ready?'UNREADY':'READY';$('start-btn').textContent=s?.state==='suspended'?'RESUME CO-OP SESSION':'START MATCH';$('start-btn').disabled=!joined||s.owner!==net.id||(s.state==='suspended'?false:s.state!=='lobby'||s.roster.filter(a=>a.connected).length<2||s.roster.some(a=>a.connected&&!a.ready));
  $('room-title').textContent=s?net.code+' / '+(s.mode==='coop'?'CO-OP STORY':s.mode.toUpperCase()):'WAITING FOR CARRIER';$('room-badge').textContent=s?s.roster.filter(a=>a.connected).length+' / '+s.capacity+' CONNECTED':'OFFLINE';
- $('room-state').textContent=s?(s.raid?'THE FINAL FREQUENCY / '+s.raid.state.toUpperCase():s.mode==='coop'?'STAGE '+(s.stage+1)+' / 24 · '+game.definition.name:s.mode==='control'?'CONTROL ZONE '+((s.control?.zone?.index??0)+1)+' / '+s.arena.toUpperCase().replaceAll('-',' '):'ARENA / '+s.arena.toUpperCase().replaceAll('-',' '))+' · '+s.state.toUpperCase()+' · '+(s.owner===net.id?'YOU ARE SYSOP':'SYSOP: '+(s.roster.find(a=>a.id===s.owner)?.nickname||'RECONNECTING')):'Connect to a running node, then create or join a room.';
+ $('room-state').textContent=s?(s.raid?'THE FINAL FREQUENCY / '+s.raid.state.toUpperCase():s.mode==='coop'?'STAGE '+(s.stage+1)+' / 24 · '+game.definition.name:s.mode==='control'?'CONTROL ZONE '+((s.control?.zone?.index??0)+1)+' / '+s.arena.toUpperCase().replaceAll('-',' '):'ARENA / '+s.arena.toUpperCase().replaceAll('-',' '))+' · '+s.state.toUpperCase()+' · '+(s.owner===net.id?'YOU ARE SYSOP':'SYSOP: '+(s.roster.find(a=>a.id===s.owner)?.nickname||'RECONNECTING')):soloBots?'Choose your arena and number of bots, then deploy. No server required.':'Connect to a running node, then create or join a room.';
  $('roster').querySelector('tbody').replaceChildren(...(s?.roster||[]).map(a=>{const row=document.createElement('tr');row.dataset.player=a.id;row.className='team-'+a.team;for(const value of [a.nickname+(a.bot?' / BOT':'')+(a.id===net.id?' / YOU':''),a.connected?'ONLINE':'HELD',s.state==='lobby'?(a.ready?'READY':'WAITING'):a.status,a.frags,a.deaths]){const td=document.createElement('td');td.textContent=value;row.append(td);}return row;}));
  const active=joined&&s.state!=='lobby';$('play-area').hidden=!active;$('empty-signal').hidden=active;$('next-btn').hidden=s?.state!=='cleared'||s.owner!==net.id||s.stage===23&&!s.finaleAvailable;$('next-btn').textContent=s?.stage===23?'ENTER THE FINAL FREQUENCY':'DESCEND TO NEXT STAGE';$('retry-btn').hidden=s?.state!=='wipe'||s.owner!==net.id;$('save-btn').hidden=!joined||s.mode!=='coop'||s.state==='lobby';
  $('ending').hidden=s?.state!=='ending';if(s&&['team','clan','control'].includes(s.mode))$('room-state').textContent+=' · CYAN '+s.teamScore.cyan+' / PINK '+s.teamScore.pink+(s.mode==='clan'?' · ROUND '+s.round:'');
@@ -52,8 +55,40 @@ function renderStatus(){
  }
  for(const b of document.querySelectorAll('[data-action=oriAbility]'))b.disabled=game.networkCompetitive||game.oriCorrupted;
  for(const b of $('weapons').children)b.setAttribute('aria-pressed',String(Number(b.dataset.weapon)===game.weapon));
- $('net-stats').textContent=connected?'WS / '+(net.rtt===null?'LINKING':net.rtt+' MS RTT')+' / '+Math.round(net.bytesIn/1024)+' KiB IN':'NO SERVICE REQUIRED FOR SOLO';
+ $('net-stats').textContent=soloBots?'LOCAL FIXED-STEP / '+(s?.roster?.length||0)+' OF 12 PARTICIPANTS':connected?'WS / '+(net.rtt===null?'LINKING':net.rtt+' MS RTT')+' / '+Math.round(net.bytesIn/1024)+' KiB IN':'NO SERVICE REQUIRED FOR SOLO';
 }
+function configureSoloBotsUI(){
+ document.title='SOLO BOT ARENA · BREAK THE MATRIX';
+ document.body.classList.add('solo-bots');
+ document.querySelector('.masthead h1').innerHTML='SOLO <em>BOT ARENA</em>';
+ document.querySelector('.strap').textContent='ONE HUMAN / UP TO ELEVEN BOT PILOTS / ZERO SERVERS';
+ document.querySelector('.terminal-line span').textContent='LOCAL ENGINE / 30 HZ / NO ACCOUNT REQUIRED';
+ document.querySelector('#menu-panel .terminal-card h2').textContent='01 / LOCAL PLAYER';
+ $('room-tools').querySelector('h2').textContent='02 / CONFIGURE YOUR ARENA';
+ $('create-btn').textContent='START SOLO VS BOT PILOTS';
+ $('leave-btn').textContent='EXIT TO SOLO SETUP';
+ $('lobby-btn').textContent='RETURN TO SOLO SETUP';
+ $('room-tools').querySelector('.hint').textContent='Bot pilots run in your browser. All hits and scores are simulated locally, not ranked online. High bot counts need more device power.';
+ $('server-url').closest('label').hidden=true;
+ $('room-code').closest('label').hidden=true;
+ for(const id of ['connect-btn','disconnect-btn','join-btn','reconnect-btn','export-pass','import-pass','ready-btn','start-btn','save-btn'])$(id).hidden=true;
+ $('capacity').closest('label').hidden=true;
+ const bots=$('bots'),slots=$('capacity');
+ bots.replaceChildren(...Array.from({length:11},(_,i)=>{
+  const count=i+1,opt=document.createElement('option');opt.value=String(count);
+  opt.textContent=count+' BOT PILOT'+(count===1?'':'S')+' / '+(count+1)+' TOTAL PLAYERS';return opt;
+ }));
+ slots.replaceChildren(...Array.from({length:11},(_,i)=>{const opt=document.createElement('option');opt.value=opt.textContent=String(i+2);return opt;}));
+ bots.value='5';slots.value='6';
+ bots.addEventListener('change',()=>{slots.value=String(Number(bots.value)+1);});
+ const coop=$('mode').querySelector('option[value=coop]');coop.disabled=true;coop.hidden=true;
+ const standby=$('empty-signal');
+ standby.querySelector('h2').textContent='SOLO ARENA STANDBY';
+ standby.querySelector('.hint').textContent='No connection, fake humans or matchmaking. Select 1–11 bots and deploy.';
+ $('room-state').textContent='Choose a mode and bot count, then start your match.';
+}
+if(soloBots)configureSoloBotsUI();
+
 $('connect-btn').onclick=async()=>{audio.start();audio.play('pit2');storePrefs();$('connect-btn').disabled=true;try{await net.connect($('server-url').value);}catch(e){log(e.message);}renderStatus();};
 $('disconnect-btn').onclick=()=>{pause();net.disconnect();game.netState=null;status('NO CARRIER / SOLO ALWAYS AVAILABLE');renderStatus();};
 $('create-btn').onclick=()=>net.send({type:'create',nickname:$('nickname').value,mode:$('mode').value,arena:$('arena').value,limit:Number($('limit').value),capacity:Number($('capacity').value),bots:Number($('bots').value)});
@@ -92,5 +127,6 @@ function tick(t,pad,spatial){
 }
 function frame(t){frameId=0;if(vr.active)return;tick(t);frameId=requestAnimationFrame(frame);}
 audio.configure(settings);$('audio-toggle').textContent=settings.muted?'AUDIO OFF':'AUDIO ON';$('audio-toggle').setAttribute('aria-pressed',String(settings.muted));comms.configure(settings);void vr.probe();renderStatus();frameId=requestAnimationFrame(frame);
+if(soloBots)void net.connect().then(renderStatus).catch(error=>status('LOCAL BOT ENGINE ERROR / '+error.message));
 // Readable diagnostics and the same public input transport used by controls; no authority setters.
 window.bbs={net,game,pause,resume,version:1,drive:input=>{driven=input;game.serverDriven=!!input;if(input){game.inputEnabled=true;game.mode='playing';net.intent={...input,actions:[]};for(const a of input.actions||[])net.action(a);net.flush();}else net.neutral();},sendInput:input=>net.send({type:'input',seq:++net.seq,...input})};

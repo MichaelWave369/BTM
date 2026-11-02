@@ -1,5 +1,13 @@
 # Michael Wave & Ori: Break the Matrix
 
+## Instant SOLO BOT ARENA — one human + up to eleven bots
+
+Select **SOLO BOT ARENA** on the title screen, choose Deathmatch / Team Deathmatch / Clan Arena / Control Zones, select an authored map and **1–11 Bot Pilots**, then choose **START SOLO VS BOT PILOTS**. A twelve-player match is **you + eleven bots**, not twelve bots plus you. Defaults to five bots (six total participants). Returning to setup starts a new local match.
+
+This is **real, playable, offline browser simulation**, not fake network clients or a demo scoreboard. The exact same server-authoritative Room movement/combat/bot code runs at 30 Hz inside a same-origin Web Worker; the player uses the production BBS game renderer and controls. No account, multiplayer server, hosted connection, WebSocket or client dependency is required. The bot load is local to the current device; twelve participants can demand more CPU than a small match. Real Quest comfort/performance requires a headset test.
+
+The online **BBS LAN CLAN** menu is unchanged and still needs an optional self-hosted server. The network protocol continues to cap server rooms at eight (four in co-op); the twelve-player allowance is local-only. Offline results are *not* server-signed public rankings. Original campaign, Pit and Human Ledger saves are never written by the solo bot simulation. The worker modules are precached for previously installed offline builds; the first visit must load the new release while connected.
+
 ## BBS LAN CLAN — v0.10.0-rc.1 candidate
 
 Private native multiplayer: Deathmatch, Team Deathmatch, Clan Arena, three original arenas, and a separate 2–4 player cooperative progression through the existing twelve sectors and twelve Pit trials. Completing all 24 stages unlocks the unnumbered **THE FINAL FREQUENCY / DEMIURGE PRIME** raid and shared escape.

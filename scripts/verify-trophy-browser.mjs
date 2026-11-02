@@ -70,12 +70,32 @@ try{
  // Real BBS lobby should link directly into the Trophy Room on the same origin
  // without requiring a running LAN node or silently granting competitive stats.
  await page.goto('http://127.0.0.1:5184/bbs.html');
- // Exercise the visible BBS header doorway with a genuine user click.
- // The previous edit accidentally included literal backslash-n in this comment,
- // commenting out the click. The old wait also passed when the element was absent.
+ // Use an actual keyboard activation of the BBS header doorway. Animated
+ // production BBS canvases can prevent Playwright's mouse-click stability
+ // check from settling; focus + trusted Enter proves the same real link works.
+ // Do not substitute page.goto or a synthetic DOM click.
  assert.equal(await page.locator('a[href="./#trophy-room"]').count(),2);
- await page.locator('#trophy-link').click();
- await page.locator('#trophy-screen').waitFor({state:'visible',timeout:20000});
+ await page.locator('#trophy-link').focus();
+ assert.equal(await page.evaluate(()=>document.activeElement?.id),'trophy-link');
+ await page.keyboard.press('Enter');
+ // A native navigation is not complete when the URL changes: ES modules
+ // (including the title-screen router) run before DOMContentLoaded. On
+ // software-WebGL CI runners, waiting only for a visible element can race
+ // module evaluation and misleadingly report a hidden Trophy Room.
+ try{
+  await page.waitForLoadState('domcontentloaded',{timeout:90000});
+  await page.locator('#trophy-screen').waitFor({state:'visible',timeout:45000});
+ }catch(error){
+  const diagnostic=await page.evaluate(()=>({
+   url:location.href,ready:document.readyState,hash:location.hash,
+   titleVisible:!document.querySelector('#title-screen')?.hidden,
+   trophyExists:!!document.querySelector('#trophy-screen'),
+   trophyHidden:document.querySelector('#trophy-screen')?.hidden,
+   shellStatus:document.querySelector('#offline-status')?.textContent
+  })).catch(e=>({evaluateError:e.message}));
+  throw Error('BBS Trophy Room navigation did not initialize: '+
+   JSON.stringify({diagnostic,pageErrors:errors,reason:error.message}));
+ }
  assert.equal(new URL(page.url()).pathname,'/','BBS doorway loads the solo app');
  assert.equal(await page.locator('#trophy-screen').isVisible(),true,'BBS doorway opens actual cabinet');
  assert.match(await page.locator('.trophy-network').textContent(),/not online ranks/);

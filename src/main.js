@@ -116,7 +116,7 @@ function showScreen(id){
 }
 function lockMouse(){if(touch||vr.active||inputMode!=='keyboard'||settings.controlMode!=='auto')return;canvas.focus({preventScroll:true});void capture.capture();}
 function play(fresh=false){if(fresh){communications.reset();game.start({energyMode:settings.energyMode});mapOpen=false;}else game.mode='playing';showScreen('');audio.pitAct=game.campaign==='pit'?game.definition.act:null;audio.sector=game.levelIndex;updateSoundtrackCue();audio.start();audio.pause(false);canvas.focus({preventScroll:true});lockMouse();processEvents();updateHUD();}
-function pause(){if(game.mode!=='playing')return;game.mode='paused';audio.pause(true);showScreen('pause-screen');}
+function pause(){if(game.mode!=='playing')return;game.mode='paused';audio.pause(true);showScreen('pause-screen');updateHUD();}
 function home(){if(game.phiwadCustom)leavePhiWadMission(game);else if(!game.gallery&&(game.mode==='playing'||game.mode==='paused')){game.saveCheckpoint();saveCheckpoint();}game.gallery=null;game.mode='title';audio.pause(true);audio.setScore({kind:'title'});showScreen('title-screen');$('continue-btn').hidden=!saved;$('continue-pit-btn').hidden=!pitSaved;}
 function openSettings(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('settings-screen');}
 function openHelp(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('help-screen');}
@@ -378,4 +378,5 @@ mountSoundtrackControls({audio,settings,apply:applySettings,save:storeSettings})
 applySettings();showScreen('title-screen');if(location.hash==='#trophy-room'){openTrophyRoom();history.replaceState(null,'',location.pathname+location.search);}updateHUD();desktopFrame=requestAnimationFrame(frame);
 if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').then(()=>navigator.serviceWorker.ready).then(()=>{$('offline-status').textContent='OFFLINE READY';}).catch(()=>{$('offline-status').textContent='ONLINE';$('offline-status').title='Offline caching unavailable here. Keep the source download for local play.';});else $('offline-status').textContent='LOCAL BUILD';
 
+$('solo-bots-btn').addEventListener('click',async()=>{if(vr.active)await vr.exit();window.location.assign('./bbs.html#solo-bots');});
 $('bbs-btn').addEventListener('click',async()=>{if(vr.active)await vr.exit();window.location.assign('./bbs.html');});
