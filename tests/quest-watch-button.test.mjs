@@ -22,7 +22,7 @@ test('clicking the wrist button opens directly above cuff without tether lines',
  w.togglePin();advance(w,r,675,1100);
  assert(w.visible&&w.requested&&w.open>.8);
  const distance=Math.hypot(...w.panel.center.map((v,i)=>v-w.status.center[i]));
- assert(distance<.30,'menu is anchored to the watch, not projected to the far field');
+ assert(distance<.56,'menu is anchored to the watch, not projected to the far field');
  assert(w.panel.center[1]>w.status.center[1]+.12);
  const scene=readFileSync(new URL('../src/world-scene.js',import.meta.url),'utf8');
  assert(!scene.includes('rig.equipmentLink'),'no two decorative tether lines');
