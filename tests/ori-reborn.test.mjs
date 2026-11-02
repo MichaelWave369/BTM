@@ -24,14 +24,23 @@ test('watch button stays manual and visible panel clears inverted glove poses',(
   const original=Array.from(tracked);
   w.togglePin();for(let t=350;t<=900;t+=25)w.update(r,{},t);
   assert(w.visible,`clicked watch ${eyeHeight}/${pitch}/${roll}`);assert(w.panel.up[1]>0);
-  let gloveTop=-Infinity;
-  const mesh=handMesh('left').data;
-  for(let i=0;i<mesh.length;i+=9)
-   gloveTop=Math.max(gloveTop,visual[1]*mesh[i]+visual[5]*mesh[i+1]+visual[9]*mesh[i+2]+visual[13]);
-  const p=w.panel,bottom=p.center[1]-Math.abs(p.up[1])*p.height/2-Math.abs(p.right[1])*p.width/2;
-  assert(bottom>gloveTop+.005,`hand intersection ${eyeHeight}/${pitch}/${roll}`);
+  // The hologram now shares the watch's tilted local plane, not world-up.
+  // A world-Y bounding box would incorrectly count the wrist as intersecting
+  // even when every glove vertex lies safely BEHIND the hologram plane.
+  const p=w.panel,mesh=handMesh('left').data;
+  let farthestGlove=-Infinity;
+  for(let i=0;i<mesh.length;i+=9){
+   const world=[0,1,2].map(k=>visual[12+k]+visual[k]*mesh[i]+
+    visual[4+k]*mesh[i+1]+visual[8+k]*mesh[i+2]);
+   farthestGlove=Math.max(farthestGlove,dot(world,p.normal));
+  }
+  const faceClearance=dot(p.center,p.normal)-farthestGlove;
+  assert(faceClearance>.005,`hand intersects hologram plane ${eyeHeight}/${pitch}/${roll}`);
+  const upGap=dot(p.center.map((v,i)=>v-w.status.center[i]),p.up)-
+   (p.height+w.status.height)*.5;
+  assert(upGap>=.035-1e-5,`panel clips watch edge ${eyeHeight}/${pitch}/${roll}`);
   const distance=Math.hypot(...p.center.map((v,i)=>v-w.status.center[i]));
-  assert(distance<.56,'panel must remain attached just above the watch, not far-field projected');
+  assert(distance<.3,'panel must remain under 30cm above the watch, not in head space');
   assert.deepEqual(Array.from(tracked),original);w.reset();assert(!w.visible&&!w.pinned);
  }
 });
