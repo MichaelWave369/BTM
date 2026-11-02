@@ -77,39 +77,39 @@ export class WristComputer{
   this.watchRaised=wristY>=eye[1]-.33;
   const inRange=d>=.32&&d<=.98;
   const aligned=this.watchFacing>Math.max(.57,s.vrWristSensitivity+.12);
+  // The initial summon requires the user to deliberately LOOK at the watch.
+  // After a click, headset gaze must never tow or dismiss the panel: only
+  // the real wrist's reach and orientation determine whether it stays open.
   this.watchReady=inRange&&wristY>=eye[1]-.39&&this.watchGaze>.57&&aligned;
-  // Only a real click can open; lowering/turning away hides the menu.
-  // Short tracking losses have a grace period before clearing the click.
-  if(this.pinned&&!this.watchReady){
+  const holdReady=d>=.28&&d<=1.12&&wristY>=eye[1]-.55&&this.watchFacing>.42;
+  // Lowering/turning away or losing tracking still closes after a brief grace.
+  if(this.pinned&&!holdReady){
    if(this.lostSince<0)this.lostSince=now;
    if(now-this.lostSince>280)this.pinned=false;
   }else this.lostSince=-1;
   const previous=this.requested;
-  this.requested=this.pinned&&this.watchReady;
+  this.requested=this.pinned&&holdReady;
   if(this.requested&&!previous)this.guardUntil=Math.max(this.guardUntil,now+220);
   this.guard=this.requested&&now<this.guardUntil;
   const motion=s.vrInterfaceMotion&&!settings.reducedMotion;
   this.open=motion?this.open+((this.requested?1:0)-this.open)*(1-Math.exp(-dt*17)):(this.requested?1:0);
   this.visible=this.open>.11;
   const p=this.panel;
-  // Screen faces the headset. Unlike grip-local up, headset up never flips
-  // upside down when a Touch controller is rolled.
-  for(let i=0;i<3;i++){
-   p.right[i]=head[i];p.up[i]=head[4+i];p.normal[i]=head[8+i];
-  }
   p.width=s.vrWristSize*(.96+.04*this.open);
   p.height=p.width/1.45;
-  // Watch-anchored screen: the lower edge clears the glove's approximate
-  // local bounds, even when the cosmetic palm is tilted or inverted. This
-  // moves UP over the cuff only, never outward to a distant viewing plane.
-  const up=[head[4],head[5],head[6]];
-  const localAxis=k=>[visual[k],visual[k+1],visual[k+2]];
-  const delta=[visual[12]-status.center[0],visual[13]-status.center[1],visual[14]-status.center[2]];
-  const gloveTop=dot(delta,up)+.085*Math.abs(dot(localAxis(0),up))+
-   .115*Math.abs(dot(localAxis(4),up))+.185*Math.abs(dot(localAxis(8),up));
-  const lift=Math.max(s.vrWristOffset,gloveTop+.018);
-  for(let i=0;i<3;i++)
-   p.center[i]=status.center[i]+head[4+i]*(lift+p.height*.5)-head[8+i]*.02;
+  // A real wrist-mounted screen, NOT a head-locked comfort overlay.
+  // Share the small watch's exact tracked/visual world basis and anchor;
+  // the entire large panel follows the watch in all six degrees of freedom.
+  // Its lower edge sits just above the top edge of the watch, separated by
+  // the existing user-adjustable wrist offset. A tiny surface-normal lift
+  // keeps the hologram from fighting the glove depth buffer.
+  const rise=(status.height+p.height)*.5+s.vrWristOffset;
+  for(let i=0;i<3;i++){
+   p.right[i]=status.right[i];
+   p.up[i]=status.up[i];
+   p.normal[i]=status.normal[i];
+   p.center[i]=status.center[i]+status.up[i]*rise+status.normal[i]*.014;
+  }
   return this;
  }
 }
