@@ -37,7 +37,7 @@ export class WorldScene {
   for(const r of l.relays){b.billboard(r.x*s,0,r.y*s,.9,1.15,r.active?'relay:on':'relay:off',eye);this.counts.objects++;}
   for(const c of l.captives)if(!c.freed){b.billboard(c.x*s,0,c.y*s,1.3,1.65,'captive',eye);this.counts.objects++;}
   for(const prop of l.props||[])if(visible(prop.x,prop.y)){const h=prop.height*s;b.billboard(prop.x*s,0,prop.y*s,h*.8,h,'prop:'+prop.type,eye);this.counts.objects++;}
-  if(!game.networkCompetitive)b.billboard(l.exit.x*s,.05,l.exit.y*s,1.55,2.15,'portal',eye,game.exitReady?WHITE:[.35,.45,.55,1]);
+  if(!game.networkCompetitive&&!game.gallery)b.billboard(l.exit.x*s,.05,l.exit.y*s,1.55,2.15,'portal',eye,game.exitReady?WHITE:[.35,.45,.55,1]);
   for(const n of l.raidNodes||[])b.floor(n.x*s,.025,n.y*s,1.3*s,'hazard:arc',n.active?[.5,1.2,.9,1]:[1,.8,.35,1]);
   for(const a of game.remotePlayers||[]){
    const x=a.renderX??a.x,y=a.renderY??a.y;if(!['alive','downed'].includes(a.status)||!visible(x,y))continue;
