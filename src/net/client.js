@@ -31,7 +31,7 @@ export class NetworkView extends Game{
    this.level=structuredClone(m.level);this.netDefinition=m.definition;this.networkCompetitive=m.competitive;this.levelIndex=m.level.index;this.campaign=m.level.campaign==='pit'?'pit':'original';this.revision=m.revision;this.projectiles=[];this.remotePlayers=[];this.netState=null;this.needsRecenter=true;return;
   }
   if(m.type!=='snapshot'||m.revision!==this.revision)return;
-  if(!Array.isArray(m.players)||m.players.length>8||!m.world||!Array.isArray(m.events)||m.events.length>96||m.world.enemies?.length>128||m.world.projectiles?.length>128)throw Error('Invalid snapshot');
+  if(!Array.isArray(m.players)||m.players.length>(this.net.offlineBots?12:8)||!m.world||!Array.isArray(m.events)||m.events.length>96||m.world.enemies?.length>128||m.world.projectiles?.length>128)throw Error('Invalid snapshot');
   const mine=m.players.find(p=>p.id===this.net.id);this.netState=m;this.oriCorrupted=m.raid?.phase===3&&m.raid.state!=='escape';this.time=m.time;this.netObjective=m.control?'CONTROL / '+(m.control.contested?'CONTESTED':m.control.holder?.toUpperCase()||'NEUTRAL')+' · CYAN '+m.teamScore.cyan+' / PINK '+m.teamScore.pink:this.networkCompetitive?'FRAG LIMIT '+m.limit+' / '+m.state.toUpperCase():m.world.objective;this.netLiberation=m.world.liberation;this.netExitReady=m.world.exitReady;
   const w=m.world;applyWorld(this.level,w);
   this.ori={...w.ori};this.projectiles=structuredClone(w.projectiles);this.bassCharge=w.bassCharge;this.totalFreed=w.totalFreed;this.totalArtifacts=w.totalArtifacts;
