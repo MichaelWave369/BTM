@@ -95,6 +95,5 @@ test('disconnecting the only human never makes a PHI BOT the SYSOP',()=>{
  assert.notEqual(room.owner,bot.id);
  room.reconnect(human);
  assert.equal(room.owner,human.id);
- const stranger=room.addBot?.bind(room);
- assert.equal(typeof stranger,'function');
+ assert.equal(room.state,'playing','reconnection preserves the active match');
 });
