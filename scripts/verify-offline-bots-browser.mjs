@@ -25,7 +25,7 @@ try{
  await page.goto('http://127.0.0.1:5187/');
  await page.locator('#solo-bots-btn').click();
  await page.waitForURL('**/bbs.html#solo-bots',{timeout:20000});
- await page.waitForFunction(()=>window.bbs?.net?.connected,{timeout:20000});
+ await page.waitForFunction(()=>window.bbs?.net?.connected,null,{timeout:20000});
  assert.equal(await page.locator('#create-btn').textContent(),'START SOLO VS BOT PILOTS');
  assert.equal(await page.locator('#server-url').isHidden(),true);
  assert.equal(await page.locator('#connect-btn').isHidden(),true);
@@ -34,7 +34,7 @@ try{
  assert.equal(await page.locator('#capacity').inputValue(),'12');
  await page.selectOption('#mode','deathmatch');
  await page.locator('#create-btn').click();
- await page.waitForFunction(()=>window.bbs?.game?.netState?.players?.length===12,{timeout:35000});
+ await page.waitForFunction(()=>window.bbs?.game?.netState?.players?.length===12,null,{timeout:35000});
  const before=await page.evaluate(()=>{
   const {net,game}=window.bbs;
   return{offline:net.offlineBots,connected:net.connected,code:net.code,mode:game.netState.mode,
@@ -76,7 +76,7 @@ try{
  await page.selectOption('#bots','3');
  await page.selectOption('#mode','control');
  await page.locator('#create-btn').click();
- await page.waitForFunction(()=>window.bbs?.game?.netState?.players?.length===4&&window.bbs.game.netState.control,{timeout:35000});
+ await page.waitForFunction(()=>window.bbs?.game?.netState?.players?.length===4&&window.bbs.game.netState.control,null,{timeout:35000});
  const fresh=await page.evaluate(()=>({
   mode:window.bbs.game.netState.mode,count:window.bbs.game.netState.players.length,
   state:window.bbs.game.netState.state,networkCalls:window.__socketCalls
