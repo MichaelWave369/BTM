@@ -111,3 +111,50 @@ body[data-input=controller] #game,body[data-input=vr] #game{cursor:none}.reduced
 .archive-catalog button small{display:block;color:var(--cyan);font-size:12px;padding-top:6px;opacity:.94}
 .archive-detail{min-height:72px;padding:16px;border:1px solid #3e657f;border-radius:8px;background:#0b1529;line-height:1.55;color:var(--paper);white-space:pre-wrap}
 .archive-detail strong{color:var(--gold)}
+
+
+/* The Living Arcade / Trophy Room. No remote avatars, tracking or external art.
+   This is a scrollable, controller-friendly holographic cabinet, not a gameplay
+   overlay, so the same content works on desktop, mobile and Quest flat panels. */
+.trophy-choice{border-left-color:#ffd57a;background:linear-gradient(105deg,#241c35f5,#14283bf5)}
+.trophy-choice .choice-code{color:#ffd980}
+.trophy-choice:hover,.trophy-choice:focus-visible{border-color:#ffdf94;box-shadow:inset 0 0 22px #ffcd5a18,0 0 24px #eec7712c}
+.trophy-modal{width:min(970px,95vw);max-height:88svh;overflow-y:auto;padding:clamp(20px,3vw,36px);background:radial-gradient(ellipse at 88% 5%,#37405b 0%,transparent 37%),linear-gradient(145deg,#0d1b2e,#100d22 70%,#1f192d);border:1px solid #6b748b;box-shadow:inset 0 0 0 1px #f2cf8a15,0 22px 85px #000b}
+.trophy-hero{position:relative;min-height:195px;padding:20px clamp(16px,2vw,30px);border:1px solid #b58a5caa;border-radius:12px;background:linear-gradient(135deg,#432a346c,#17273da8),repeating-linear-gradient(0deg,transparent 0 19px,#7bdfff0c 20px 21px);overflow:hidden}
+.trophy-hero:before{content:'Φ';position:absolute;right:18px;top:-65px;font:700 clamp(160px,24vw,260px)/1 Oxanium,sans-serif;color:#e4cb9e17;pointer-events:none}
+.trophy-hero h2{margin:9px 0 7px;font-size:clamp(39px,6vw,65px);line-height:.99;letter-spacing:-.035em}
+.trophy-hero h2 em{color:#ffd78c;font-style:normal}
+.trophy-hero>p{max-width:590px;font:15px/1.55 Oxanium,sans-serif;color:#e1e8f7}
+.trophy-hero-total{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;margin-top:17px;color:#ddf8ff}
+.trophy-hero-total strong{font:700 clamp(26px,4vw,40px) Oxanium,sans-serif;color:#ffe5a5}
+.trophy-hero-total span{font:700 11px Oxanium,sans-serif;letter-spacing:.14em}
+.trophy-wing{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:17px 0}
+.trophy-panel{border:1px solid #426a84;border-radius:10px;background:linear-gradient(145deg,#122239,#101629);padding:16px;box-shadow:inset 0 1px #9edbff12}
+.trophy-panel header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}
+.trophy-panel h3{font:700 16px Oxanium,sans-serif;letter-spacing:.065em;color:#abf0ff;margin:0}
+.trophy-panel .trophy-icon{font-size:21px;color:#f6d58f}
+.trophy-panel small{display:block;color:#b8c9e1;font:11px/1.45 Oxanium,sans-serif;margin-bottom:13px}
+.trophy-stat{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0;padding:7px 0;border-top:1px solid #83b0ce23}
+.trophy-stat dt{font:700 10px Oxanium,sans-serif;letter-spacing:.07em;color:#b5d5df}
+.trophy-stat dd{margin:0;text-align:right;font:700 14px Oxanium,sans-serif;color:#f6f1df}
+.trophy-cabinet{padding:18px;border:1px solid #88653f;border-radius:12px;background:repeating-linear-gradient(0deg,#271e2a 0 104px,#382839 105px 108px,#140f1b 109px 113px);box-shadow:inset 0 0 50px #0006}
+.trophy-heading{margin-bottom:14px}
+.trophy-heading h3{color:#ffe5ad;margin:7px 0 0;font:700 clamp(18px,2.4vw,25px) Oxanium,sans-serif;letter-spacing:.075em}
+.trophy-medals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.trophy-medal{display:flex;align-items:flex-start;gap:11px;min-height:104px;padding:13px;border:1px solid #4f5470;border-radius:9px;background:linear-gradient(145deg,#101c30,#1c1a31);color:#afb5c6}
+.trophy-medal.earned{background:linear-gradient(145deg,#283141,#33243c);border-color:#dabb76;box-shadow:0 0 16px #f5bb4022,inset 0 1px #f5df9e27;color:#edf5ff}
+.trophy-medal-symbol{width:38px;min-width:38px;height:44px;display:grid;place-items:center;clip-path:polygon(50% 0,93% 19%,93% 72%,50% 100%,7% 72%,7% 19%);background:#344058;font:700 20px Oxanium,sans-serif;color:#a1b4c4}
+.trophy-medal.earned .trophy-medal-symbol{background:linear-gradient(145deg,#eac67b,#835c46);color:#222031}
+.trophy-medal b{display:block;font:700 12px/1.35 Oxanium,sans-serif;letter-spacing:.045em}
+.trophy-medal small{display:block;font:10px/1.45 Oxanium,sans-serif;margin:5px 0;color:inherit}
+.trophy-medal progress{display:block;width:100%;height:5px;accent-color:#f3c979;margin:7px 0}
+.trophy-medal .trophy-status{font:700 9px Oxanium,sans-serif;letter-spacing:.08em;color:#93afcc}
+.trophy-medal.earned .trophy-status{color:#ffe4a6}
+.trophy-network{margin-top:16px;padding:15px;border:1px dashed #6383a0;border-radius:8px;background:#0b172a}
+.trophy-network strong{display:block;color:#a6ebff;font:700 12px Oxanium,sans-serif}
+.trophy-network p{margin:7px 0 0;color:#c5d3e8;font:12px/1.6 Oxanium,sans-serif}
+.trophy-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:15px}
+.trophy-actions button{min-height:43px;flex:1 1 200px}
+@media(max-width:710px){.trophy-wing{grid-template-columns:1fr}.trophy-medals{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:440px){.trophy-medals{grid-template-columns:1fr}.trophy-modal{width:98vw;padding:14px}.trophy-hero{padding:14px}.trophy-hero>p{font-size:12px}.trophy-stat dd{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.trophy-choice,.trophy-medal{animation:none;transition:none}}
