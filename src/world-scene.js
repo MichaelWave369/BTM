@@ -4,6 +4,7 @@ import {SignalPresentation} from './signal-presentation.js';
 import {SIGNAL_QUALITY} from './neon-signal.js';
 import {doorFrameParts,doorSurfaceMaterial} from './door-visibility.js';
 import {WEAPONS,findRoute} from './core.js';import {materialUV,doorGeometry} from './level-geometry.js';import {WORLD_SCALE,entityHeight,traceEnvironment} from './spatial.js';import {transformPoint} from './immersive-math.js';
+import {previewTrackedShot} from './aim-diagnostics.js';
 const ORDER=[0,1,2,0,2,3],FACES=[[4,5,6,7],[1,0,3,2],[0,4,7,3],[5,1,2,6],[3,7,6,2],[0,1,5,4]],WHITE=[1,1,1,1],STUN=[.65,1.1,1.35,1],TELL=[1.5,.45,.18,1],CYAN=[.5,1.5,1.4,1],PURPLE=[1.3,.45,1.8,1];
 const rgbCache=new Map();export function colorRGB(hex='#b9ff53'){if(!rgbCache.has(hex)){const v=hex.replace('#','');rgbCache.set(hex,[parseInt(v.slice(0,2),16)/255,parseInt(v.slice(2,4),16)/255,parseInt(v.slice(4,6),16)/255,1]);}return rgbCache.get(hex);}
 export class VertexBatch {
@@ -68,7 +69,10 @@ export class WorldScene {
   if(game.mode==='playing'&&rig.uiPointer){b.line(rig.uiPointer.from,rig.uiPointer.to,.003,eye,CYAN);b.billboard(...rig.uiPointer.to,.015,.015,'marker',eye,CYAN);}
   if(rig.aim){const color=colorRGB(WEAPONS[game.weapon].color),hand=this.weaponWorld;hand.set(rig.weaponWorld||rig.rightWorld);const recoil=game.shotAnim*.008;for(let i=0;i<3;i++)hand[12+i]+=hand[8+i]*recoil;appendEquipment(b,weaponMesh(game.weapon,settings.vrQuality==='performance'?6:8),hand,settings.vrHologramBrightness??.85,game.charge*.3+game.muzzle*.2);
    const o=rig.aim.origin;this.from.set([o.x*s,o.height*s,o.y*s]);if(game.muzzle>.05)b.billboard(this.from[0],this.from[1],this.from[2],[.09,.055,.13,.055,.085,.11][game.weapon],[.09,.055,.13,.055,.085,.11][game.weapon],'marker',eye,color);if(game.charge>.1)b.billboard(this.from[0],this.from[1],this.from[2],.08+game.charge*.15,.08+game.charge*.15,'ori',eye,color);
-   if(settings.vrAimLine&&!rig.uiCaptured){const hit=traceEnvironment(l,o,rig.aim.direction,1.7/s),d=hit.distance*s;this.to.set([this.from[0]+rig.aim.direction.x*d,this.from[1]+rig.aim.direction.z*d,this.from[2]+rig.aim.direction.y*d]);b.line(this.from,this.to,.0035,eye,CYAN);}
+   if(settings.vrDiagnostics&&game.mode==='playing'&&game.weapon!==3&&!rig.uiCaptured){
+    const preview=previewTrackedShot(l,rig.aim,WEAPONS[game.weapon]);
+    if(preview){b.line(preview.from,preview.rayEnd,.002,eye,CYAN);b.billboard(...preview.rayEnd,.045,.045,'marker',eye,preview.target?CYAN:TELL);if(preview.targetMarker)b.billboard(...preview.targetMarker,.06,.06,'marker',eye,STUN);}
+   }else if(settings.vrAimLine&&!rig.uiCaptured){const hit=traceEnvironment(l,o,rig.aim.direction,1.7/s),d=hit.distance*s;this.to.set([this.from[0]+rig.aim.direction.x*d,this.from[1]+rig.aim.direction.z*d,this.from[2]+rig.aim.direction.y*d]);b.line(this.from,this.to,.0035,eye,CYAN);}
   }
 
   this.counts.vertices=b.length/9;this.counts.dropped=b.dropped;return b;
