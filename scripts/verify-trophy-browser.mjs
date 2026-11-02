@@ -70,7 +70,7 @@ try{
  // Real BBS lobby should link directly into the Trophy Room on the same origin
  // without requiring a running LAN node or silently granting competitive stats.
  await page.goto('http://127.0.0.1:5184/bbs.html');
- await page.locator('a[href="./#trophy-room"]').click();
+ // Exercise the visible BBS header doorway with a genuine user click, not a\n // programmatic navigation or force-click on the footer far below the fold.\n assert.equal(await page.locator('a[href="./#trophy-room"]').count(),2);\n await page.locator('#trophy-link').click();
  await page.waitForFunction(()=>!document.querySelector('#trophy-screen')?.hidden);
  assert.equal(await page.locator('#trophy-screen').isVisible(),true,'BBS doorway opens actual cabinet');
  assert.match(await page.locator('.trophy-network').textContent(),/not online ranks/);
