@@ -6,6 +6,7 @@ import {Game,SECTORS,WEAPONS,CAMPAIGN_HOSTS,clamp,angleDiff} from './core.js';
 import {Renderer} from './renderer.js';
 import {textureSettings} from './texture-packs.js';
 import {ArchiveLedger} from './archive-ledger.js';
+import {buildTrophyDossier,readGalleryCard} from './trophy-room.js';
 import {enterGallery,galleryResult,storeGalleryResult} from './shooting-gallery.js';
 import {enterPhiWadMission,leavePhiWadMission} from './phi-content/runtime.js';
 import {loadHostedMission} from './phi-content/hosted-missions.js';
@@ -22,6 +23,7 @@ import {GamepadInput,ControllerMenu,ControllerRumble,CONTROLLER_DEFAULTS,control
 const $=id=>document.getElementById(id),canvas=$('game'),game=new Game(),renderer=new Renderer(canvas),audio=new AudioEngine(),communications=new Communications();
 const SAVE_KEY=ORIGINAL_SAVE_KEY,SETTINGS_KEY='mwave-ori-settings-v1';
 const archiveLedger=new ArchiveLedger((()=>{try{return localStorage;}catch{return null;}})());
+let trophyReturnScreen='title-screen';
 // Keep the original SVG title scene when the optional locally bundled album art is absent.
 // Once the image is added, use its complete cover without cropping the title or credits.
 const titleCover=$('title-cover-art');
@@ -57,7 +59,7 @@ try{
 }catch{$('storage-warning').hidden=false;}
 game.events=[];
 const capture=new PointerCapture({request:()=>{if(!canvas.requestPointerLock)throw Error('Unavailable');return canvas.requestPointerLock();},onState:()=>updateCapture(),onLost:()=>{if(game.mode==='playing')pause();}});
-function controllerBack(){if(screen==='gallery-result-screen'){home();return;}if(screen==='settings-screen'||screen==='help-screen'||screen==='archive-screen')showScreen(returnScreen);else if(screen==='pause-screen')play();else if(screen==='result-screen')home();}
+function controllerBack(){if(screen==='trophy-screen'){showScreen(trophyReturnScreen);return;}if(screen==='gallery-result-screen'){home();return;}if(screen==='settings-screen'||screen==='help-screen'||screen==='archive-screen')showScreen(returnScreen);else if(screen==='pause-screen')play();else if(screen==='result-screen')home();}
 const controllerMenu=new ControllerMenu({root:()=>screen?$(screen):null,back:controllerBack,resume:()=>{if(screen==='pause-screen')play();else controllerBack();}});
 const vr=new VRArcade({settings:()=>settings,onStatus:message=>{$('vr-status').textContent=message;for(const id of ['vr-btn','immersive-btn'])$(id).disabled=vr.pending||vr.active;},onStart:()=>{if(desktopFrame)cancelAnimationFrame(desktopFrame);desktopFrame=0;clearInput();if(game.mode==='playing')pause();setInputMode('vr');$('vr-session-tools').hidden=false;showScreen(screen||'pause-screen');},onPause:()=>{clearInput();pause();},onEnd:()=>{clearInput();pause();$('vr-session-tools').hidden=true;setInputMode('keyboard');lastFrame=performance.now();if(!desktopFrame)desktopFrame=requestAnimationFrame(frame);audio.pause(true);for(const id of ['vr-btn','immersive-btn'])$(id).disabled=false;showToast('VR SESSION ENDED / GAME PRESERVED');},onFrame:(now,pad,spatial)=>tick(now,pad,spatial),data:()=>({game,scene:canvas,screen,assets:renderer.assets,settings,map:mapOpen,immersive:vr.immersive,items:screen?controllerMenu.items():[],archive:archiveLedger,focused:document.activeElement,communications:communications.log,alert:alertTimer>0?alertText:'',dialogue:dialogueTimer<=0?'':$('dialogue-name').textContent+': '+$('dialogue-text').textContent,toast:toastTimer>0?$('toast').textContent:'',activate:vrAction})});
 function vrAction(action,element){
@@ -105,7 +107,7 @@ function showDialogue(text,speaker='ORI',priority=1){communications.record(text,
 function showScreen(id){
   communications.cancel();controllerMenu.clear();clearInput();
   screen=id;if(id&&vr.active)$(id).append($('vr-session-tools'));$('overlay').hidden=!id;$('overlay').classList.toggle('title-overlay',id==='title-screen');
-  for(const n of ['title-screen','pause-screen','result-screen','gallery-result-screen','settings-screen','help-screen','archive-screen'])$(n).hidden=n!==id;
+  for(const n of ['title-screen','pause-screen','result-screen','gallery-result-screen','settings-screen','help-screen','archive-screen','trophy-screen'])$(n).hidden=n!==id;
   $('view-top').hidden=!!id;$('touch-controls').hidden=!!id||!touch||inputMode!=='keyboard';$('onboarding').hidden=!!id||!!game.gallery||game.campaign==='pit'||game.levelIndex!==0||game.lesson>=3;
   document.body.classList.toggle('playing',!id);$('app').dataset.screen=id||'playing';
   if(id){capture.release();if(document.pointerLockElement)document.exitPointerLock();if(inputMode!=='keyboard')controllerMenu.focus(controllerMenu.items()[0]);}
@@ -138,6 +140,46 @@ function renderArchiveScreen(){
  else detail.textContent='Select a recovered record to read the complete testimony. Only records you have found appear here.';
 }
 function openArchive(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();renderArchiveScreen();showScreen('archive-screen');}
+function renderTrophyRoom(){
+ let gallery=null;try{gallery=readGalleryCard(localStorage);}catch{}
+ const dossier=buildTrophyDossier({original:saved,pit:pitSaved,archive:archiveLedger,gallery});
+ $('trophy-earned').textContent=dossier.earned+' / '+dossier.available;
+ const panels=dossier.panels.map(panel=>{
+  const article=document.createElement('article');article.className='trophy-panel';
+  const header=document.createElement('header'),heading=document.createElement('h3');
+  heading.textContent=panel.title;header.append(heading);
+  const sub=document.createElement('small');sub.textContent=panel.subtitle;
+  const stats=document.createElement('dl');
+  for(const [name,value]of panel.stats){const line=document.createElement('div');line.className='trophy-stat';
+   const dt=document.createElement('dt');dt.textContent=name;
+   const dd=document.createElement('dd');dd.textContent=value;
+   line.append(dt,dd);stats.append(line);}
+  article.append(header,sub,stats);return article;
+ });
+ $('trophy-stat-panels').replaceChildren(...panels);
+ const trophies=dossier.medals.map(m=>{
+  const article=document.createElement('article');article.className='trophy-medal'+(m.earned?' earned':'');
+  article.setAttribute('role','listitem');
+  article.setAttribute('aria-label',m.title+(m.earned?' earned':' locked')+', '+m.current+' of '+m.target);
+  const emblem=document.createElement('span');emblem.className='trophy-medal-symbol';
+  emblem.textContent=m.earned?'Φ':'◇';emblem.setAttribute('aria-hidden','true');
+  const content=document.createElement('div'),title=document.createElement('b');title.textContent=m.title;
+  const info=document.createElement('small');info.textContent=m.description;
+  const bar=document.createElement('progress');bar.max=m.target;bar.value=m.current;bar.setAttribute('aria-label',m.title+' progress');
+  const status=document.createElement('span');status.className='trophy-status';
+  status.textContent=m.earned?'UNLOCKED / LOCAL':m.current+' / '+m.target+' TO UNLOCK';
+  content.append(title,info,bar,status);article.append(emblem,content);return article;
+ });
+ $('trophy-medals').replaceChildren(...trophies);
+ $('trophy-open-range').hidden=trophyReturnScreen==='pause-screen';
+}
+function openTrophyRoom(){
+ trophyReturnScreen=screen||'pause-screen';
+ if(game.mode==='playing')pause();
+ renderTrophyRoom();showScreen('trophy-screen');
+}
+function trophyBack(){showScreen(trophyReturnScreen);}
+
 
 function applySettings(){
   for(const [id,value]of Object.entries(EQUIPMENT_DEFAULTS)){const element=$(id);if(typeof value==='boolean')element.checked=settings[id];else element.value=settings[id];}
@@ -283,7 +325,7 @@ function refreshCommunications(){const entries=communications.log.slice(-30);$('
 $('energyMode').addEventListener('input',()=>{settings.energyMode=$('energyMode').value;storeSettings();});
 $('resume-btn').addEventListener('click',()=>play());$('save-btn').addEventListener('click',()=>{if(game.gallery)return;game.saveCheckpoint();saveCheckpoint();showToast('CHECKPOINT SAVED / YOUR SIGNAL IS YOURS');});$('quit-btn').addEventListener('click',home);$('result-home').addEventListener('click',home);
 $('result-btn').addEventListener('click',()=>{if(game.campaign==='pit'){if(game.mode==='dead')game.retry();else if(game.mode==='ending')game.startPit();else game.next();play();return;}if(game.phiwadCustom){if(game.mode==='dead'){game.retry();play();}else home();return;}if(game.mode==='dead'){game.retry();play();}else if(game.mode==='ending'&&game.levelIndex<SECTORS.length-1){game.continueCampaign()||game.continueBeyond();play();}else if(game.mode==='ending')play(true);else{game.next();play();}});
-$('title-archive').addEventListener('click',openArchive);$('pause-archive').addEventListener('click',openArchive);$('archive-back').addEventListener('click',()=>showScreen(returnScreen));$('title-settings').addEventListener('click',openSettings);$('map-toggle').addEventListener('click',()=>{if(game.mode==='playing'){mapOpen=!mapOpen;updateHUD();}});$('settings-btn').addEventListener('click',openSettings);$('pause-settings').addEventListener('click',openSettings);$('settings-back').addEventListener('click',()=>showScreen(returnScreen));$('howto-btn').addEventListener('click',openHelp);$('help-back').addEventListener('click',()=>showScreen(returnScreen));
+$('trophy-btn').addEventListener('click',openTrophyRoom);$('pause-trophy').addEventListener('click',openTrophyRoom);$('trophy-back').addEventListener('click',trophyBack);$('trophy-open-ledger').addEventListener('click',openArchive);$('trophy-open-range').addEventListener('click',()=>{if(trophyReturnScreen==='pause-screen')return;communications.reset();enterGallery(game);mapOpen=false;play();});$('title-archive').addEventListener('click',openArchive);$('pause-archive').addEventListener('click',openArchive);$('archive-back').addEventListener('click',()=>showScreen(returnScreen));$('title-settings').addEventListener('click',openSettings);$('map-toggle').addEventListener('click',()=>{if(game.mode==='playing'){mapOpen=!mapOpen;updateHUD();}});$('settings-btn').addEventListener('click',openSettings);$('pause-settings').addEventListener('click',openSettings);$('settings-back').addEventListener('click',()=>showScreen(returnScreen));$('howto-btn').addEventListener('click',openHelp);$('help-back').addEventListener('click',()=>showScreen(returnScreen));
 $('controller-setup').addEventListener('click',()=>{openSettings();if(inputMode!=='keyboard')controllerMenu.focus($('controllerSensitivity'));else $('controller-section').scrollIntoView({block:'nearest'});});
 for(const [id,mode]of [['vr-btn','arcade'],['immersive-btn','immersive']])$(id).addEventListener('click',()=>{audio.start();void vr.enter(mode).finally(()=>{for(const button of ['vr-btn','immersive-btn'])$(button).disabled=vr.active;});});$('vr-recenter').addEventListener('click',()=>vr.recenter());$('vr-exit').addEventListener('click',()=>void vr.exit());
 $('mute-btn').addEventListener('click',toggleMute);$('capture-btn').addEventListener('click',lockMouse);
@@ -295,7 +337,7 @@ document.addEventListener('keydown',e=>{
   if(vr.immersive&&game.mode==='playing')return;setInputMode('keyboard');
   if(e.target.matches('input,select'))return;const code=keyCode(e);
   if(code==='KeyM'&&!e.repeat){toggleMute();return;}
-  if(code==='Escape'&&!e.repeat){e.preventDefault();if(screen==='settings-screen'||screen==='help-screen'){showScreen(returnScreen);return;}if(screen==='gallery-result-screen'){home();return;}if(game.mode==='playing')pause();else if(screen==='pause-screen')play();return;}
+  if(code==='Escape'&&!e.repeat){e.preventDefault();if(screen==='settings-screen'||screen==='help-screen'){showScreen(returnScreen);return;}if(screen==='gallery-result-screen'){home();return;}if(screen==='trophy-screen'){trophyBack();return;}if(game.mode==='playing')pause();else if(screen==='pause-screen')play();return;}
   if(code==='Enter'&&!e.repeat&&e.target===canvas){if(game.mode==='paused')play();else if(game.mode==='dead')$('result-btn').click();return;}
   if(game.mode!=='playing')return;if(['Tab','Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyZ'].includes(code))e.preventDefault();
   keys.add(code);if(e.repeat)return;if(code==='KeyH'){openHelp();return;}if(pressedActions[code])pressedActions[code]();if(/^Digit[1-6]$/.test(code))game.selectWeapon(Number(code.slice(-1))-1);if(code==='Tab')mapOpen=!mapOpen;
