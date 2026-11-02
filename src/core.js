@@ -3,6 +3,7 @@ export {tileAt,solidAt,canOccupy,moveBody,castRay,lineOfSight,reachable,findRout
 import {validAim,traceEnvironment,traceTrackedShot,rayEntityDistance,entityHeight,WALL_HEIGHT} from './spatial.js';
 import {EXPANSION,decorateLevel} from './expansion.js';
 import {recordForSign} from './archive-ledger.js';
+import {galleryShot,galleryHit,advanceGallery} from './shooting-gallery.js';
 import {GAUNTLET} from './gauntlet.js';
 import {PIT_STAGES,PIT_HOSTS,PIT_BOSSES} from './pit.js';
 import {updatePitBoss,updatePitEnvironment,pitDamageMultiplier,exposePitBoss} from './pit-combat.js';
@@ -69,7 +70,7 @@ export function createLevel(index,campaign='original'){
   decorateLevel(level,def,index);return level;
 }
 export class Game {
-  constructor(){this.campaign='original';this.energyMode='survival';this.mode='title';this.events=[];this.time=0;this.levelIndex=0;this.totalFreed=0;this.totalArtifacts=0;this.totalSecrets=0;this.campaignTime=0;this.unlocked=3;this.weapon=1;this.effects=[];this.projectiles=[];this.rng=369;this.loadLevel(0,false);this.mode='title';}
+  constructor(){this.gallery=null;this.campaign='original';this.energyMode='survival';this.mode='title';this.events=[];this.time=0;this.levelIndex=0;this.totalFreed=0;this.totalArtifacts=0;this.totalSecrets=0;this.campaignTime=0;this.unlocked=3;this.weapon=1;this.effects=[];this.projectiles=[];this.rng=369;this.loadLevel(0,false);this.mode='title';}
   random(){this.rng=(Math.imul(1664525,this.rng)+1013904223)>>>0;return this.rng/4294967296;}
   emit(type,data={}){this.events.push({type,...data});}
   say(text,speaker='ORI',priority=1){
@@ -87,7 +88,7 @@ export class Game {
   get stageCount(){return this.campaign==='pit'?PIT_STAGES.length:12;}
   get survival(){return this.energyMode==='survival';}
   get tactics(){return this.definition.tactics||0;}
-  start({energyMode='survival',campaign='original'}={}){this.campaign=campaign==='pit'?'pit':'original';this.pitRecord=[];this.pitDeaths=0;this.energyMode=this.campaign==='pit'?'survival':energyMode==='legacy'?'legacy':'survival';this.totalFreed=0;this.totalArtifacts=0;this.totalSecrets=0;this.campaignTime=0;this.unlocked=3;this.weapon=1;this.rng=369;this.loadLevel(0,false);this.mode='playing';if(this.campaign==='original')this.banter('hello',[['ORI','Rise and shine, Michael. The Matrix has terrible customer service.'],['WAVE','Good. I brought a cancellation policy. And a bass cannon.']]);}
+  start({energyMode='survival',campaign='original'}={}){this.gallery=null;this.campaign=campaign==='pit'?'pit':'original';this.pitRecord=[];this.pitDeaths=0;this.energyMode=this.campaign==='pit'?'survival':energyMode==='legacy'?'legacy':'survival';this.totalFreed=0;this.totalArtifacts=0;this.totalSecrets=0;this.campaignTime=0;this.unlocked=3;this.weapon=1;this.rng=369;this.loadLevel(0,false);this.mode='playing';if(this.campaign==='original')this.banter('hello',[['ORI','Rise and shine, Michael. The Matrix has terrible customer service.'],['WAVE','Good. I brought a cancellation policy. And a bass cannon.']]);}
   startPit(){this.start({campaign:'pit'});this.say('The Twelve Trials. Finite cells. Read the floor, punish recovery, and keep Ori close.','ORI',2);}
   loadLevel(index,carry=true){
     const health=carry?Math.max(this.campaign==='pit'?40:65,this.player?.health??100):100,armor=carry?Math.max(this.campaign==='pit'?0:20,this.player?.armor??0):25;this.nav=null;this.navTime=0;
@@ -96,10 +97,10 @@ export class Game {
     this.ori={x:this.player.x+.35,y:this.player.y+.3,a:0};this.effects=[];this.projectiles=[];this.time=0;this.levelFreed=0;this.shots=0;this.hits=0;this.cooldown=0;this.recharge=0;this.vent=0;this.shotAnim=0;this.hurt=0;this.shake=0;this.shift=false;this.bassCharge=0;this.dodgeCooldown=0;this.dodgeFlash=0;this.shieldTime=0;this.shieldCharge=0;this.oriCooldown=0;this.oriAuto=3;this.warning=4;this.objectiveTime=0;this.levelKills=0;this.unlocked=this.campaign==='pit'?6:Math.max(this.unlocked,index===0?3:index===1?4:6);this.mode='playing';this.resetFeel();this.checkpoint=this.snapshot();this.emit('checkpoint');this.emit('sector',{index,name:this.definition.name,campaign:this.campaign});
   }
   get liberation(){return Math.round(this.totalFreed/(this.campaign==='pit'?PIT_HOSTS:CAMPAIGN_HOSTS)*100);}
-  get objective(){const n=this.level.relays.filter(r=>r.active).length;if(n<2)return `BREAK CONTROL RELAYS ${n}/2`;if(!this.player.key)return 'FIND THE GOLDEN ACCESS KEY';if(this.level.enemies.some(e=>e.type==='warden'&&!e.dead))return 'DEFEAT '+(PIT_BOSSES[this.definition.boss]?.name||'THE WARDEN');return 'REACH THE EXTRACTION PORTAL';}
-  get objectiveTarget(){return this.level.relays.find(r=>!r.active)||(!this.player.key?{...this.level.key,label:'GOLD ACCESS KEY'}:null)||this.level.enemies.find(e=>e.type==='warden'&&!e.dead)||{...this.level.exit,label:'EXTRACTION'};}
-  get exitReady(){return this.level.relays.every(r=>r.active)&&this.player.key&&!this.level.enemies.some(e=>e.type==='warden'&&!e.dead);}
-  selectWeapon(index){if(index<0||index>=this.unlocked){this.emit('toast',{text:'WEAPON LOCKED · advance to the next sector'});return false;}if(this.weapon!==index){this.weapon=index;this.equipAnim=.24;this.emit('sound',{name:'equip'});this.emit('weapon');}return true;}
+  get objective(){if(this.gallery)return 'CALIBRATION VAULT / '+Math.max(0,Math.ceil(60-this.time))+'s · '+this.gallery.hits+' HITS / '+this.gallery.shots+' SHOTS';const n=this.level.relays.filter(r=>r.active).length;if(n<2)return `BREAK CONTROL RELAYS ${n}/2`;if(!this.player.key)return 'FIND THE GOLDEN ACCESS KEY';if(this.level.enemies.some(e=>e.type==='warden'&&!e.dead))return 'DEFEAT '+(PIT_BOSSES[this.definition.boss]?.name||'THE WARDEN');return 'REACH THE EXTRACTION PORTAL';}
+  get objectiveTarget(){if(this.gallery)return this.level.enemies.find(e=>!e.dead)||{x:14.5,y:10.5,label:'PRACTICE TARGETS'};return this.level.relays.find(r=>!r.active)||(!this.player.key?{...this.level.key,label:'GOLD ACCESS KEY'}:null)||this.level.enemies.find(e=>e.type==='warden'&&!e.dead)||{...this.level.exit,label:'EXTRACTION'};}
+  get exitReady(){if(this.gallery)return false;return this.level.relays.every(r=>r.active)&&this.player.key&&!this.level.enemies.some(e=>e.type==='warden'&&!e.dead);}
+  selectWeapon(index){if(this.gallery&&index!==1){this.emit('toast',{text:'CALIBRATION / BLASTER ONLY'});return false;}if(index<0||index>=this.unlocked){this.emit('toast',{text:'WEAPON LOCKED · advance to the next sector'});return false;}if(this.weapon!==index){this.weapon=index;this.equipAnim=.24;this.emit('sound',{name:'equip'});this.emit('weapon');}return true;}
   setCombatPose(pose){if(!validAim(pose?.aim)||!pose?.head||!['x','y','height'].every(k=>Number.isFinite(pose.head[k]))){this.combatPose=null;return false;}this.combatPose=pose;return true;}
   clearCombatPose(){this.combatPose=null;}
   advanceCombat(dt,fire=false){if(this.mode!=='playing')return;if(this.bufferedFire){this.bufferedFire.left-=dt;if(this.bufferedFire.left<=0)this.bufferedFire=null;else if(this.cooldown<=0){const shot=this.bufferedFire;this.bufferedFire=null;this.shoot(shot.alternate,shot.charge);}}if(fire)this.shoot();}
@@ -150,6 +151,7 @@ export class Game {
   }
   saveCheckpoint(){if(this.player.health<=0)return false;this.checkpoint=this.snapshot();this.emit('checkpoint');return true;}
   oriAbility(){
+    if(this.gallery)return false;
     if(this.mode!=='playing'||this.player.ori<30||this.oriCooldown>0){this.emit('toast',{text:'ORI IS RECHARGING'});return false;}
     this.player.ori-=30;this.oriCooldown=3;
     const target=this.level.enemies.filter(e=>!e.dead&&distance(this.player,e)<7&&lineOfSight(this.level,this.player,e)).sort((a,b)=>Math.abs(angleDiff(Math.atan2(a.y-this.player.y,a.x-this.player.x),(this.combatPose?Math.atan2(this.combatPose.aim.direction.y,this.combatPose.aim.direction.x):this.player.a)))-Math.abs(angleDiff(Math.atan2(b.y-this.player.y,b.x-this.player.x),(this.combatPose?Math.atan2(this.combatPose.aim.direction.y,this.combatPose.aim.direction.x):this.player.a))))[0];
@@ -160,6 +162,7 @@ export class Game {
   }
   freeHost(entity){this.totalFreed++;this.levelFreed++;this.lesson=3;this.bassCharge=clamp(this.bassCharge+20,0,100);this.portraitMood='GRIN';this.portraitTime=1.1;this.emit('liberation',{x:entity.x,y:entity.y});this.emit('sound',{name:'free'});}
   damageEnemy(e,damage,stun=0,source='weapon'){
+    if(this.gallery&&e.galleryTarget){galleryHit(this,e,source);return;}
     if(e.dead)return;let actual=damage*(1+Math.floor(this.totalArtifacts/2)*.15)*pitDamageMultiplier(this,e,source);if(e.pitBoss){const floor=e.phase===1?e.maxHp*.66:e.phase===2?e.maxHp*.33:0;actual=Math.min(actual,Math.max(0,e.hp-floor));}e.hp-=actual;e.flash=.15;e.pain=.18;e.stun=Math.max(e.stun,stun*(source==='weapon'?1-this.tactics*.65:1),source==='weapon'&&e.type!=='warden'?.08:0);if(e.pitBoss)e.stun=Math.min(e.stun,.55);e.state='pursue';e.recoil=source==='ori'?0:.16;
     this.stats.damageDealt+=Math.min(actual,Math.max(0,e.hp+actual));if(source==='weapon')this.hitPulse=.16;
     this.emit('hit',{x:e.x,y:e.y,color:source==='ori'?'#5df6ec':WEAPONS[this.weapon].color,source,damage:Math.round(actual),finisher:e.hp<=0});
@@ -174,7 +177,7 @@ export class Game {
     if(this.mode!=='playing'||this.cooldown>0||this.vent>0)return false;
     const w=WEAPONS[this.weapon],mult=alternate?1.65:1,cost=Math.ceil(w.cost*mult);
     if(this.player.energy<cost){if(this.weapon!==0)this.emit('dryFire');if(this.weapon!==0)this.emit('toast',{text:this.survival?'DRY · R / X RELOAD · 1 FOR SLAP':'LOW ENERGY · R TO VENT · 1 FOR SLAP'});this.cooldown=.25;return false;}
-    this.player.energy-=cost;this.cooldown=w.cooldown*(alternate?1.5:1);this.shotAnim=1;this.muzzle=1;this.shake=[.08,.12,.42,.17,.24,.38][this.weapon]*(alternate?1.25:1);this.shots++;this.stats.shots++;this.emit('shot',{weapon:this.weapon,alternate,charge,...(this.combatPose?{aim:{origin:{...this.combatPose.aim.origin},direction:{...this.combatPose.aim.direction}}}:{})});this.emit('sound',{name:'fire',weapon:this.weapon,alternate});
+    this.player.energy-=cost;this.cooldown=w.cooldown*(alternate?1.5:1);this.shotAnim=1;this.muzzle=1;this.shake=[.08,.12,.42,.17,.24,.38][this.weapon]*(alternate?1.25:1);this.shots++;this.stats.shots++;galleryShot(this);this.emit('shot',{weapon:this.weapon,alternate,charge,...(this.combatPose?{aim:{origin:{...this.combatPose.aim.origin},direction:{...this.combatPose.aim.direction}}}:{})});this.emit('sound',{name:'fire',weapon:this.weapon,alternate});
     const p=this.player,damage=w.damage*mult*(1+charge*.5);
     if(this.combatPose)return this.shootTracked(w,damage,alternate);
     if(this.weapon===3){this.projectiles.push({x:p.x,y:p.y,a:p.a,speed:9,life:3,damage,enemy:false,color:w.color,r:.12});return true;}
@@ -196,7 +199,7 @@ export class Game {
     if(end){this.emit('beam',{from:{...o},to:{x:end.x,y:end.y,height:end.height},color:w.color,tracked:true});if(!targets.length&&this.weapon>0){this.emit('impact',{x:end.x,y:end.y,height:end.height,color:w.color});this.emit('sound',{name:'ricochet',position:{...end}});}}
     return true;
   }
-  bassDrop(){if(this.bassCharge<100){this.emit('toast',{text:'BASS DROP CHARGES BY LIBERATING HOSTS'});return false;}this.bassCharge=0;this.shake=.6;this.emit('bass');for(const e of this.level.enemies)if(!e.dead&&distance(e,this.player)<6&&lineOfSight(this.level,e,this.player))this.damageEnemy(e,70,3);this.portraitMood='BROOO';this.portraitTime=1.5;this.say('BROOOOO! Time to change the frequency!','WAVE',2);return true;}
+  bassDrop(){if(this.gallery)return false;if(this.bassCharge<100){this.emit('toast',{text:'BASS DROP CHARGES BY LIBERATING HOSTS'});return false;}this.bassCharge=0;this.shake=.6;this.emit('bass');for(const e of this.level.enemies)if(!e.dead&&distance(e,this.player)<6&&lineOfSight(this.level,e,this.player))this.damageEnemy(e,70,3);this.portraitMood='BROOO';this.portraitTime=1.5;this.say('BROOOOO! Time to change the frequency!','WAVE',2);return true;}
   damagePlayer(amount,source=null){
     if(this.mode!=='playing'||!this.survival&&this.dodgeFlash>0)return;
     if(this.shieldTime>0&&this.shieldCharge>0){const shield=Math.min(amount,this.shieldCharge);this.shieldCharge-=shield;amount-=shield;this.emit('shieldHit',{absorbed:shield});if(amount<=0)return;}
@@ -219,7 +222,7 @@ export class Game {
   }
   update(dt,input={}){
     if(this.mode!=='playing')return;dt=clamp(dt,0,.05);this.time+=dt;
-    this.updatePlayer(dt,input);this.updateShared(dt);this.collectPlayerItems();this.updateWorld(dt);
+    this.updatePlayer(dt,input);this.updateShared(dt);this.collectPlayerItems();this.updateWorld(dt);if(this.gallery)advanceGallery(this);
   }
   // Split phases let an optional authoritative squad step each avatar, then one world.
   updatePlayer(dt,input={}){
@@ -256,6 +259,7 @@ export class Game {
   updateWorld(dt){
     const p=this.player,l=this.level;
     this.updateEnvironment(dt);if(this.mode!=='playing')return;
+    if(this.gallery){this.updateProjectiles(dt);return;}
     for(const e of l.enemies){this.updateEnemy(e,dt);if(this.mode!=='playing')return;}
     this.updateProjectiles(dt);
     this.oriAuto-=dt;this.warning-=dt;

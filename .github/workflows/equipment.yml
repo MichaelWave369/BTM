@@ -50,6 +50,12 @@ jobs:
           BTM_SOFTWARE_WEBGL: '1'
           BTM_BROWSER_OUTPUT: docs/equipment/ci/survival
         run: node scripts/verify-survival-browser.mjs
+      - name: Real Calibration Vault launch, shooting, pause and save isolation
+        env:
+          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
+          BTM_SOFTWARE_WEBGL: '1'
+          BTM_GALLERY_OUTPUT: docs/equipment/ci/gallery
+        run: node scripts/verify-gallery-browser.mjs
       - name: Twelve Pit trials, isolated saves, production captures and offline resume
         env:
           BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
