@@ -70,8 +70,13 @@ try{
  // Real BBS lobby should link directly into the Trophy Room on the same origin
  // without requiring a running LAN node or silently granting competitive stats.
  await page.goto('http://127.0.0.1:5184/bbs.html');
- // Exercise the visible BBS header doorway with a genuine user click, not a\n // programmatic navigation or force-click on the footer far below the fold.\n assert.equal(await page.locator('a[href="./#trophy-room"]').count(),2);\n await page.locator('#trophy-link').click();
- await page.waitForFunction(()=>!document.querySelector('#trophy-screen')?.hidden);
+ // Exercise the visible BBS header doorway with a genuine user click.
+ // The previous edit accidentally included literal backslash-n in this comment,
+ // commenting out the click. The old wait also passed when the element was absent.
+ assert.equal(await page.locator('a[href="./#trophy-room"]').count(),2);
+ await page.locator('#trophy-link').click();
+ await page.locator('#trophy-screen').waitFor({state:'visible',timeout:20000});
+ assert.equal(new URL(page.url()).pathname,'/','BBS doorway loads the solo app');
  assert.equal(await page.locator('#trophy-screen').isVisible(),true,'BBS doorway opens actual cabinet');
  assert.match(await page.locator('.trophy-network').textContent(),/not online ranks/);
  await page.locator('#trophy-back').click();
