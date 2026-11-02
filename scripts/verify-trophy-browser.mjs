@@ -78,7 +78,24 @@ try{
  await page.locator('#trophy-link').focus();
  assert.equal(await page.evaluate(()=>document.activeElement?.id),'trophy-link');
  await page.keyboard.press('Enter');
- await page.locator('#trophy-screen').waitFor({state:'visible',timeout:20000});
+ // A native navigation is not complete when the URL changes: ES modules
+ // (including the title-screen router) run before DOMContentLoaded. On
+ // software-WebGL CI runners, waiting only for a visible element can race
+ // module evaluation and misleadingly report a hidden Trophy Room.
+ try{
+  await page.waitForLoadState('domcontentloaded',{timeout:90000});
+  await page.locator('#trophy-screen').waitFor({state:'visible',timeout:45000});
+ }catch(error){
+  const diagnostic=await page.evaluate(()=>({
+   url:location.href,ready:document.readyState,hash:location.hash,
+   titleVisible:!document.querySelector('#title-screen')?.hidden,
+   trophyExists:!!document.querySelector('#trophy-screen'),
+   trophyHidden:document.querySelector('#trophy-screen')?.hidden,
+   shellStatus:document.querySelector('#offline-status')?.textContent
+  })).catch(e=>({evaluateError:e.message}));
+  throw Error('BBS Trophy Room navigation did not initialize: '+
+   JSON.stringify({diagnostic,pageErrors:errors,reason:error.message}));
+ }
  assert.equal(new URL(page.url()).pathname,'/','BBS doorway loads the solo app');
  assert.equal(await page.locator('#trophy-screen').isVisible(),true,'BBS doorway opens actual cabinet');
  assert.match(await page.locator('.trophy-network').textContent(),/not online ranks/);
