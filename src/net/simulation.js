@@ -94,9 +94,9 @@ export class Room{
   if(this.state!=='lobby'||!this.competitive&&this.started)throw Error('Campaign in progress; use your reconnect token');if(this.actors.size>=this.capacity)throw Error('Room full');
   const a={id,nickname,token,connected:true,ready:false,team:this.mode==='coop'?'cyan':this.actors.size%2?'pink':'cyan',status:'lobby',frags:0,deaths:0,lastSeq:0,lastInput:-99,input:neutralInput(),actions:[],player:null,feel:{},lastEvent:0};this.actors.set(id,a);this.owner??=id;this.event('joined',{player:id});return a;
  }
- disconnect(id){const a=this.actors.get(id);if(!a)return;a.connected=false;a.disconnectedAt=this.elapsed;a.input=neutralInput();a.actions=[];if(this.owner===id)this.owner=[...this.actors.values()].find(p=>p.connected)?.id||id;this.event('disconnected',{player:id});this.dirty=true;}
+ disconnect(id){const a=this.actors.get(id);if(!a)return;a.connected=false;a.disconnectedAt=this.elapsed;a.input=neutralInput();a.actions=[];if(this.owner===id)this.owner=[...this.actors.values()].find(p=>p.connected&&!p.bot)?.id||id;this.event('disconnected',{player:id});this.dirty=true;}
  reconnect(a){a.connected=true;a.input=neutralInput();a.actions=[];a.lastInput=this.elapsed;this.event('reconnected',{player:a.id});return a;}
- remove(id){this.actors.delete(id);if(this.owner===id)this.owner=[...this.actors.values()].find(a=>a.connected)?.id||this.actors.keys().next().value||null;this.event('left',{player:id});}
+ remove(id){this.actors.delete(id);if(this.owner===id)this.owner=[...this.actors.values()].find(a=>a.connected&&!a.bot)?.id||[...this.actors.values()].find(a=>!a.bot)?.id||null;this.event('left',{player:id});}
  live(){return [...this.actors.values()].filter(a=>a.status==='alive');}
  withActor(a,fn){
   const g=this.game;if(g.actorId===a.id)return fn();const old={player:g.player,actorId:g.actorId};for(const k of AVATAR_FIELDS)old[k]=g[k];
