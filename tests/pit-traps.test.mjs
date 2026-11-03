@@ -28,9 +28,9 @@ function fire(g,t){
  g.update(.005);
  return g.projectiles.filter(b=>b.trap==='electric-orb');
 }
-test('only Iron Lung owns an optional, reachable plate with an emitter on actual wall geometry',()=>{
+test('only authored Pit chambers own optional reachable plates with actual wall emitters',()=>{
  for(let i=0;i<12;i++){
-  const l=createLevel(i,'pit'),expected=i===3?1:0;
+  const l=createLevel(i,'pit'),expected=[3,6,7].includes(i)?1:0;
   assert.equal(l.traps.length,expected,'new authored traps only in trial '+(i+1));
   if(!expected)continue;
   const t=l.traps[0];
@@ -38,6 +38,11 @@ test('only Iron Lung owns an optional, reachable plate with an emitter on actual
   assert(canOccupy(l,t.muzzleX,t.muzzleY,.05),'orb must leave the wall from open space');
   assert(solidAt(l,t.mountX,t.mountY),'turret head must actually attach to a wall');
   assert(lineOfSight(l,{x:t.muzzleX,y:t.muzzleY},t),'plate has a valid projectile lane');
+  if(t.pattern==='crossfire'){
+   assert(solidAt(l,t.secondMountX,t.secondMountY));
+   assert(canOccupy(l,t.secondMuzzleX,t.secondMuzzleY,.05));
+   assert(lineOfSight(l,{x:t.secondMuzzleX,y:t.secondMuzzleY},t));
+  }
   assert(findRoute(l,PIT_STAGES[i].spawn,t).length,'plate is accessible without teleporting');
   assert(Math.hypot(t.x-PIT_STAGES[i].spawn.x,t.y-PIT_STAGES[i].spawn.y)>4,'no spawn trap');
  }
