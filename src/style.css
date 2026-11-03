@@ -175,3 +175,12 @@ body[data-input=controller] #game,body[data-input=vr] #game{cursor:none}.reduced
 #bbs-portal-close:focus-visible{outline:3px solid #fff8b9;outline-offset:2px}
 #bbs-portal-frame{display:block;flex:1;min-width:0;min-height:0;width:100%;border:0;background:#07141a}
 @media(max-width:600px){.bbs-portal-toolbar{gap:7px;flex-wrap:wrap}.bbs-portal-toolbar strong{font-size:10px}.bbs-portal-toolbar span{display:none}#bbs-portal-close{margin-left:auto;font-size:10px;padding:8px}}
+
+/* Optional Human Ledger witness reconstruction, accessible offline and by keyboard. */
+.archive-intel-options{display:grid;gap:9px;margin-top:13px;white-space:normal}
+.archive-intel-options button{width:100%;text-align:left;line-height:1.4;background:#132b3a;
+ border:1px solid #6d9bb6;border-radius:8px;color:#f0fbff;padding:12px 14px;
+ cursor:pointer;font:600 15px Oxanium,sans-serif}
+.archive-intel-options button:hover,.archive-intel-options button:focus-visible{
+ background:#21445b;border-color:var(--gold);outline:2px solid var(--gold);outline-offset:2px}
+.archive-intel-feedback{min-height:1.4em;font-weight:700;color:var(--gold)}
