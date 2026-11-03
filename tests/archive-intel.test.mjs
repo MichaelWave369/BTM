@@ -98,7 +98,7 @@ test('desktop and wrist render the same locally earned exercises with no mandato
  assert(main.includes('archiveLedger.submitIntel(selected.id,i)'));
  assert(main.includes("selected.type==='challenge'"));
  assert(main.includes("result.correct"));
- assert(main.includes('role\',\'status'));
+ assert(main.includes("feedback.setAttribute('role','status')"));
  assert(wrist.includes("if(entry.type==='challenge')"));
  assert(wrist.includes('ledger.submitIntel(entry.id,i)'));
  assert(wrist.includes("this.archiveFeedback=result.correct?"));
