@@ -90,20 +90,41 @@ export class WorldUI{
   if(entry){
    g.fillStyle=UI.gold;g.font='600 22px '+UI_FONT;g.fillText(entry.title.slice(0,52),20,149);
    g.fillStyle=UI.cyan;g.font='14px '+UI_FONT;g.fillText(entry.kind+'  /  '+entry.subject,20,176);
-   g.fillStyle=UI.text;g.font='18px '+UI_FONT;
-   const lines=linesFor(g,entry.text,710),pages=Math.max(1,Math.ceil(lines.length/10));
-   this.archiveDetailPage=Math.min(this.archiveDetailPage,pages-1);
-   lines.slice(this.archiveDetailPage*10,(this.archiveDetailPage+1)*10).forEach((line,i)=>g.fillText(line,20,213+i*22));
-   g.font='14px '+UI_FONT;g.fillStyle=UI.muted;g.fillText('RECORD PAGE '+(this.archiveDetailPage+1)+' / '+pages,20,432);
-   this.button(20,444,210,46,'INDEX',()=>{this.archiveSelected=null;this.archiveDetailPage=0;this.lastPaint=-Infinity;});
-   this.button(240,444,150,46,'PREV',()=>{this.archiveDetailPage--;this.lastPaint=-Infinity;},{enabled:this.archiveDetailPage>0});
-   this.button(400,444,170,46,'NEXT',()=>{this.archiveDetailPage++;this.lastPaint=-Infinity;},{enabled:this.archiveDetailPage<pages-1});
+   if(entry.type==='challenge'){
+    g.fillStyle=UI.text;g.font='18px '+UI_FONT;
+    if(entry.solved){
+     g.fillStyle=UI.gold;g.font='600 19px '+UI_FONT;g.fillText('INTEL VERIFIED / LOCAL ARCHIVE ONLY',20,212);
+     g.fillStyle=UI.text;g.font='17px '+UI_FONT;
+     linesFor(g,entry.debrief,705).slice(0,9).forEach((line,i)=>g.fillText(line,20,251+i*21));
+    }else{
+     linesFor(g,entry.question,715).slice(0,2).forEach((line,i)=>g.fillText(line,20,208+i*24));
+     entry.options.forEach((option,i)=>this.button(20,268+i*54,724,46,
+      String(i+1)+'. '+option.slice(0,51),()=>{
+       const result=ledger.submitIntel(entry.id,i);
+       this.archiveFeedback=result.correct?'VERIFIED / WITNESS CHAIN COMPLETE':'CHECK THE EVIDENCE / TRY AGAIN';
+       this.lastPaint=-Infinity;
+      }));
+     g.fillStyle=UI.gold;g.font='14px '+UI_FONT;
+     g.fillText(this.archiveFeedback||'ANSWER USING RECOVERED WITNESS TESTIMONIES',20,432);
+    }
+    this.button(20,444,210,46,'INDEX',()=>{this.archiveSelected=null;this.archiveFeedback='';this.lastPaint=-Infinity;});
+   }else{
+    g.fillStyle=UI.text;g.font='18px '+UI_FONT;
+    const lines=linesFor(g,entry.text,710),pages=Math.max(1,Math.ceil(lines.length/10));
+    this.archiveDetailPage=Math.min(this.archiveDetailPage,pages-1);
+    lines.slice(this.archiveDetailPage*10,(this.archiveDetailPage+1)*10).forEach((line,i)=>g.fillText(line,20,213+i*22));
+    g.font='14px '+UI_FONT;g.fillStyle=UI.muted;g.fillText('RECORD PAGE '+(this.archiveDetailPage+1)+' / '+pages,20,432);
+    this.button(20,444,210,46,'INDEX',()=>{this.archiveSelected=null;this.archiveDetailPage=0;this.lastPaint=-Infinity;});
+    this.button(240,444,150,46,'PREV',()=>{this.archiveDetailPage--;this.lastPaint=-Infinity;},{enabled:this.archiveDetailPage>0});
+    this.button(400,444,170,46,'NEXT',()=>{this.archiveDetailPage++;this.lastPaint=-Infinity;},{enabled:this.archiveDetailPage<pages-1});
+   }
   }else{
    if(!records.length){g.fillStyle=UI.text;g.font='18px '+UI_FONT;g.fillText('NO RECORDS YET / READ THE PLAQUES ON FACILITY WALLS',20,154);g.fillText('Point at a plaque and press USE. Each testimony is saved.',20,189);}
    const pages=Math.max(1,Math.ceil(records.length/5));this.archivePage=Math.min(this.archivePage,pages-1);
    records.slice(this.archivePage*5,(this.archivePage+1)*5).forEach((record,i)=>{
-    const title=(record.type==='dossier'?'[UNSEALED] ':'')+record.title;
-    this.button(20,119+i*62,724,53,title.slice(0,47),()=>{this.archiveSelected=record.id;this.archiveDetailPage=0;this.lastPaint=-Infinity;});
+    const title=(record.type==='dossier'?'[UNSEALED] ':record.type==='challenge'?
+     record.solved?'[VERIFIED] ':'[INTEL] ':'')+record.title;
+    this.button(20,119+i*62,724,53,title.slice(0,47),()=>{this.archiveSelected=record.id;this.archiveDetailPage=0;this.archiveFeedback='';this.lastPaint=-Infinity;});
    });
    g.fillStyle=UI.muted;g.font='14px '+UI_FONT;g.fillText('INDEX PAGE '+(this.archivePage+1)+' / '+pages,20,431);
    this.button(20,444,210,46,'BACK / COMBAT',()=>{this.archiveOpen=false;this.lastPaint=-Infinity;});
