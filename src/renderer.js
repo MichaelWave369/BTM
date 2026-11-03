@@ -8,18 +8,23 @@ import {UI,UI_FONT} from './arcade-ui.js';
 import {makeAssets,makeSign} from './assets.js';
 import {doorKind,paintDoorSurface} from './door-visibility.js';
 export class Renderer {
-  constructor(canvas){this.canvas=canvas;this.g=canvas.getContext('2d',{alpha:false});this.assets=makeAssets();this.setResolution(640);this.particles=[];this.beams=[];this.ghosts=[];this.hitMarker=0;this.finisher=0;this.bassFlash=0;this.damageFlash=0;this.lastTime=0;this.signTextures=new Map();this.packCache=new Map();this.activePackStyle=null;this.packImages=null;this.packRevision=0;}
+  constructor(canvas){this.canvas=canvas;this.g=canvas.getContext('2d',{alpha:false});this.assets=makeAssets();this.setResolution(640);this.particles=[];this.beams=[];this.ghosts=[];this.hitMarker=0;this.finisher=0;this.bassFlash=0;this.damageFlash=0;this.lastTime=0;this.signTextures=new Map();this.packCache=new Map();this.packPending=new Map();this.activePackStyle=null;this.packImages=null;this.packRevision=0;}
   setResolution(width){this.canvas.width=width;this.canvas.height=Math.round(width*9/16);this.depth=new Float32Array(width);this.g.imageSmoothingEnabled=false;}
   event(e){if(['burst','liberation','hit','telegraph','impact','oriAssist'].includes(e.type)){const n=e.count??(e.type==='liberation'?30:e.type==='oriAssist'?18:10),color=e.color??(e.type==='liberation'?'#b9ff53':e.type==='oriAssist'?'#5df6ec':'#ffbc82');for(let i=0;i<n;i++){const a=i/n*Math.PI*2;this.particles.push({x:e.x,y:e.y,z:.25+(i%5)*.11,vx:Math.cos(a)*.8,vy:Math.sin(a)*.8,vz:.4+(i%3)*.5,life:e.type==='liberation'?1.1:.45,max:e.type==='liberation'?1.1:.45,color});}}if(e.type==='hit'&&e.source!=='ori'){this.hitMarker=.17;this.finisher=e.finisher?.3:0;}if(e.type==='liberation')this.ghosts.push({...e,life:.85});if(e.type==='beam')this.beams.push({...e,life:e.ori?.24:.12});if(e.type==='bass')this.bassFlash=.7;this.particles=this.particles.slice(-500);this.beams=this.beams.slice(-24);}
   ensureTexturePack(level,settings={}){
     const style=textureStyleFor(level,settings);
     if(style===this.activePackStyle)return;
     this.activePackStyle=style;this.packImages=this.packCache.get(style)||null;
-    if(this.packImages||!AUTHORED_TEXTURE_MANIFESTS[style])return;
-    void loadAuthoredTexturePack(style).then(images=>{
-      this.packCache.set(style,images);
+    if(this.packImages||!AUTHORED_TEXTURE_MANIFESTS[style]||this.packPending.has(style))return;
+    const request=loadAuthoredTexturePack(style).then(images=>{
+      this.packPending.delete(style);
+      if(Object.keys(images).length){
+        this.packCache.set(style,images);
+        while(this.packCache.size>2)this.packCache.delete(this.packCache.keys().next().value);
+      }
       if(this.activePackStyle===style){this.packImages=images;this.packRevision++;this.currentTextureKey=null;}
-    }).catch(()=>{});
+    }).catch(()=>this.packPending.delete(style));
+    this.packPending.set(style,request);
   }
   draw(game,dt,settings,{demo=false,map=false}={}){
     const g=this.g,w=this.canvas.width,h=this.canvas.height,p=game.player,l=game.level;this.lastTime+=dt;this.finisher=Math.max(0,this.finisher-dt);this.reducedMotion=settings.reducedMotion;this.ensureTexturePack(l,settings);
