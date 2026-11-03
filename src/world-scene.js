@@ -56,6 +56,16 @@ export class WorldScene {
   if(l.hazards){
    const primary=colorRGB(game.definition.color);
    for(const h of l.hazards){if(!visible(h.x,h.y))continue;const state=pitFloorState(h,game.time),gain=state==='active'?1:state==='warning'?.7:.18,color=state==='warning'?[1,.66,.23,1]:[primary[0]*gain,primary[1]*gain,primary[2]*gain,1];b.floor(h.x*s,.025,h.y*s,h.radius*2*s,'hazard:'+h.kind,color);}
+   for(const trap of l.traps||[]){
+    if(!visible(trap.x,trap.y))continue;
+    const charging=Number.isFinite(trap.fireAt),color=charging?[1,.78,.28,1]:[.25,.62,.72,1];
+    // Mark the PRESSURE PLATE on the actual floor and the emitter on its wall.
+    // These are render-only hints; collision and shots stay in Game.update.
+    b.floor(trap.x*s,.038,trap.y*s,trap.radius*2*s,'hazard:arc',color);
+    b.box([trap.muzzleX*s,.66*s,trap.muzzleY*s],[.12*s,.28*s,.30*s],'white',color);
+    b.billboard(trap.muzzleX*s,.73*s,trap.muzzleY*s,.15,.15,'marker',eye,charging?TELL:CYAN);
+    this.counts.objects++;
+   }
    for(const blast of l.blasts)if(visible(blast.x,blast.y))b.floor(blast.x*s,.03,blast.y*s,blast.radius*2*s,'hazard:arc',blast.hit?[1,.25,.3,1]:[1,.7,.25,1]);
    for(const e of l.enemies)if(e.pitBoss==='mirror'&&!e.dead&&visible(e.x,e.y)){const h=entityHeight(e.type)*s;for(const side of [-1,1])b.billboard((e.x+side*.65)*s,.15,e.y*s,h*.6,h*.8,'pitboss:mirror',eye,[.18,.12,.25,1]);}
   }
