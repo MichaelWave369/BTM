@@ -11,6 +11,10 @@ const LANES=Object.freeze([
 const cleanInt=(x,max=1e8)=>Number.isSafeInteger(x)&&x>=0&&x<=max?x:0;
 const pct=(hits,shots)=>shots>0?Math.round(hits/shots*100):0;
 export function galleryResult(gallery){
+ if(gallery?.drill==='hazard-gauntlet')
+  return {drill:'hazard-gauntlet',seconds:Math.max(0,Math.min(90,Math.ceil(gallery.elapsed||0))),
+   duration:90,activations:cleanInt(gallery.activations),healthDamage:cleanInt(gallery.healthDamage),
+   shielded:cleanInt(gallery.shielded),survived:!!gallery.survived};
  const shots=cleanInt(gallery?.shots),hits=cleanInt(gallery?.hits);
  return {drill:gallery?.drill==='tracking-60'?'tracking-60':'signal-60',seconds:GALLERY_DURATION,shots,hits,
   accuracy:pct(hits,shots),score:cleanInt(gallery?.score)};
@@ -88,6 +92,19 @@ export function galleryHit(game,enemy,source='weapon'){
 export function advanceGallery(game){
  const state=game.gallery;
  if(!state||state.ended)return;
+ if(state.drill==='hazard-gauntlet'){
+  state.elapsed=game.time;
+  state.healthDamage=Math.round(Math.max(0,game.stats.damageTaken-state.damageStart));
+  // Game.update still calls advanceGallery after lethal damage, so convert
+  // the end of a practice life into a standalone result rather than Pit death.
+  if(game.mode==='dead'||game.time>=state.duration){
+   state.survived=game.player.health>0&&game.time>=state.duration;
+   state.ended=true;
+   game.mode='complete';
+   game.emit('galleryComplete',{result:galleryResult(state)});
+  }
+  return;
+ }
  for(const enemy of game.level.enemies){
   if(!enemy.galleryTarget)continue;
   if(enemy.dead){

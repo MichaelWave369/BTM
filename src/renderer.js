@@ -55,7 +55,7 @@ export class Renderer {
     for(const captive of l.captives)if(!captive.freed)things.push({...captive,type:'captive',height:1});
     for(const relay of l.relays)things.push({...relay,type:relay.active?'relayOn':'relay',height:1});
     if(!l.key.taken)things.push({...l.key,type:'key',height:.48,bob:true});
-    if(!game.networkCompetitive)things.push({...l.exit,type:'portal',height:1.6});
+    if(!game.networkCompetitive&&!game.gallery)things.push({...l.exit,type:'portal',height:1.6});
     for(const a of game.remotePlayers||[])if(['alive','downed'].includes(a.status))things.push({x:a.renderX??a.x,y:a.renderY??a.y,type:'remote',remote:a,height:a.status==='downed'?.4:1.03});
     for(const trap of l.traps||[]){
       const charging=Number.isFinite(trap.fireAt);
