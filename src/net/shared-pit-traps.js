@@ -21,7 +21,7 @@ function hit(g,h,a){
  // its event. SharedWorld.emit otherwise tags events with the primary actor.
  g.room.withActor(a,()=>{
   g.damagePlayer(h.damage,h);
-  g.emit('hazardHit',{id:h.id,kind:h.kind,damage:h.damage});
+  g.emit('hazardHit',{trapId:h.id,kind:h.kind,damage:h.damage});
  });
 }
 function insideNow(trap,actors,radius=trap.radius){
@@ -43,7 +43,7 @@ function advanceOrb(g,trap,actors){
    trap.pattern==='double'?'DOUBLE ORB / STAGGERED VOLLEY':
    'ELECTRIC ORB / PRESSURE PLATE ARMED';
   announce(g,trap,text);
-  g.emit('pitTrapArmed',{id:trap.id,pattern:trap.pattern||'single',
+  g.emit('pitTrapArmed',{trapId:trap.id,pattern:trap.pattern||'single',
    x:trap.x,y:trap.y,fireAt:trap.fireAt,targetId:a.id});
  }
  if(!Number.isFinite(trap.fireAt)||g.time<trap.fireAt)return;
@@ -65,7 +65,7 @@ function advanceOrb(g,trap,actors){
   a:Math.atan2(target.y-source.y,target.x-source.x),
   speed:trap.speed,damage:trap.damage,life:3,enemy:true,
   trap:'electric-orb',color:'#59e7ff',r:.15});
- g.emit('pitTrapFired',{id:trap.id,shot:shot+1,side,
+ g.emit('pitTrapFired',{trapId:trap.id,shot:shot+1,side,
   x:source.x,y:source.y,targetX:target.x,targetY:target.y});
  g.emit('sound',{name:'oriBolt',position:{x:source.x,y:source.y,height:.7}});
  g.emit('burst',{x:source.x,y:source.y,height:.7,color:'#59e7ff',count:8});
@@ -76,11 +76,11 @@ function advanceFloor(g,h,actors){
   if(entrants.length&&!Number.isFinite(h.fireAt)&&g.time>=(h.readyAt||0)){
    h.fireAt=g.time+h.warning;h.readyAt=g.time+h.cooldown;
    announce(g,h,'PRESSURE PULSE / SQUAD MOVE CLEAR');
-   g.emit('pitFloorArmed',{id:h.id,kind:h.kind,fireAt:h.fireAt});
+   g.emit('pitFloorArmed',{trapId:h.id,kind:h.kind,fireAt:h.fireAt});
   }
   if(!Number.isFinite(h.fireAt)||g.time<h.fireAt)return;
   h.fireAt=null;h.activeUntil=g.time+.4;
-  g.emit('pitFloorFired',{id:h.id,kind:h.kind});
+  g.emit('pitFloorFired',{trapId:h.id,kind:h.kind});
   for(const a of actors)if(dist(a.player,h)<h.radius+.16)hit(g,h,a);
   g.emit('burst',{x:h.x,y:h.y,height:.08,color:'#62e8ff',count:8});
   return;
