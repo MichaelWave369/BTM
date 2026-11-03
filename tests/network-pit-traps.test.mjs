@@ -121,13 +121,13 @@ test('trap timer snapshots drive two distinct clients, without sending geometry 
  assert.deepEqual(wa.world.traps,wb.world.traps,'two peers see the same firing clock');
  assert(!('cells'in wa.world),'no duplicate static geometry every snapshot');
  applyWorld(west,wa.world);applyWorld(east,wb.world);
- assert.equal(west.traps[0].fireAt,t.fireAt);
- assert.equal(east.traps[0].fireAt,t.fireAt);
+ assert(Math.abs(west.traps[0].fireAt-t.fireAt)<.001,'wire clock is quantized to milliseconds');
+ assert(Math.abs(east.traps[0].fireAt-t.fireAt)<.001,'second peer receives same quantized clock');
  assert.throws(()=>applyWorld(west,{...wa.world,traps:[['unknown',500]]}));
  assert.throws(()=>applyWorld(west,{...wa.world,traps:[[t.id,Infinity]]}));
  const previous=structuredClone(west);
  applyWorld(previous,{...wa.world,traps:undefined,floorTraps:undefined});
- assert.equal(previous.traps[0].fireAt,t.fireAt,'old format-1 wire remains accepted');
+ assert(Math.abs(previous.traps[0].fireAt-t.fireAt)<.001,'old format-1 wire remains accepted');
 });
 
 test('co-op checkpoints preserve one pending orb and reject forged authoritative trap data',()=>{
@@ -137,7 +137,9 @@ test('co-op checkpoints preserve one pending orb and reject forged authoritative
  const restored=newRoom();restored.restore(save);
  assert.equal(restored.game.level.traps[0].fireAt,t.fireAt);
  assert.deepEqual(restored.game.level.traps[0].insideActors,[a.id]);
- const restoredActor=restored.actors.get(a.id);restoredActor.invulnerable=0;
+ const restoredActor=restored.actors.get(a.id);
+ restored.reconnect(restoredActor); // resumable sessions remain suspended until a real avatar reconnects
+ restoredActor.invulnerable=0;
  restored.step();assert.equal(count(restored,'pitTrapArmed'),0);
  step(restored,33);assert.equal(count(restored,'pitTrapFired'),1,'one delayed shot survives resume');
  const noTraps=structuredClone(save);
