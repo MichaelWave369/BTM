@@ -7,6 +7,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {WebSocketServer,WebSocket} from 'ws';
 import {Room} from '../src/net/simulation.js';
+import {trustedHostOrigins} from './host-config.mjs';
 import {PROTOCOL,TICK_RATE,SNAPSHOT_RATE,MAX_MESSAGE,TokenBucket,validateMessage,roomCode,nickname} from '../src/net/protocol.js';
 const root=path.resolve(fileURLToPath(new URL('../dist/',import.meta.url))),secret=()=>randomBytes(24).toString('hex');
 const DEFAULT_SAVE_DIR=fileURLToPath(new URL('./data/',import.meta.url));
@@ -91,7 +92,7 @@ export async function createServer({host='127.0.0.1',port=8787,origins=[],saveDi
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const args=process.argv.slice(2),value=(key,fallback)=>{const i=args.indexOf(key);return i>=0?args[i+1]:fallback;};
- const host=value('--host','127.0.0.1'),port=Number(value('--port',process.env.PORT||8787)),origins=args.flatMap((v,i)=>v==='--origin'?[args[i+1]]:[]);if(!Number.isInteger(port)||port<1||port>65535)throw Error('Invalid port');
+ const host=value('--host','127.0.0.1'),port=Number(value('--port',process.env.PORT||8787)),origins=trustedHostOrigins(process.env.BTM_ALLOWED_ORIGINS||'',args.flatMap((v,i)=>v==='--origin'?[args[i+1]]:[]));if(!Number.isInteger(port)||port<1||port>65535)throw Error('Invalid port');
  const server=await createServer({host,port,origins,saveDir:path.resolve(value('--save-dir',DEFAULT_SAVE_DIR))});console.log('BTM BBS LAN CLAN listening on http://'+host+':'+server.address.port+' / ws endpoint /ws');
  for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>void server.close().then(()=>process.exit(0)));
 }
