@@ -8,6 +8,7 @@ import {textureSettings} from './texture-packs.js';
 import {ArchiveLedger} from './archive-ledger.js';
 import {buildTrophyDossier,readGalleryCard} from './trophy-room.js';
 import {enterGallery,galleryResult,storeGalleryResult} from './shooting-gallery.js';
+import {enterHazardVault} from './hazard-vault.js';
 import {enterPhiWadMission,leavePhiWadMission} from './phi-content/runtime.js';
 import {loadHostedMission} from './phi-content/hosted-missions.js';
 import {UI,WEAPON_UI,drawOri,drawWeaponIcon} from './arcade-ui.js';
@@ -197,9 +198,21 @@ const minutes=n=>Math.floor(n/60).toString().padStart(2,'0')+':'+Math.floor(n%60
 function galleryFinished(result){
   const report=result||galleryResult(game.gallery);
   let savedRecord=null;if(report.drill==='signal-60'){try{savedRecord=storeGalleryResult(localStorage,report);}catch{}}
-  const rows=[['DRILL',report.drill==='tracking-60'?'TRACKING':'STATIONARY'],['SCORE',String(report.score)],['HITS',String(report.hits)],['SHOTS',String(report.shots)],['ACCURACY',report.accuracy+'%'],['BEST',report.drill==='tracking-60'?'PRACTICE ONLY':String(savedRecord?.best?.score??report.score)]];
-  $('gallery-result-screen').querySelector('.eyebrow').textContent=report.drill==='tracking-60'?'CALIBRATION VAULT / TRACKING COMPLETE':'THE CALIBRATION VAULT / DRILL COMPLETED';
-  $('gallery-retry').textContent=report.drill==='tracking-60'?'RETRY MOVING TARGETS':'RETRY 60-SECOND DRILL';
+  const hazard=report.drill==='hazard-gauntlet';
+  const rows=hazard?[
+   ['RESULT',report.survived?'SURVIVED':'OVERRUN'],['TIME',String(report.seconds)+' / 90s'],
+   ['PLATES ARMED',String(report.activations)],['HEALTH LOST',String(report.healthDamage)],
+   ['SHIELD ABSORBED',String(report.shielded)]
+  ]:[['DRILL',report.drill==='tracking-60'?'TRACKING':'STATIONARY'],['SCORE',String(report.score)],['HITS',String(report.hits)],['SHOTS',String(report.shots)],['ACCURACY',report.accuracy+'%'],['BEST',report.drill==='tracking-60'?'PRACTICE ONLY':String(savedRecord?.best?.score??report.score)]];
+  const resultPanel=$('gallery-result-screen');
+  resultPanel.querySelector('.eyebrow').textContent=hazard?'PIT HAZARD VAULT / PRACTICE COMPLETE':
+   report.drill==='tracking-60'?'CALIBRATION VAULT / TRACKING COMPLETE':'THE CALIBRATION VAULT / DRILL COMPLETED';
+  resultPanel.querySelector('h2').innerHTML=hazard?(report.survived?'TRAPS<br><em>SURVIVED.</em>':'RUN<br><em>OVERLOADED.</em>'):'SIGHTS<br><em>CALIBRATED.</em>';
+  resultPanel.querySelector('p').textContent=hazard?
+   'Six real Pit traps. No campaign saves, loot, medals or multiplayer results were changed.':
+   'One minute in the vault. Every hit was earned with the actual BTM blaster and aim controls. This is a local practice result, not a multiplayer achievement.';
+  $('gallery-retry').textContent=hazard?'RETRY HAZARD VAULT':
+   report.drill==='tracking-60'?'RETRY MOVING TARGETS':'RETRY 60-SECOND DRILL';
   $('gallery-result-stats').replaceChildren(...rows.map(([name,value])=>{const div=document.createElement('div'),bold=document.createElement('b');div.textContent=name;bold.textContent=value;div.append(bold);return div;}));
   audio.pause(true);audio.play('complete');showScreen('gallery-result-screen');
 }
@@ -249,7 +262,7 @@ function processEvents(){
     if(e.type==='secret'){showToast('SECRET FOUND / CODE BROWN SUPPLY CLOSET');audio.play('free');}
     if(e.type==='pitTell'){alertText=e.text;alertTimer=2.3;}
     if(e.type==='sector'){audio.sector=e.index;audio.pitAct=e.campaign==='pit'?game.definition.act:null;updateSoundtrackCue();showToast((e.campaign==='pit'?'PIT / TRIAL ':'SECTOR ')+String(e.index+1).padStart(2,'0')+' / '+e.name);}
-    if(e.type==='bass')audio.play('fire',2);if(e.type==='complete'){audio.setScore({kind:'ending'});}if(e.type==='complete'||e.type==='dead')result();
+    if(e.type==='bass')audio.play('fire',2);if(e.type==='complete'){audio.setScore({kind:'ending'});}if((e.type==='complete'||e.type==='dead')&&!game.gallery)result();
   }
 }
 function updateHUD(){
@@ -267,9 +280,9 @@ function updateHUD(){
   $('ori-energy').innerHTML=Math.floor(p.ori)+'<small>%</small>';$('ori-meter').style.width=p.ori+'%';$('ori-status').textContent=game.assistTime>0?'ASSISTING MICHAEL':p.ori>=30?'COMPANION ONLINE':'RECHARGING';
   const liberation=game.phiwadCustom?Math.min(100,Math.round(game.levelFreed/Math.max(1,game.level.captives.length+game.level.enemies.filter(e=>e.human).length)*100)):game.liberation;
   $('liberation').textContent=liberation;$('liberation-meter').style.width=liberation+'%';$('freed-count').textContent=String(game.totalFreed).padStart(2,'0')+' MINDS FREED';$('key-icon').classList.toggle('acquired',p.key);$('key-label').textContent=p.key?'GOLD KEY':'NO KEY';$('artifacts').textContent=String(game.totalArtifacts).padStart(2,'0')+' ARTIFACTS';
-  $('bass-meter').style.width=game.bassCharge+'%';$('bass-label').innerHTML=(game.bassCharge>=100?'DROP THE BASS':'BASS DROP')+' <kbd>'+(vrMode?'BAR':padMode?'D↓':'B')+'</kbd>';$('secret-counter').textContent=game.gallery?'RANGE '+game.gallery.hits+' HITS / '+game.gallery.shots+' SHOTS':game.campaign==='pit'?'TRIALS '+game.pitRecord.length+' / 12':'SECRETS '+(game.level.secretFound?'01':'00')+' / 01';$('bottom-level').textContent=game.gallery?'CALIBRATION VAULT':game.definition.name;$('objective').textContent=game.objective;$('room-label').textContent=game.region||game.definition.tag;
+  $('bass-meter').style.width=game.bassCharge+'%';$('bass-label').innerHTML=(game.bassCharge>=100?'DROP THE BASS':'BASS DROP')+' <kbd>'+(vrMode?'BAR':padMode?'D↓':'B')+'</kbd>';$('secret-counter').textContent=game.gallery?.drill==='hazard-gauntlet'?'LAB '+game.gallery.activations+' PLATES':game.gallery?'RANGE '+game.gallery.hits+' HITS / '+game.gallery.shots+' SHOTS':game.campaign==='pit'?'TRIALS '+game.pitRecord.length+' / 12':'SECRETS '+(game.level.secretFound?'01':'00')+' / 01';$('bottom-level').textContent=game.gallery?.drill==='hazard-gauntlet'?'PIT HAZARD VAULT':game.gallery?'CALIBRATION VAULT':game.definition.name;$('objective').textContent=game.objective;$('room-label').textContent=game.region||game.definition.tag;
   const t=game.objectiveTarget,a=angleDiff(Math.atan2(t.y-p.y,t.x-p.x),p.a);$('objective-bearing').textContent=(a<-1?'←':a>1?'→':a<-.25?'↖':a>.25?'↗':'↑')+' '+(t.label||'WARDEN')+' / '+Math.round(Math.hypot(t.x-p.x,t.y-p.y))+'m';
-  if(game.mode!=='title')$('header-sector').textContent=game.gallery?(game.gallery.drill==='tracking-60'?'CALIBRATION VAULT / MOVING TARGETS':'CALIBRATION VAULT / 60-SECOND DRILL'):game.campaign==='pit'?'PIT / '+PIT_ACTS[game.definition.act].name+' / TRIAL '+(game.levelIndex+1)+' OF 12':game.phiwadCustom?'ΦWAD / CUSTOM MISSION':'ACT '+['I','II','III','IV'][Math.floor(game.levelIndex/3)]+' / SECTOR '+String(game.levelIndex+1).padStart(2,'0')+' OF 12';
+  if(game.mode!=='title')$('header-sector').textContent=game.gallery?(game.gallery.drill==='hazard-gauntlet'?'PIT HAZARD VAULT / 90-SECOND PRACTICE':game.gallery.drill==='tracking-60'?'CALIBRATION VAULT / MOVING TARGETS':'CALIBRATION VAULT / 60-SECOND DRILL'):game.campaign==='pit'?'PIT / '+PIT_ACTS[game.definition.act].name+' / TRIAL '+(game.levelIndex+1)+' OF 12':game.phiwadCustom?'ΦWAD / CUSTOM MISSION':'ACT '+['I','II','III','IV'][Math.floor(game.levelIndex/3)]+' / SECTOR '+String(game.levelIndex+1).padStart(2,'0')+' OF 12';
   $('interaction').textContent=playing?game.interactionHint().replace('[ E ]',vrMode?'[ R GRIP ]':padMode?'[ A ]':'[ E ]'):'';$('vision-tag').hidden=!playing||!game.shift;$('vision-value').textContent=Math.floor(p.vision);
   const bossVisible=playing&&alive&&Math.hypot(alive.x-p.x,alive.y-p.y)<11;$('boss-bar').hidden=!bossVisible;if(bossVisible){$('boss-hp').style.width=alive.hp/alive.maxHp*100+'%';$('boss-name').textContent=alive.pitBoss?PIT_BOSSES[alive.pitBoss].name:'THE WARDEN';$('boss-phase').textContent='PHASE '+alive.phase+(alive.pitBoss?(alive.exposed>0?' / CORE OPEN':' / GUARDED'):'');}
   for(const b of $('weapon-slots').children){const n=Number(b.dataset.weapon);b.classList.toggle('active',n===game.weapon);b.disabled=n>=game.unlocked;b.setAttribute('aria-pressed',String(n===game.weapon));const enabled=n<game.unlocked;if(b.dataset.enabled!==String(enabled)){const iconContext=b.querySelector('canvas').getContext('2d');iconContext.clearRect(0,0,80,44);drawWeaponIcon(iconContext,n,0,0,80,44,enabled);b.querySelector('.weapon-lock').hidden=enabled;b.dataset.enabled=enabled;}b.title=(n>=game.unlocked?'LOCKED / ':'')+WEAPONS[n].name;}
@@ -320,7 +333,7 @@ $('phiwad-input').addEventListener('change',async event=>{
   finally{input.value='';}
 });
 $('start-btn').addEventListener('click',()=>play(true));$('nightmare-btn').addEventListener('click',()=>{communications.reset();game.startNightmare({energyMode:settings.energyMode});mapOpen=false;play();});$('continue-btn').hidden=!saved;
-$('pit-btn').addEventListener('click',()=>{communications.reset();game.startPit();mapOpen=false;play();});$('gallery-btn').addEventListener('click',()=>{communications.reset();enterGallery(game);mapOpen=false;play();});$('gallery-moving-btn').addEventListener('click',()=>{communications.reset();enterGallery(game,{moving:true});mapOpen=false;play();});$('gallery-retry').addEventListener('click',()=>{const moving=game.gallery?.drill==='tracking-60';communications.reset();enterGallery(game,{moving});mapOpen=false;play();});$('gallery-home').addEventListener('click',home);$('continue-pit-btn').hidden=!pitSaved;
+$('pit-btn').addEventListener('click',()=>{communications.reset();game.startPit();mapOpen=false;play();});$('gallery-btn').addEventListener('click',()=>{communications.reset();enterGallery(game);mapOpen=false;play();});$('gallery-moving-btn').addEventListener('click',()=>{communications.reset();enterGallery(game,{moving:true});mapOpen=false;play();});$('hazard-vault-btn').addEventListener('click',()=>{communications.reset();enterHazardVault(game);mapOpen=false;play();});$('gallery-retry').addEventListener('click',()=>{const hazard=game.gallery?.drill==='hazard-gauntlet',moving=game.gallery?.drill==='tracking-60';communications.reset();if(hazard)enterHazardVault(game);else enterGallery(game,{moving});mapOpen=false;play();});$('gallery-home').addEventListener('click',home);$('continue-pit-btn').hidden=!pitSaved;
 $('continue-pit-btn').addEventListener('click',()=>{try{game.restore(pitSaved,{campaign:'pit'});mapOpen=false;if(game.mode==='playing')play();else result();}catch(e){showToast(e.message);pitSaved=null;$('continue-pit-btn').hidden=true;}});
 $('continue-btn').addEventListener('click',()=>{try{game.restore(saved,{campaign:'original'});play();showDialogue('Welcome back, Michael. I saved your place in the rebellion.');}catch(e){showToast(e.message);saved=null;$('continue-btn').hidden=true;}});
 function refreshCommunications(){const entries=communications.log.slice(-30);$('communication-log').textContent=entries.map(e=>e.speaker+': '+e.text).join('\n')||'No transmissions yet.';}
