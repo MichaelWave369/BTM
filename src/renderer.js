@@ -1,6 +1,7 @@
 import {playerSprite,finaleSprite} from './net/presentation.js';
 import {castRay,distance,angleDiff,findRoute,SECTORS,WEAPONS,clamp} from './core.js';
 import {pitBossSprite,pitFloorState} from './pit-presentation.js';
+import {floorTrapState} from './pit-floor-traps.js';
 import {paintSignalSurface} from './neon-signal.js';
 import {textureSignature,textureStyleFor,TEXTURE_PACKS,paintPackSurface,AUTHORED_TEXTURE_MANIFESTS,loadAuthoredTexturePack} from './texture-packs.js';
 import {UI,UI_FONT} from './arcade-ui.js';
@@ -64,7 +65,17 @@ export class Renderer {
     }
     for(const b of game.projectiles)things.push({...b,type:'projectile',height:.18});
     things.sort((a,b)=>distance(b,p)-distance(a,p));
-    if(l.hazards){for(const hazard of l.hazards)this.pitFloor(hazard,game,horizon,pitFloorState(hazard,game.time));for(const trap of l.traps||[])this.pitFloor(trap,game,horizon,Number.isFinite(trap.fireAt)?'warning':'idle');for(const b of l.blasts)this.pitFloor(b,game,horizon,b.hit?'active':'warning');}
+    if(l.hazards){for(const hazard of l.hazards)this.pitFloor(hazard,game,horizon,pitFloorState(hazard,game.time));for(const floor of l.floorTraps||[]){
+     const state=floorTrapState(floor,game.time);
+     const count=floor.kind==='arc-lane'?5:1;
+     for(let i=0;i<count;i++){
+      const t=count===1?0:i/(count-1);
+      this.pitFloor({...floor,x:floor.x+(floor.toX-floor.x||0)*t,
+       y:floor.y+(floor.toY-floor.y||0)*t,
+       radius:floor.kind==='arc-lane'?.4:floor.radius},game,horizon,state);
+     }
+    }
+    for(const trap of l.traps||[])this.pitFloor(trap,game,horizon,Number.isFinite(trap.fireAt)?'warning':'idle');for(const b of l.blasts)this.pitFloor(b,game,horizon,b.hit?'active':'warning');}
     for(const node of l.raidNodes||[])this.pitFloor({...node,radius:.65},game,horizon,'warning');
     for(const o of things)this.sprite(o,game,horizon);
     for(const ghost of this.ghosts){ghost.life-=dt;const pos=this.project(ghost,p);if(pos&&pos.depth<this.depth[clamp(Math.floor(pos.x),0,w-1)]){const height=h/pos.depth,width=height*.5;g.globalAlpha=Math.max(0,ghost.life)*.65;g.drawImage(this.assets.sprites.captive,pos.x-width/2,horizon-height*.55-(.85-ghost.life)*height*.5,width,height);g.globalAlpha=1;}}this.ghosts=this.ghosts.filter(s=>s.life>0);
