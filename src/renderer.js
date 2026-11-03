@@ -58,7 +58,7 @@ export class Renderer {
     for(const a of game.remotePlayers||[])if(['alive','downed'].includes(a.status))things.push({x:a.renderX??a.x,y:a.renderY??a.y,type:'remote',remote:a,height:a.status==='downed'?.4:1.03});
     for(const b of game.projectiles)things.push({...b,type:'projectile',height:.18});
     things.sort((a,b)=>distance(b,p)-distance(a,p));
-    if(l.hazards){for(const hazard of l.hazards)this.pitFloor(hazard,game,horizon,pitFloorState(hazard,game.time));for(const b of l.blasts)this.pitFloor(b,game,horizon,b.hit?'active':'warning');}
+    if(l.hazards){for(const hazard of l.hazards)this.pitFloor(hazard,game,horizon,pitFloorState(hazard,game.time));for(const trap of l.traps||[])this.pitFloor(trap,game,horizon,Number.isFinite(trap.fireAt)?'warning':'idle');for(const b of l.blasts)this.pitFloor(b,game,horizon,b.hit?'active':'warning');}
     for(const node of l.raidNodes||[])this.pitFloor({...node,radius:.65},game,horizon,'warning');
     for(const o of things)this.sprite(o,game,horizon);
     for(const ghost of this.ghosts){ghost.life-=dt;const pos=this.project(ghost,p);if(pos&&pos.depth<this.depth[clamp(Math.floor(pos.x),0,w-1)]){const height=h/pos.depth,width=height*.5;g.globalAlpha=Math.max(0,ghost.life)*.65;g.drawImage(this.assets.sprites.captive,pos.x-width/2,horizon-height*.55-(.85-ghost.life)*height*.5,width,height);g.globalAlpha=1;}}this.ghosts=this.ghosts.filter(s=>s.life>0);
