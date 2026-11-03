@@ -1,5 +1,6 @@
 import {PIT_BOSSES} from './pit.js';
 import {moveBody,lineOfSight} from './collision.js';
+import {updatePitFloorTraps} from './pit-floor-traps.js';
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export function hazardState(h,time){const clock=time+h.offset,cycle=Math.floor(clock/h.period),t=clock-cycle*h.period;return{cycle,warning:t>=1.2&&t<2.15,active:t>=2.15&&t<3.05};}
 function warn(g,e,text){g.emit('pitTell',{text,x:e.x,y:e.y});g.emit('toast',{text});g.emit('sound',{name:'pit'+(g.definition.act+1),position:{x:e.x,y:e.y,height:.65}});}
@@ -94,6 +95,7 @@ export function updatePitTraps(g){
 export function updatePitEnvironment(g,dt){
  if(g.campaign!=='pit')return;
  updatePitTraps(g);
+ updatePitFloorTraps(g);
  for(const h of g.level.hazards){const state=hazardState(h,g.time);
   if(state.warning&&h.warned!==state.cycle&&distance(g.player,h)<4&&lineOfSight(g.level,g.player,h)){h.warned=state.cycle;warn(g,h,'FLOOR '+h.kind.toUpperCase()+' / MOVE CLEAR');}
   if(state.active&&distance(g.player,h)<h.radius+.16&&g.time-(h.lastHit??-1)>.8){h.lastHit=g.time;g.damagePlayer(h.damage,h);g.emit('hazardHit',{kind:h.kind,damage:h.damage});}
