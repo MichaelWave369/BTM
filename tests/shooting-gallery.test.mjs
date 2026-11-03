@@ -57,6 +57,51 @@ test('Quest tracked-ray shooting hits real dummy targets via the existing server
  assert(g.events.some(e=>e.type==='shot'&&e.aim));
  assert(g.events.some(e=>e.type==='galleryHit'));
 });
+test('optional tracking drill moves inert dummies deterministically without touching campaign or ammo',()=>{
+ const g=new Game();g.startPit();const before=g.snapshot(),modeBefore=g.campaign;
+ enterGallery(g,{moving:true});assert.equal(g.gallery.drill,'tracking-60');
+ assert.equal(g.campaign,'original');assert.equal(modeBefore,'pit');
+ assert(g.level.enemies.every(e=>e.galleryTarget&&e.damage===0&&e.speed===0));
+ const originals=g.level.enemies.map(e=>e.homeX);
+ g.time=3.25;advanceGallery(g);
+ const first=g.level.enemies.map(e=>e.x);
+ assert(first.some((x,i)=>Math.abs(x-originals[i])>.15),'targets should strafe visibly');
+ advanceGallery(g);assert.deepEqual(g.level.enemies.map(e=>e.x),first,'same clock must yield same positions');
+ g.time=3.5;advanceGallery(g);assert.notDeepEqual(g.level.enemies.map(e=>e.x),first);
+ assert.equal(g.player.energy,100,'tracking targets never spend finite energy');
+ assert.equal(g.checkpoint,null,'practice mode never snapshots campaign progress');
+ g.startPit();assert.equal(g.gallery,null);assert.deepEqual(g.level.cells,before.level.cells);
+});
+
+test('moving target receives a real tracked shot at its updated position',()=>{
+ const g=new Game();enterGallery(g,{moving:true});
+ g.time=3.25;advanceGallery(g);
+ const target=g.level.enemies[1],from={x:g.player.x,y:g.player.y,height:.8};
+ const aim={origin:from,direction:{x:target.x-from.x,y:target.y-from.y,z:0}};
+ assert(g.setCombatPose({head:{x:from.x,y:from.y,height:1.7},aim}));
+ assert.equal(g.shoot(),true);
+ assert.equal(g.gallery.shots,1);assert.equal(g.gallery.hits,1);
+ assert.equal(target.dead,true);
+ const score=galleryResult(g.gallery);
+ assert.equal(score.drill,'tracking-60');
+ assert.equal(score.score,100);assert.equal(score.accuracy,100);
+ assert.equal(g.totalFreed,0);
+ g.time=target.respawnAt+.01;advanceGallery(g);
+ assert.equal(target.dead,false,'moving training unit respawns through existing safe logic');
+});
+
+test('tracking drill has separate unranked results and preserves classic Trophy Room record',()=>{
+ const app=readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
+ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+ assert(app.includes("if(report.drill==='signal-60')"),'moving practice must not overwrite classic best card');
+ assert(app.includes("enterGallery(game,{moving:true})"));
+ assert(html.includes('id="gallery-moving-btn"'));
+ const normal=new Game();enterGallery(normal);
+ const moving=new Game();enterGallery(moving,{moving:true});
+ assert.equal(galleryResult(normal.gallery).drill,'signal-60');
+ assert.equal(galleryResult(moving.gallery).drill,'tracking-60');
+});
+
 test('time limit ends precisely once, preserving a local standalone result without sector completion',()=>{
  const g=new Game();enterGallery(g);
  g.time=GALLERY_DURATION-.025;

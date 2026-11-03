@@ -12,7 +12,7 @@ const cleanInt=(x,max=1e8)=>Number.isSafeInteger(x)&&x>=0&&x<=max?x:0;
 const pct=(hits,shots)=>shots>0?Math.round(hits/shots*100):0;
 export function galleryResult(gallery){
  const shots=cleanInt(gallery?.shots),hits=cleanInt(gallery?.hits);
- return {drill:'signal-60',seconds:GALLERY_DURATION,shots,hits,
+ return {drill:gallery?.drill==='tracking-60'?'tracking-60':'signal-60',seconds:GALLERY_DURATION,shots,hits,
   accuracy:pct(hits,shots),score:cleanInt(gallery?.score)};
 }
 export function storeGalleryResult(storage,result){
@@ -48,7 +48,7 @@ function target(slot){
   range:0,delay:999,cooldown:999,tell:0,stun:0,flash:0,
   pain:0,recoil:0,walk:0,pathTimer:0,phase:1};
 }
-export function enterGallery(game){
+export function enterGallery(game,{moving=false}={}){
  // Start the real engine and then substitute a special training level.
  // Discard the ordinary level-start checkpoint event before the app sees it.
  game.start({energyMode:'legacy'});
@@ -64,10 +64,10 @@ export function enterGallery(game){
  game.player.health=100;game.player.armor=100;game.player.energy=100;
  game.player.key=true;game.weapon=1;game.unlocked=2;game.oriAuto=Infinity;
  game.levelKills=0;game.hits=0;game.shots=0;game.time=0;
- game.gallery={drill:'signal-60',duration:GALLERY_DURATION,
+ game.gallery={drill:moving?'tracking-60':'signal-60',duration:GALLERY_DURATION,
   score:0,shots:0,hits:0,ended:false};
  game.checkpoint=null;game.events=[];
- game.say('Calibration Vault online. Sixty seconds. Center your sights and tag the practice units. No people in those targets.','ORI',2);
+ game.say(moving?'Tracking drill online. Sixty seconds. Follow the moving targets, lead your aim and verify where each shot lands.':'Calibration Vault online. Sixty seconds. Center your sights and tag the practice units. No people in those targets.','ORI',2);
  return game.gallery;
 }
 export function galleryShot(game){
@@ -89,11 +89,23 @@ export function advanceGallery(game){
  const state=game.gallery;
  if(!state||state.ended)return;
  for(const enemy of game.level.enemies){
-  if(!enemy.galleryTarget||!enemy.dead||game.time<enemy.respawnAt)continue;
-  const lane=(enemy.gallerySlot+3+state.hits)%LANES.length;
-  const [x,y]=LANES[lane];
-  enemy.x=x;enemy.y=y;enemy.homeX=x;enemy.homeY=y;
-  enemy.dead=false;enemy.hp=enemy.maxHp=1;
+  if(!enemy.galleryTarget)continue;
+  if(enemy.dead){
+   if(game.time<enemy.respawnAt)continue;
+   const lane=(enemy.gallerySlot+3+state.hits)%LANES.length;
+   const [x,y]=LANES[lane];
+   enemy.x=x;enemy.y=y;enemy.homeX=x;enemy.homeY=y;
+   enemy.dead=false;enemy.hp=enemy.maxHp=1;
+  }
+  // Movement is deterministic from elapsed simulation time, not frame count,
+  // so idle/headset pauses cannot create drift and shots use real hit geometry.
+  // Never ask the enemy AI to navigate or fire. Targets remain inert dummies.
+  if(state.drill==='tracking-60'){
+   const slot=enemy.gallerySlot;
+   enemy.x=enemy.homeX+.78*Math.sin(game.time*(1.05+slot*.18)+slot*1.9);
+   enemy.y=enemy.homeY;
+   enemy.walk=game.time*5;
+  }
  }
  if(game.time>=state.duration){
   state.ended=true;game.mode='complete';
