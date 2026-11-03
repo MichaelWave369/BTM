@@ -45,16 +45,27 @@ function author(d,index){
  const act=PIT_ACTS[Math.floor(index/3)],wall=1+act.index%3,cells=Array.from({length:25},()=>Array(29).fill(wall));
  for(const [x0,y0,x1,y1]of [...d.rooms,...d.halls])for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)cells[y][x]=0;
  for(const [x,y]of d.pillars)cells[y][x]=wall;
- // Iron Lung's first real pressure plate lives on a safe open floor tile.
- // Its emitter is in the EAST wall, with a muzzle just inside the room.
- // Other stages (and old checkpoints) have zero trap objects.
+ // Three deliberately bounded, authored SOLO Pit trap configurations.
+ // Every muzzle is inside an open room while its mount touches a solid wall.
+ // Never add traps to the classic 12 sectors or alter the Pit save format.
  const traps=index===3?[{
   id:'iron-lung-electric-plate',kind:'electric-orb',x:4.5,y:16.5,radius:.44,
   mountX:8.5,mountY:16.5,muzzleX:7.88,muzzleY:16.5,
   warning:.9,cooldown:5.5,speed:2.35,damage:12
+ }]:index===6?[{
+  id:'choir-crossfire-plate',kind:'electric-orb',pattern:'crossfire',
+  x:5.5,y:20.5,radius:.44,
+  mountX:.5,mountY:20.5,muzzleX:1.12,muzzleY:20.5,
+  secondMountX:10.5,secondMountY:20.5,secondMuzzleX:9.88,secondMuzzleY:20.5,
+  warning:1.15,cooldown:7.5,interval:.65,burst:2,speed:2.45,damage:9
+ }]:index===7?[{
+  id:'bloodless-double-plate',kind:'electric-orb',pattern:'double',
+  x:4.5,y:18.5,radius:.44,
+  mountX:8.5,mountY:18.5,muzzleX:7.88,muzzleY:18.5,
+  warning:1,cooldown:6.5,interval:.46,burst:2,speed:2.4,damage:9
  }]:[];
  const used=new Set(),mark=p=>{used.add(p.join(','));return p;};
- for(const p of [d.spawn.slice(0,2),...d.relays,d.key,d.exit,...d.hazards,d.bossAt].filter(Boolean))mark(p);
+ for(const p of [d.spawn.slice(0,2),...d.relays,d.key,d.exit,...d.hazards,d.bossAt,...traps.filter(t=>index!==3).map(t=>[t.x,t.y])].filter(Boolean))mark(p);
  const take=(room,preferCenter=false)=>{const [x0,y0,x1,y1]=d.rooms[room],spots=[];for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)if(!cells[y][x]&&!used.has([x+.5,y+.5].join(',')))spots.push([x+.5,y+.5]);spots.sort((a,b)=>preferCenter?Math.hypot(a[0]-(x0+x1+1)/2,a[1]-(y0+y1+1)/2)-Math.hypot(b[0]-(x0+x1+1)/2,b[1]-(y0+y1+1)/2):((a[0]*11+a[1]*19+index*7)%41)-((b[0]*11+b[1]*19+index*7)%41));if(!spots.length)throw Error('Pit room lacks a safe encounter position');return mark(spots[0]);};
  const enemies=[];for(const [room,formation]of d.groups)for(const t of formation)enemies.push([types[t],...take(room)]);
  if(d.boss)enemies.push(['warden',...d.bossAt,d.boss]);
