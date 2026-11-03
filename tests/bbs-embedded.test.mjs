@@ -13,7 +13,13 @@ test('BBS and solo bot menu enter a same-page portal, never navigate the game aw
   'embedded multiplayer must request XR permissions explicitly');
  assert(app.includes("bbsFrame.src='./bbs.html?embedded=1'+(bots?'#solo-bots':'')"));
  assert(app.includes("if(game.mode==='playing')pause()"));
- assert(app.includes('try{await vr.exit();}catch'),'failed XR exit must not launch another immersive session');
+ assert(app.includes('if(vr.active)await vr.exit()'),'old XR session must exit before opening BBS');
+ assert(app.includes('if(document.fullscreenElement)await document.exitFullscreen()'),
+  'browser fullscreen must exit so overlay remains visible');
+ assert(app.includes("catch{showToast('EXIT FULLSCREEN OR VR BEFORE OPENING BBS');}"),
+  'failed fullscreen or XR exit must preserve current game');
+ assert(app.includes('if(!bbsPortal.hidden||bbsOpening)return'),
+  'repeated button taps must not mount competing frames');
  assert(app.includes("if($('bbs-portal').hidden)tick(now);else lastFrame=now"),
   'background solo game must not consume multiplayer gamepad input');
  assert(app.includes("bbsFrame.src='about:blank'"),'closing must unload network session');
