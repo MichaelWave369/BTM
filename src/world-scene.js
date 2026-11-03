@@ -62,9 +62,14 @@ export class WorldScene {
     // Mark the PRESSURE PLATE on the actual floor and the emitter on its wall.
     // These are render-only hints; collision and shots stay in Game.update.
     b.floor(trap.x*s,.038,trap.y*s,trap.radius*2*s,'hazard:arc',color);
-    b.box([trap.muzzleX*s,.66*s,trap.muzzleY*s],[.12*s,.28*s,.30*s],'white',color);
-    b.billboard(trap.muzzleX*s,.73*s,trap.muzzleY*s,.15,.15,'marker',eye,charging?TELL:CYAN);
-    this.counts.objects++;
+    const emitters=[{x:trap.muzzleX,y:trap.muzzleY}];
+    if(Number.isFinite(trap.secondMuzzleX)&&Number.isFinite(trap.secondMuzzleY))
+     emitters.push({x:trap.secondMuzzleX,y:trap.secondMuzzleY});
+    for(const emitter of emitters){
+     b.box([emitter.x*s,.66*s,emitter.y*s],[.12*s,.28*s,.30*s],'white',color);
+     b.billboard(emitter.x*s,.73*s,emitter.y*s,.15,.15,'marker',eye,charging?TELL:CYAN);
+     this.counts.objects++;
+    }
    }
    for(const blast of l.blasts)if(visible(blast.x,blast.y))b.floor(blast.x*s,.03,blast.y*s,blast.radius*2*s,'hazard:arc',blast.hit?[1,.25,.3,1]:[1,.7,.25,1]);
    for(const e of l.enemies)if(e.pitBoss==='mirror'&&!e.dead&&visible(e.x,e.y)){const h=entityHeight(e.type)*s;for(const side of [-1,1])b.billboard((e.x+side*.65)*s,.15,e.y*s,h*.6,h*.8,'pitboss:mirror',eye,[.18,.12,.25,1]);}
