@@ -56,6 +56,12 @@ export class Renderer {
     if(!l.key.taken)things.push({...l.key,type:'key',height:.48,bob:true});
     if(!game.networkCompetitive)things.push({...l.exit,type:'portal',height:1.6});
     for(const a of game.remotePlayers||[])if(['alive','downed'].includes(a.status))things.push({x:a.renderX??a.x,y:a.renderY??a.y,type:'remote',remote:a,height:a.status==='downed'?.4:1.03});
+    for(const trap of l.traps||[]){
+      const charging=Number.isFinite(trap.fireAt);
+      things.push({type:'trapEmitter',height:.30,x:trap.muzzleX,y:trap.muzzleY,charging});
+      if(Number.isFinite(trap.secondMuzzleX)&&Number.isFinite(trap.secondMuzzleY))
+       things.push({type:'trapEmitter',height:.30,x:trap.secondMuzzleX,y:trap.secondMuzzleY,charging});
+    }
     for(const b of game.projectiles)things.push({...b,type:'projectile',height:.18});
     things.sort((a,b)=>distance(b,p)-distance(a,p));
     if(l.hazards){for(const hazard of l.hazards)this.pitFloor(hazard,game,horizon,pitFloorState(hazard,game.time));for(const trap of l.traps||[])this.pitFloor(trap,game,horizon,Number.isFinite(trap.fireAt)?'warning':'idle');for(const b of l.blasts)this.pitFloor(b,game,horizon,b.hit?'active':'warning');}
@@ -93,6 +99,16 @@ export class Renderer {
     const g=this.g,w=this.canvas.width,h=this.canvas.height,p=game.player,s=this.project(o,p);if(!s||s.x< -w||s.x>w*2)return;const height=Math.min(h*5,h/s.depth*o.height),width=o.e?.raidRole==='core'?height*4:o.type==='warden'?height:height*(o.type==='relay'||o.type==='relayOn'?.8:1),x=Math.floor(s.x-width/2),y=Math.floor(horizon+h/(2*s.depth)-height+(o.bob?Math.sin(this.lastTime*3+o.x)*h*.04/s.depth:0));
     if(o.type==='portal'){
       for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++){if(s.depth>=this.depth[xx])continue;const f=(xx-x)/width-.5,curve=Math.sqrt(Math.max(0,1-4*f*f)),yy=height/2*curve;g.fillStyle=game.exitReady?'#64e8cd':'#614279';g.globalAlpha=.75;g.fillRect(xx,y+height/2-yy,1,yy*2);g.fillStyle='#091d25';g.globalAlpha=.8;g.fillRect(xx,y+height/2-yy*.82,1,yy*1.64);g.fillStyle=game.exitReady?'#b9ff53':'#bc89e8';g.globalAlpha=.4;for(let k=0;k<6;k++){const py=y+height/2-yy+((this.lastTime*.2+k/6)%1)*yy*2;g.fillRect(xx,py,1,1);}}g.globalAlpha=1;return;
+    }
+    if(o.type==='trapEmitter'){
+      if(s.depth<this.depth[clamp(Math.floor(s.x),0,w-1)]){
+       g.fillStyle='#101d2b';g.fillRect(x,y,width,height);
+       g.strokeStyle=o.charging?'#ffd479':'#59e7ff';g.lineWidth=Math.max(1,width*.065);
+       g.strokeRect(x+width*.12,y+height*.12,width*.76,height*.76);
+       g.fillStyle=o.charging?'#ffb85c':'#79f1ff';
+       g.fillRect(x+width*.35,y+height*.35,width*.3,height*.3);
+      }
+      return;
     }
     if(o.type==='projectile'){if(s.depth<this.depth[clamp(Math.floor(s.x),0,w-1)]){g.fillStyle=o.color;g.fillRect(s.x-width/2,horizon-height/2,width,height);g.fillStyle='#fff9d5';g.fillRect(s.x-width/6,horizon-height/6,width/3,height/3);}return;}
     let sprite=o.e?.raidRole?finaleSprite(o.e.raidRole,o.e.exposed>0):o.remote?playerSprite(o.remote.team,o.remote.status==='downed'):o.e?.pitBoss?pitBossSprite(o.e.pitBoss,o.e.exposed>0):o.e?.pain>0?this.assets.pain[o.type]:this.assets.sprites[o.type];if(Array.isArray(sprite))sprite=sprite[o.frame??0];if(!sprite)return;
