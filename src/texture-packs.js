@@ -52,8 +52,10 @@ export function validateTextureManifest(manifest,style){
  }
  return Object.freeze(assets);
 }
-// Original 256×256 authored image tiles are shipped in public/texture-packs.
-// Retro intentionally stays byte-for-byte the existing original procedural look.
+// Industrial and Matrix Facility are original tracked PNG assets.
+// Cyberpunk, Horror and Corporate are reproducibly generated first-party 256px PNGs
+// by scripts/author-texture-tiles.mjs into dist/texture-packs during npm run build.
+// Retro intentionally stays byte-for-byte the original procedural look.
 const authoredSurfaceFiles=Object.freeze(Object.fromEntries(SURFACE_MATERIALS.map(id=>[id,id+'.png'])));
 export const AUTHORED_TEXTURE_MANIFESTS=Object.freeze(Object.fromEntries(
  ['industrial','matrix-facility','cyberpunk','horror','corporate'].map(style=>[style,Object.freeze({schema:'btm.texture-pack/1',style,surfaces:authoredSurfaceFiles})])
