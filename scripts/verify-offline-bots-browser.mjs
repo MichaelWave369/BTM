@@ -29,7 +29,7 @@ try{
  await outerPage.waitForFunction(()=>document.querySelector('#bbs-portal-frame')?.contentWindow?.bbs?.net?.connected,null,{timeout:20000});
  assert.equal(new URL(outerPage.url()).pathname,'/','BTM must remain in the same browser tab');
  assert.equal(await outerPage.locator('#bbs-portal').isVisible(),true);
- page=outerPage.frame({url:/\\/bbs\\.html\\?embedded=1#solo-bots$/});
+ page=outerPage.frames().find(frame=>frame.url().endsWith('/bbs.html?embedded=1#solo-bots'));
  assert(page,'embedded offline-bots document missing');
  assert.equal(await page.locator('#create-btn').textContent(),'START SOLO VS BOT PILOTS');
  assert.equal(await page.locator('#server-url').isHidden(),true);
