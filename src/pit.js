@@ -64,8 +64,20 @@ function author(d,index){
   mountX:8.5,mountY:18.5,muzzleX:7.88,muzzleY:18.5,
   warning:1,cooldown:6.5,interval:.46,burst:2,speed:2.4,damage:9
  }]:[];
+ // Three different solo Pit floor mechanics. Keep these off player spawns and
+ // clear of the existing wall-orb plates. Old Pit saves can omit floorTraps.
+ const floorTraps=index===4?[{
+  id:'sanctuary-charge-tile',kind:'charge-tile',x:5.5,y:12.5,radius:.52,
+  period:5.6,offset:0,warningStart:1,activeStart:1.9,activeEnd:2.45,damage:10
+ }]:index===6?[{
+  id:'choir-arc-lane',kind:'arc-lane',x:4.5,y:17.5,toX:8.5,toY:17.5,radius:.43,
+  period:6.2,offset:.2,warningStart:1.1,activeStart:2,activeEnd:2.65,damage:11
+ }]:index===9?[{
+  id:'unlit-pressure-pulse',kind:'pressure-pulse',x:5.5,y:16.5,triggerRadius:.4,
+  radius:1.08,warning:.8,cooldown:5,damage:11
+ }]:[];
  const used=new Set(),mark=p=>{used.add(p.join(','));return p;};
- for(const p of [d.spawn.slice(0,2),...d.relays,d.key,d.exit,...d.hazards,d.bossAt,...traps.filter(t=>index!==3).map(t=>[t.x,t.y])].filter(Boolean))mark(p);
+ for(const p of [d.spawn.slice(0,2),...d.relays,d.key,d.exit,...d.hazards,d.bossAt,...traps.filter(t=>index!==3).map(t=>[t.x,t.y]),...floorTraps.map(t=>[t.x,t.y])].filter(Boolean))mark(p);
  const take=(room,preferCenter=false)=>{const [x0,y0,x1,y1]=d.rooms[room],spots=[];for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)if(!cells[y][x]&&!used.has([x+.5,y+.5].join(',')))spots.push([x+.5,y+.5]);spots.sort((a,b)=>preferCenter?Math.hypot(a[0]-(x0+x1+1)/2,a[1]-(y0+y1+1)/2)-Math.hypot(b[0]-(x0+x1+1)/2,b[1]-(y0+y1+1)/2):((a[0]*11+a[1]*19+index*7)%41)-((b[0]*11+b[1]*19+index*7)%41));if(!spots.length)throw Error('Pit room lacks a safe encounter position');return mark(spots[0]);};
  const enemies=[];for(const [room,formation]of d.groups)for(const t of formation)enemies.push([types[t],...take(room)]);
  if(d.boss)enemies.push(['warden',...d.bossAt,d.boss]);
@@ -79,7 +91,7 @@ function author(d,index){
   for(let y=1;y<24;y++)for(let x=1;x<28;x++)if(cells[y][x]&&[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>cells[y+dy]?.[x+dx]===0)&&!signs.some(s=>s[0]===x&&s[1]===y))walls.push([x,y]);
   walls.sort((a,b)=>Math.hypot(a[0]+.5-target[0],a[1]+.5-target[1])-Math.hypot(b[0]+.5-target[0],b[1]+.5-target[1]));signs.push([...walls[0],label,act.name,text]);
  }
- return {...d,campaign:'pit',act:act.index,palette:act,tag:'PIT / '+act.name+' / '+d.identity,color:act.primary,wall,spawn:{x:d.spawn[0],y:d.spawn[1],a:d.spawn[2]},doors:[],secret:null,difficulty:act.difficulty,speedScale:act.speed,damageScale:act.damage,tactics:act.tactics,shotSpeed:3.1+act.index*.28,enemies,items,captives,theme:{rooms:d.rooms.map((r,i)=>[d.identity,'RELAY APPROACH','CELL DEPOT','CROSSFEED','GUARDIAN BAY','LOWER CONDUIT','EXTRACTION SPUR','REFUGE'][i]),signs,props:[['speaker',...take(0)],['console',...take(2)],['lamp',...take(3)]]},hazards:d.hazards.map(([x,y],id)=>({id,x,y,radius:.63,kind:act.hazard,period:5.8-act.index*.35,offset:id*.83+index*.21,damage:8+act.index*2})),traps};
+ return {...d,campaign:'pit',act:act.index,palette:act,tag:'PIT / '+act.name+' / '+d.identity,color:act.primary,wall,spawn:{x:d.spawn[0],y:d.spawn[1],a:d.spawn[2]},doors:[],secret:null,difficulty:act.difficulty,speedScale:act.speed,damageScale:act.damage,tactics:act.tactics,shotSpeed:3.1+act.index*.28,enemies,items,captives,theme:{rooms:d.rooms.map((r,i)=>[d.identity,'RELAY APPROACH','CELL DEPOT','CROSSFEED','GUARDIAN BAY','LOWER CONDUIT','EXTRACTION SPUR','REFUGE'][i]),signs,props:[['speaker',...take(0)],['console',...take(2)],['lamp',...take(3)]]},hazards:d.hazards.map(([x,y],id)=>({id,x,y,radius:.63,kind:act.hazard,period:5.8-act.index*.35,offset:id*.83+index*.21,damage:8+act.index*2})),traps,floorTraps};
 }
 export const PIT_STAGES=layouts.map(author);
 export const PIT_HOSTS=PIT_STAGES.reduce((n,d)=>n+d.captives.length+d.enemies.filter(e=>['plugged','repeater'].includes(e[0])).length,0);
