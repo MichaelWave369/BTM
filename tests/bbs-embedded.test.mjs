@@ -61,7 +61,9 @@ test('portable WSS host keeps authoritative Node server private and co-op saves 
  assert(caddy.includes('reverse_proxy @websocket btm:8787'));
  assert(caddy.includes('reverse_proxy @status btm:8787'));
  assert(docker.includes('npm ci --prefix server --omit=dev --ignore-scripts'));
- assert(docker.includes('USER node'));
+ assert(docker.includes('ENTRYPOINT ["/usr/local/bin/btm-entrypoint"]'));
+ assert(read('deploy/bbs/entrypoint.sh').includes('exec su-exec node "$@"'),
+  'runtime should chown newly mounted volumes then drop to node privileges');
  assert(ignore.includes('server/data/'),'private co-op checkpoints cannot enter build image');
 });
 
