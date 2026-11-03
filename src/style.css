@@ -194,3 +194,12 @@ body[data-input=controller] #game,body[data-input=vr] #game{cursor:none}.reduced
 .hd-offline-actions button:disabled{opacity:.46;cursor:not-allowed}
 .hd-offline-actions button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 #hd-offline-status{min-height:2em;color:var(--cyan)!important;font-weight:600}
+
+/* Human Ledger sharing: local-only, explicit export that never reveals sealed files. */
+.archive-export-actions{border-top:1px solid #536386;margin-top:18px;padding-top:12px}
+.archive-export-actions #archive-export{display:block;width:100%;min-height:44px;text-align:center;
+ background:#203751;border:1px solid #5ac5dc;color:#e9faff;
+ font:700 12px var(--mono);letter-spacing:.35px;cursor:pointer;padding:10px}
+.archive-export-actions #archive-export:disabled{opacity:.45;cursor:not-allowed}
+.archive-export-actions #archive-export:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.archive-export-actions #archive-export-status{margin:7px 0 3px;color:#aacde0;font:500 11px/1.5 var(--mono)}
