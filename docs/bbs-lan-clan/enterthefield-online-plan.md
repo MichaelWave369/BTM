@@ -15,7 +15,11 @@ Netlify is an excellent **static frontend** for `www.enterthefield.org`, but its
 - The existing standalone `bbs.html` URL is retained as a fallback for diagnostics and older bookmarks.
 - On Quest, switching between solo immersive XR and embedded multiplayer requires exiting the old XR session and entering the new one; browser permission support must be validated in a physical headset.
 
-## Deploy an actual Internet node (separate from Netlify)
+## Preferred managed host: Railway
+
+For the simplest deployment with no private VPS maintenance, use the step-by-step **[Railway public launch guide](./railway-launch.md)**. Railway terminates TLS, supports long-running WebSockets and mounts a real save volume. Use its temporary hostname first, then add the `play.enterthefield.org` custom domain with the **exact CNAME and TXT** records Railway supplies. No Caddy container or VPS-specific A record is needed on Railway. The public node is NOT live until an actual deployment and two-client verification succeed.
+
+## Alternative: deploy on your own VPS (separate from Netlify)
 
 Prerequisites: a maintained Linux VPS/container host with a public IP, Docker Engine and Compose, ports 80/443 reachable, a domain name under your control, adequate RAM/CPU/network, and a plan for backups/monitoring. The VPS is not provisioned by this PR.
 
