@@ -401,21 +401,24 @@ if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWor
 
 // In-game BBS scene: keep the solo page (and separate campaign checkpoints)
 // mounted. The embedded network document owns its own controls and sockets.
-let bbsReturnButton=null;
+let bbsReturnButton=null,bbsOpening=false;
 const bbsPortal=$('bbs-portal'),bbsFrame=$('bbs-portal-frame');
 async function openBbsPortal(bots=false,button=null){
- if(!bbsPortal.hidden)return;
- if(vr.active){
-  try{await vr.exit();}catch{showToast('EXIT VR BEFORE OPENING BBS');return;}
- } // only one immersive XR session can be active
- if(game.mode==='playing')pause();
- clearInput();
- if(document.pointerLockElement)document.exitPointerLock?.();
- audio.pause(true);
- bbsReturnButton=button;
- bbsPortal.hidden=false;
- bbsFrame.src='./bbs.html?embedded=1'+(bots?'#solo-bots':'');
- $('bbs-portal-close').focus({preventScroll:true});
+ if(!bbsPortal.hidden||bbsOpening)return;
+ bbsOpening=true;
+ try{
+  if(vr.active)await vr.exit(); // one immersive XR session at a time
+  if(document.fullscreenElement)await document.exitFullscreen();
+  if(game.mode==='playing')pause();
+  clearInput();
+  if(document.pointerLockElement)document.exitPointerLock?.();
+  audio.pause(true);
+  bbsReturnButton=button;
+  bbsPortal.hidden=false;
+  bbsFrame.src='./bbs.html?embedded=1'+(bots?'#solo-bots':'');
+  $('bbs-portal-close').focus({preventScroll:true});
+ }catch{showToast('EXIT FULLSCREEN OR VR BEFORE OPENING BBS');}
+ finally{bbsOpening=false;}
 }
 function closeBbsPortal(){
  if(bbsPortal.hidden)return;
