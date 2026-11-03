@@ -87,5 +87,9 @@
   <footer class="bottom-bar"><div><span class="cross-mark">+</span><b id="bottom-level">THE WAKE-UP CALL</b><span class="bottom-sep">/</span><span id="secret-counter">SECRETS 00 / 01</span></div><div class="bottom-controls" id="bottom-controls">WASD <span>MOVE</span> <i>·</i> MOUSE <span>AIM</span> <i>·</i> E <span>INTERACT</span> <i>·</i> ESC <span>PAUSE</span></div><div class="bottom-right"><span class="led"></span> <span id="fps">60</span> FPS <i>·</i> <span id="offline-status">CACHING…</span></div></footer>
   <p id="storage-warning" hidden>Browser storage is unavailable. You can play, but checkpoints will last only for this session.</p>
 </main>
+<section id="bbs-portal" class="bbs-portal" role="dialog" aria-modal="true" aria-label="BBS LAN CLAN multiplayer" hidden>
+  <header class="bbs-portal-toolbar"><strong>Φ / BREAK THE MATRIX / BBS LAN CLAN</strong><span>IN-GAME MULTIPLAYER</span><button type="button" id="bbs-portal-close" aria-label="Close multiplayer and return to Break the Matrix">RETURN TO GAME ✕</button></header>
+  <iframe id="bbs-portal-frame" title="BBS LAN CLAN private multiplayer lobby and arena" allow="xr-spatial-tracking; fullscreen" allowfullscreen></iframe>
+</section>
 <script type="module" src="./src/main.js"></script>
 </body></html>
