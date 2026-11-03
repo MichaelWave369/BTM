@@ -1,4 +1,5 @@
 import {pitFloorState} from './pit-presentation.js';
+import {floorTrapState} from './pit-floor-traps.js';
 import {weaponMesh,appendEquipment} from './equipment-meshes.js';
 import {SignalPresentation} from './signal-presentation.js';
 import {SIGNAL_QUALITY} from './neon-signal.js';
@@ -56,6 +57,18 @@ export class WorldScene {
   if(l.hazards){
    const primary=colorRGB(game.definition.color);
    for(const h of l.hazards){if(!visible(h.x,h.y))continue;const state=pitFloorState(h,game.time),gain=state==='active'?1:state==='warning'?.7:.18,color=state==='warning'?[1,.66,.23,1]:[primary[0]*gain,primary[1]*gain,primary[2]*gain,1];b.floor(h.x*s,.025,h.y*s,h.radius*2*s,'hazard:'+h.kind,color);}
+   for(const trap of l.floorTraps||[]){
+    if(!visible(trap.x,trap.y))continue;
+    const state=floorTrapState(trap,game.time);
+    const color=state==='warning'?[1.4,.85,.3,1]:state==='active'?[.3,1.45,1.55,1]:[.18,.44,.53,1];
+    const count=trap.kind==='arc-lane'?5:1;
+    for(let i=0;i<count;i++){
+     const ratio=count===1?0:i/(count-1);
+     const x=trap.x+(trap.toX-trap.x||0)*ratio,y=trap.y+(trap.toY-trap.y||0)*ratio;
+     if(visible(x,y))b.floor(x*s,.043,y*s,(trap.kind==='arc-lane'?.66:trap.radius*2)*s,
+      trap.kind==='charge-tile'?'hazard:fracture':'hazard:arc',color);
+    }
+   }
    for(const trap of l.traps||[]){
     if(!visible(trap.x,trap.y))continue;
     const charging=Number.isFinite(trap.fireAt),color=charging?[1,.78,.28,1]:[.25,.62,.72,1];
