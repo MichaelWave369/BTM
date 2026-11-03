@@ -104,7 +104,7 @@ export class Game {
   }
   get liberation(){return Math.round(this.totalFreed/(this.campaign==='pit'?PIT_HOSTS:CAMPAIGN_HOSTS)*100);}
   get objective(){if(this.gallery?.drill==='hazard-gauntlet')return 'PIT HAZARD VAULT / '+Math.max(0,Math.ceil(this.gallery.duration-this.time))+'s · '+this.gallery.activations+' PLATES ARMED';if(this.gallery)return 'CALIBRATION VAULT / '+Math.max(0,Math.ceil(60-this.time))+'s · '+this.gallery.hits+' HITS / '+this.gallery.shots+' SHOTS';const n=this.level.relays.filter(r=>r.active).length;if(n<2)return `BREAK CONTROL RELAYS ${n}/2`;if(!this.player.key)return 'FIND THE GOLDEN ACCESS KEY';if(this.level.enemies.some(e=>e.type==='warden'&&!e.dead))return 'DEFEAT '+(PIT_BOSSES[this.definition.boss]?.name||'THE WARDEN');return 'REACH THE EXTRACTION PORTAL';}
-  get objectiveTarget(){if(this.gallery)return this.level.enemies.find(e=>!e.dead)||{x:14.5,y:10.5,label:'PRACTICE TARGETS'};return this.level.relays.find(r=>!r.active)||(!this.player.key?{...this.level.key,label:'GOLD ACCESS KEY'}:null)||this.level.enemies.find(e=>e.type==='warden'&&!e.dead)||{...this.level.exit,label:'EXTRACTION'};}
+  get objectiveTarget(){if(this.gallery?.drill==='hazard-gauntlet')return {x:14.5,y:12.5,label:'TRAP STATIONS'};if(this.gallery)return this.level.enemies.find(e=>!e.dead)||{x:14.5,y:10.5,label:'PRACTICE TARGETS'};return this.level.relays.find(r=>!r.active)||(!this.player.key?{...this.level.key,label:'GOLD ACCESS KEY'}:null)||this.level.enemies.find(e=>e.type==='warden'&&!e.dead)||{...this.level.exit,label:'EXTRACTION'};}
   get exitReady(){if(this.gallery)return false;return this.level.relays.every(r=>r.active)&&this.player.key&&!this.level.enemies.some(e=>e.type==='warden'&&!e.dead);}
   selectWeapon(index){if(this.gallery&&index!==1){this.emit('toast',{text:'CALIBRATION / BLASTER ONLY'});return false;}if(index<0||index>=this.unlocked){this.emit('toast',{text:'WEAPON LOCKED · advance to the next sector'});return false;}if(this.weapon!==index){this.weapon=index;this.equipAnim=.24;this.emit('sound',{name:'equip'});this.emit('weapon');}return true;}
   setCombatPose(pose){if(!validAim(pose?.aim)||!pose?.head||!['x','y','height'].every(k=>Number.isFinite(pose.head[k]))){this.combatPose=null;return false;}this.combatPose=pose;return true;}
@@ -155,7 +155,7 @@ export class Game {
     if(distance(p,l.exit)<1.8){if(this.exitReady)this.complete();else this.emit('toast',{text:this.objective});return;}
     this.emit('toast',{text:'AIM AT A DOOR, RELAY, OR CAPTIVE · THEN E'});
   }
-  saveCheckpoint(){if(this.player.health<=0)return false;this.checkpoint=this.snapshot();this.emit('checkpoint');return true;}
+  saveCheckpoint(){if(this.gallery||this.player.health<=0)return false;this.checkpoint=this.snapshot();this.emit('checkpoint');return true;}
   oriAbility(){
     if(this.gallery)return false;
     if(this.mode!=='playing'||this.player.ori<30||this.oriCooldown>0){this.emit('toast',{text:'ORI IS RECHARGING'});return false;}
