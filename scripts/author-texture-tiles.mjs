@@ -20,11 +20,11 @@ const crc32=b=>{let c=0xffffffff;for(const v of b)c=crcTable[(c^v)&255]^(c>>>8);
 function chunk(type,data){
  const label=Buffer.from(type,'ascii');return Buffer.concat([u32(data.length),label,data,u32(crc32(Buffer.concat([label,data])))]);
 }
-export function encodeTilePNG(rgb,size=ART_TILE_SIZE){
- if(rgb.length!==size*size*3)throw Error('Invalid tile RGB');
- const raw=Buffer.alloc(size*(size*3+1));
- for(let y=0;y<size;y++)rgb.copy(raw,y*(size*3+1)+1,y*size*3,(y+1)*size*3);
- const hdr=Buffer.alloc(13);hdr.writeUInt32BE(size,0);hdr.writeUInt32BE(size,4);hdr[8]=8;hdr[9]=2;
+export function encodeTilePNG(rgb,width=ART_TILE_SIZE,height=width){
+ if(rgb.length!==width*height*3)throw Error('Invalid tile RGB');
+ const raw=Buffer.alloc(height*(width*3+1));
+ for(let y=0;y<height;y++)rgb.copy(raw,y*(width*3+1)+1,y*width*3,(y+1)*width*3);
+ const hdr=Buffer.alloc(13);hdr.writeUInt32BE(width,0);hdr.writeUInt32BE(height,4);hdr[8]=8;hdr[9]=2;
  return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',hdr),chunk('IDAT',deflateSync(raw,{level:9})),chunk('IEND',Buffer.alloc(0))]);
 }
 export function renderAuthoredTile(style,surface){
@@ -106,12 +106,16 @@ export function renderAuthoredTile(style,surface){
 }
 export async function writeRung3Tiles(destination){
  let count=0,bytes=0;
- for(const style of AUTHORED_NEW_STYLES){
+ const w=3*ART_TILE_SIZE,h=8*ART_TILE_SIZE,matrix=Buffer.alloc(w*h*3);
+ for(const [column,style] of AUTHORED_NEW_STYLES.entries()){
   const dir=path.join(destination,'texture-packs',style);await mkdir(dir,{recursive:true});
-  for(const surface of ART_SURFACES){
-   const png=encodeTilePNG(renderAuthoredTile(style,surface));
+  for(const [row,surface] of ART_SURFACES.entries()){
+   const image=renderAuthoredTile(style,surface),png=encodeTilePNG(image);
    await writeFile(path.join(dir,surface+'.png'),png);bytes+=png.length;count++;
+   for(let y=0;y<ART_TILE_SIZE;y++)image.copy(matrix,((row*ART_TILE_SIZE+y)*w+column*ART_TILE_SIZE)*3,y*ART_TILE_SIZE*3,(y+1)*ART_TILE_SIZE*3);
   }
  }
- return {count,bytes};
+ const sheet=encodeTilePNG(matrix,w,h);
+ await writeFile(path.join(destination,'texture-packs','rung3-material-matrix.png'),sheet);
+ return {count,bytes,matrixBytes:sheet.length};
 }
