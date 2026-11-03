@@ -3,3 +3,12 @@
 .in-match .masthead,.in-match #menu-panel,.in-match .lobby,.in-match .log-card,.in-match footer,.in-match .utilities+.hint{display:none}.in-match .layout{display:block}.in-match .game-heading{margin-top:12px}.in-match .viewport{height:min(calc(100svh - 235px),calc((100vw - 64px)*.5625))}.in-match canvas{height:100%;object-fit:contain}.in-match #play-area{max-width:1450px;margin:auto}@media(max-width:740px){.in-match .viewport{height:calc(100svh - 300px)}.in-match .vitals{padding:8px}.in-match header{padding:8px 0}}
 
 .epilogue{padding:35px;background:radial-gradient(ellipse at top right,#22574d,#081a20 70%);border-color:#8debd0}.epilogue h2{font-size:clamp(24px,3vw,42px);color:#d4ffe1;letter-spacing:-1px}.epilogue p{max-width:65ch;line-height:1.8}.epilogue .hint{color:#9bb9b2}
+
+/* Embedded under BTM's in-page multiplayer view. Standalone bbs.html keeps
+   its original navigation and full UI untouched. */
+body.embedded-bbs #solo-link,body.embedded-bbs #trophy-link,
+body.embedded-bbs footer>a{display:none}
+body.embedded-bbs #bbs-return{display:inline-flex;align-items:center;justify-content:center;
+  min-height:34px;padding:7px 12px;border:1px solid #63e7ff;
+  background:#10324a;color:#d5f9ff;font:700 11px sans-serif;cursor:pointer}
+body.embedded-bbs #bbs-return:focus-visible{outline:3px solid #ffd2aa;outline-offset:2px}
