@@ -30,12 +30,18 @@ test('two co-op actors entering the same wall plate generate one server-owned el
  place(a,t.x,t.y);place(b,t.x+.12,t.y);
  r.step();
  assert.equal(count(r,'pitTrapArmed'),1);
- assert.equal(r.events.find(e=>e.type==='pitTrapArmed').targetId,a.id);
+ const armed=r.events.find(e=>e.type==='pitTrapArmed');
+ assert.equal(armed.targetId,a.id);
+ assert.equal(armed.trapId,t.id,'event retains original authored trap identifier');
+ assert(Number.isInteger(armed.id)&&armed.id>0,'network event retains monotonic numeric cursor');
  assert(Number.isFinite(t.fireAt));
  assert.equal(r.game.projectiles.length,0,'warning precedes real projectile');
  step(r,33);
  assert.equal(count(r,'pitTrapFired'),1);
- assert(r.events.find(e=>e.type==='pitTrapFired').targetX===t.x);
+ const fire=r.events.find(e=>e.type==='pitTrapFired');
+ assert.equal(fire.trapId,t.id);
+ assert(Number.isInteger(fire.id)&&fire.id>armed.id);
+ assert.equal(fire.targetX,t.x);
  assert(r.game.projectiles.some(p=>p.enemy&&p.trap==='electric-orb'));
  // Even when both actors remain standing on the plate, cooldown expiry
  // must not generate another scheduled shot.
@@ -103,6 +109,7 @@ test('pressure-pulse arms once per shared entry, hits both actors in radius, and
  assert(a.player.health===100&&b.player.health===100);
  step(r,27);
  assert.equal(count(r,'pitFloorFired'),1);
+ assert.equal(r.events.find(e=>e.type==='pitFloorFired').trapId,h.id);
  assert(a.player.health<100&&b.player.health<100,'both actors within blast radius take independent damage');
  step(r,195);
  assert.equal(count(r,'pitFloorArmed'),1,'standing on plate cannot farm pulses');
