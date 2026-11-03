@@ -163,3 +163,15 @@ body[data-input=controller] #game,body[data-input=vr] #game{cursor:none}.reduced
 @media(max-width:710px){.trophy-wing{grid-template-columns:1fr}.trophy-medals{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:440px){.trophy-medals{grid-template-columns:1fr}.trophy-modal{width:98vw;padding:14px}.trophy-hero{padding:14px}.trophy-hero>p{font-size:12px}.trophy-stat dd{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.trophy-choice,.trophy-medal{animation:none;transition:none}}
+
+/* BBS is a full-screen in-game scene; the parent document and solo save stay
+   mounted, while the isolated network client gets its own input lifecycle. */
+.bbs-portal{position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;background:#070f1e;color:#e5f8ff}
+.bbs-portal[hidden]{display:none!important}
+.bbs-portal-toolbar{flex:0 0 auto;min-height:50px;display:flex;align-items:center;gap:16px;padding:8px clamp(10px,2vw,28px);background:linear-gradient(90deg,#0a1931,#1d1231);border-bottom:2px solid #47e7ff;font-size:12px;letter-spacing:.1em}
+.bbs-portal-toolbar strong{color:#84f2ff;font-weight:700}
+.bbs-portal-toolbar span{flex:1;color:#aabbe0;font-size:10px}
+#bbs-portal-close{border:1px solid #e992d5;padding:10px 16px;background:#351e48;color:#fff;font-size:12px;font-weight:700;min-height:38px}
+#bbs-portal-close:focus-visible{outline:3px solid #fff8b9;outline-offset:2px}
+#bbs-portal-frame{display:block;flex:1;min-width:0;min-height:0;width:100%;border:0;background:#07141a}
+@media(max-width:600px){.bbs-portal-toolbar{gap:7px;flex-wrap:wrap}.bbs-portal-toolbar strong{font-size:10px}.bbs-portal-toolbar span{display:none}#bbs-portal-close{margin-left:auto;font-size:10px;padding:8px}}
