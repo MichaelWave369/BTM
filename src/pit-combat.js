@@ -59,21 +59,34 @@ export function updatePitTraps(g){
    t.fireAt=g.time+t.warning;
    t.readyAt=g.time+t.cooldown;
    t.targetX=g.player.x;t.targetY=g.player.y;
-   warn(g,t,'PRESSURE PLATE / ELECTRIC ORB CHARGING');
-   g.emit('pitTrapArmed',{id:t.id,x:t.x,y:t.y,fireAt:t.fireAt});
+   t.volleyShot=0;
+   const message=t.pattern==='crossfire'?'CROSSFIRE PLATE / TWO WALLS CHARGING':
+    t.pattern==='double'?'DOUBLE ORB PLATE / STAGGERED VOLLEY':'PRESSURE PLATE / ELECTRIC ORB CHARGING';
+   warn(g,t,message);
+   g.emit('pitTrapArmed',{id:t.id,x:t.x,y:t.y,fireAt:t.fireAt,pattern:t.pattern||'single'});
   }
   t.wasInside=inside;
   if(!Number.isFinite(t.fireAt)||g.time<t.fireAt)continue;
-  t.fireAt=null; // one launch per entry, even across pause/resume
+  const shot=t.volleyShot||0,burst=Math.max(1,Math.min(2,t.burst||1));
+  const side=t.pattern==='crossfire'?(shot+(t.volleyCycle||0))%2:0;
+  const source=side===1?{x:t.secondMuzzleX,y:t.secondMuzzleY}:{x:t.muzzleX,y:t.muzzleY};
+  const target={x:t.targetX,y:t.targetY},due=t.fireAt;
+  // Consume the scheduled shot BEFORE collision/cap checks, so an obscured
+  // or saturated emitter cannot spin forever, double-fire or spam on resume.
+  t.volleyShot=shot+1;
+  if(t.volleyShot>=burst){
+   t.fireAt=null;t.volleyShot=0;
+   if(t.pattern==='crossfire')t.volleyCycle=((t.volleyCycle||0)+1)%2;
+  }else t.fireAt=Math.max(g.time,due)+Math.max(.3,t.interval||.45);
   if(g.projectiles.length>=96)continue;
-  const source={x:t.muzzleX,y:t.muzzleY},target={x:t.targetX,y:t.targetY};
+  if(!Number.isFinite(source.x)||!Number.isFinite(source.y))continue;
   const length=distance(source,target);
   if(length<.1||!lineOfSight(g.level,source,target))continue;
   g.projectiles.push({x:source.x,y:source.y,height:.7,
    a:Math.atan2(target.y-source.y,target.x-source.x),
    speed:t.speed,life:3,damage:t.damage,enemy:true,trap:'electric-orb',
    color:'#59e7ff',r:.15});
-  g.emit('pitTrapFired',{id:t.id,x:source.x,y:source.y,targetX:target.x,targetY:target.y});
+  g.emit('pitTrapFired',{id:t.id,x:source.x,y:source.y,targetX:target.x,targetY:target.y,shot:shot+1,side});
   g.emit('sound',{name:'oriBolt',position:{x:source.x,y:source.y,height:.7}});
   g.emit('burst',{x:source.x,y:source.y,height:.7,color:'#59e7ff',count:8});
  }
