@@ -142,7 +142,7 @@ test('the full 48-record archive remains optional and safe to import through exi
  assert.equal(ledger.total,48);
  assert.equal(ledger.unlocked.length,3,'the original 3/6/9 dossiers remain in place');
  assert.equal(ledger.evidence.length,4);
- assert.equal(ledger.list().length,55,'48 records, 3 original dossiers and 4 evidence cases');
+ assert.equal(ledger.list().length,59,'48 records, 3 dossiers, 4 linked cases and 4 optional intel challenges');
  assert.equal(new ArchiveLedger(store).count,48);
  assert.equal(JSON.stringify(new Game().snapshot()),before,'collectibles cannot mutate campaign state');
  assert.equal(recordForSign('pit',8,2),null,'Pit campaign keeps a separate story mapping');

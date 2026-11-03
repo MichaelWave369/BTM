@@ -122,23 +122,49 @@ function home(){if(game.phiwadCustom)leavePhiWadMission(game);else if(!game.gall
 function openSettings(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('settings-screen');}
 function openHelp(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('help-screen');}
 
-function renderArchiveScreen(){
+function renderArchiveScreen(selectedId=null){
  const entries=archiveLedger.list(),root=$('archive-catalog'),detail=$('archive-detail');
- $('archive-progress').textContent=archiveLedger.count+' / '+archiveLedger.total+' RECOVERED RECORDS   ·   '+archiveLedger.unlocked.length+' / 3 DOSSIERS OPEN';
+ $('archive-progress').textContent=archiveLedger.count+' / '+archiveLedger.total+
+  ' RECOVERED RECORDS   ·   '+archiveLedger.unlocked.length+' / 3 DOSSIERS OPEN   ·   '+
+  archiveLedger.solvedIntelCount+' / 4 INTEL VERIFIED';
  root.replaceChildren(...entries.map(entry=>{
   const button=document.createElement('button');button.type='button';
-  button.textContent=(entry.type==='dossier'?'UNSEALED / ':'')+entry.title;
+  button.textContent=(entry.type==='dossier'?'UNSEALED / ':entry.type==='challenge'?
+   entry.solved?'VERIFIED / ':'INVESTIGATE / ':'')+entry.title;
   const small=document.createElement('small');small.textContent=entry.kind+' · '+entry.subject;button.append(small);
-  button.addEventListener('click',()=>{
-   const selected=archiveLedger.find(entry.id);
-   if(!selected)return;
-   detail.replaceChildren();
-   const heading=document.createElement('strong');heading.textContent=selected.title;
-   detail.append(heading,document.createTextNode('\n'+selected.kind+' / '+selected.subject+'\n\n'+selected.text));
-  });return button;
+  button.addEventListener('click',()=>renderArchiveScreen(entry.id));
+  return button;
  }));
- if(!entries.length)detail.textContent='No recovered records yet. In the campaign, find a wall plaque, face it, and press USE to preserve its testimony.';
- else detail.textContent='Select a recovered record to read the complete testimony. Only records you have found appear here.';
+ const selected=selectedId?archiveLedger.find(selectedId):null;
+ if(selected){
+  detail.replaceChildren();
+  const heading=document.createElement('strong');heading.textContent=selected.title;
+  detail.append(heading,document.createTextNode('\n'+selected.kind+' / '+selected.subject+'\n\n'));
+  if(selected.type==='challenge'){
+   detail.append(document.createTextNode(selected.question+'\n\n'));
+   if(selected.solved){
+    detail.append(document.createTextNode('WITNESS RECORD VERIFIED\n\n'+selected.debrief));
+   }else{
+    const options=document.createElement('div');options.className='archive-intel-options';
+    for(const [i,option] of selected.options.entries()){
+     const choice=document.createElement('button');choice.type='button';
+     choice.textContent=String(i+1)+'. '+option;
+     choice.addEventListener('click',()=>{
+      const result=archiveLedger.submitIntel(selected.id,i);
+      if(result.correct)renderArchiveScreen(selected.id);
+      else{
+       feedback.textContent=result.accepted?'EVIDENCE DOES NOT MATCH. RECHECK THE TESTIMONIES.':'WITNESS CHAIN NOT VERIFIED.';
+      }
+     });
+     options.append(choice);
+    }
+    const feedback=document.createElement('p');feedback.className='archive-intel-feedback';
+    feedback.setAttribute('role','status');
+    detail.append(options,feedback);
+   }
+  }else detail.append(document.createTextNode(selected.text));
+ }else if(!entries.length)detail.textContent='No recovered records yet. In the campaign, find a wall plaque, face it, and press USE to preserve its testimony.';
+ else detail.textContent='Select a recovered record to read its testimony. Complete evidence chains unlock optional intelligence challenges.';
 }
 function openArchive(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();renderArchiveScreen();showScreen('archive-screen');}
 function renderTrophyRoom(){
