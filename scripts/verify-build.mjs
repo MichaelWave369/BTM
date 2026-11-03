@@ -8,4 +8,24 @@ for(const file of ['main.js','pit.js','pit-combat.js','pit-presentation.js','cam
 const css=await readFile(path.join(root,'src/style.css'),'utf8');for(const m of css.matchAll(/url\(['"]?([^)'"]+)['"]?\)/g))if(!m[1].startsWith('data:'))await verifyURL(m[1],new URL('src/style.css',base));
 const sw=await readFile(path.join(root,'sw.js'),'utf8'),files=JSON.parse(sw.match(/const FILES=(\[[^;]+\]);/)[1]);for(const file of files)await verifyURL(file);
 const manifest=JSON.parse(await readFile(path.join(root,'manifest.webmanifest'),'utf8'));for(const icon of manifest.icons)await verifyURL(icon.src);if(new URL(manifest.start_url,base).pathname!==base.pathname)throw Error('Manifest start_url escapes base');
-console.log(`Build verification passed: ${checked} asset/import/cache references resolve under /MichaelWave-Ori-BreakTheMatrix/.`);
+// Rung 3 images are generated deterministically at build time rather than
+// downloaded or embedded in the service worker. Verify every image is real,
+// image-sized, present in dist and distinct before publishing a Pages build.
+const signatures=new Set();
+for(const style of ['cyberpunk','horror','corporate']){
+ for(const material of ['wall1','wall2','wall3','wall4','wall5','wall6','floor','ceiling']){
+  const {target}=await verifyURL('./texture-packs/'+style+'/'+material+'.png');
+  const bytes=await readFile(target);
+  if(bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a'||
+   bytes.readUInt32BE(16)!==256||bytes.readUInt32BE(20)!==256||bytes[25]!==2)
+   throw Error('Bad authored 256px PNG: '+target);
+  const digest=(await import('node:crypto')).createHash('sha256').update(bytes).digest('hex');
+  if(signatures.has(digest))throw Error('Duplicate authored surface '+target);
+  signatures.add(digest);
+ }
+}
+const preview=await verifyURL('./texture-packs/rung3-material-matrix.png');
+const previewBytes=await readFile(preview.target);
+if(previewBytes.readUInt32BE(16)!==768||previewBytes.readUInt32BE(20)!==2048)
+ throw Error('Incorrect Rung 3 surface comparison matrix');
+console.log(`Build verification passed: ${checked} asset/import/cache references resolve under /MichaelWave-Ori-BreakTheMatrix/. ${signatures.size} original Rung 3 tiles + 3-column image matrix.`);

@@ -23,8 +23,8 @@ function unpackPng(file){
  for(let y=0;y<height;y++)assert.equal(rgba[y*(width*3+1)],0);
  return {width,height,pixels:rgba};
 }
-test('Industrial and Matrix Facility ship sixteen original 256x256 PNG material images',async()=>{
- assert.deepEqual(Object.keys(AUTHORED_TEXTURE_MANIFESTS),ART_STYLES);
+test('Industrial and Matrix Facility preserve their sixteen original tracked 256px PNGs',async()=>{
+ assert.deepEqual(Object.keys(AUTHORED_TEXTURE_MANIFESTS),[...ART_STYLES,'cyberpunk','horror','corporate']);
  const pictures=[];
  for(const style of ART_STYLES){
   const manifest=AUTHORED_TEXTURE_MANIFESTS[style];
@@ -82,5 +82,5 @@ test('HD atlas builds remain visual-only; source paths and image loaders are wir
  assert.match(vr,/textureTileSize\(data\.settings/);
  assert.match(classic,/loadAuthoredTexturePack\(style\)/);
  assert.match(serve,/image\/png/);
- assert.match(ui,/Industrial and Matrix Facility now use original 256px image materials/);
+ assert.match(ui,/All five enhanced styles use original authored 256px image tiles/);
 });

@@ -16,14 +16,27 @@ export function textureSettings(input={}){
  return {textureStyle:TEXTURE_STYLES.includes(input.textureStyle)?input.textureStyle:'retro',
   textureQuality:TEXTURE_QUALITY.includes(input.textureQuality)?input.textureQuality:'enhanced'};
 }
+// Explicit presentation metadata; does not alter the underlying level, network
+// state, combat, AI, mission saves, or gameplay map. Overrides always win.
+export const AUTO_MATERIAL_ASSIGNMENTS=Object.freeze({
+ original:Object.freeze(['matrix-facility','industrial','corporate','industrial','cyberpunk','horror',
+  'corporate','matrix-facility','horror','cyberpunk','industrial','matrix-facility']),
+ pit:Object.freeze(['industrial','horror','cyberpunk','horror']),
+ arena:Object.freeze({'THE DESCENT':'industrial','THE SUFFERING':'cyberpunk','THE FRACTURE':'cyberpunk','NO WAY OUT':'horror'})
+});
 export function textureStyleFor(level,settings={}){
  const {textureStyle}=textureSettings(settings);
  if(textureStyle!=='auto')return textureStyle;
- if(level?.campaign==='pit')return 'horror';
- if(level?.campaign==='arena')return 'cyberpunk';
  if(level?.campaign==='raid')return 'matrix-facility';
+ if(level?.campaign==='arena')return AUTO_MATERIAL_ASSIGNMENTS.arena[level?.palette?.name]||'cyberpunk';
  const index=Number.isInteger(level?.index)?level.index:0;
- return ['matrix-facility','industrial','corporate','cyberpunk','horror','matrix-facility'][((index%6)+6)%6];
+ if(level?.campaign==='pit'){
+  const act=Number.isInteger(level?.act)?level.act:Math.floor(Math.max(0,index)/3);
+  return AUTO_MATERIAL_ASSIGNMENTS.pit[Math.min(3,Math.max(0,act))];
+ }
+ if(level?.campaign==='original'||level?.campaign==null)
+  return AUTO_MATERIAL_ASSIGNMENTS.original[((index%12)+12)%12];
+ return 'retro';
 }
 export function textureSignature(level,settings={}){
  const s=textureSettings(settings);return textureStyleFor(level,s)+'/'+s.textureQuality;
@@ -39,11 +52,13 @@ export function validateTextureManifest(manifest,style){
  }
  return Object.freeze(assets);
 }
-// Original 256×256 authored image tiles are shipped in public/texture-packs.
-// Retro intentionally stays byte-for-byte the existing original procedural look.
+// Industrial and Matrix Facility are original tracked PNG assets.
+// Cyberpunk, Horror and Corporate are reproducibly generated first-party 256px PNGs
+// by scripts/author-texture-tiles.mjs into dist/texture-packs during npm run build.
+// Retro intentionally stays byte-for-byte the original procedural look.
 const authoredSurfaceFiles=Object.freeze(Object.fromEntries(SURFACE_MATERIALS.map(id=>[id,id+'.png'])));
 export const AUTHORED_TEXTURE_MANIFESTS=Object.freeze(Object.fromEntries(
- ['industrial','matrix-facility'].map(style=>[style,Object.freeze({schema:'btm.texture-pack/1',style,surfaces:authoredSurfaceFiles})])
+ ['industrial','matrix-facility','cyberpunk','horror','corporate'].map(style=>[style,Object.freeze({schema:'btm.texture-pack/1',style,surfaces:authoredSurfaceFiles})])
 ));
 export function textureTileSize(settings={},maxTextureSize=4096){
  const tier=textureSettings(settings).textureQuality;
