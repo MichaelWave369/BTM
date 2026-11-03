@@ -86,7 +86,8 @@ try{
  await pump(38);
  const fired=room.events.filter(e=>e.type==='pitTrapFired');
  assert.equal(fired.length,1,'the host and the two client browsers cannot duplicate an orb');
- assert.equal(fired[0].id,trap.id);
+ assert.equal(fired[0].trapId,trap.id,'trap identity survives event sequencing');
+ assert(Number.isInteger(fired[0].id)&&fired[0].id>0,'network events retain monotonic numeric event IDs');
  // Capture real compositor frames with both live BBS clients in the game.
  for(let i=0;i<pages.length;i++){
   const cdp=await pages[i].context.newCDPSession(pages[i].outer);
