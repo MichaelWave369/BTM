@@ -387,11 +387,49 @@ function tick(now,externalPad,spatial){
   if(!vr.active&&!settings.reducedMotion&&game.shake>0){const magnitude=game.shake*8;canvas.style.transform='translate('+Math.sin(now*.09)*magnitude+'px,'+Math.cos(now*.11)*magnitude+'px)';}else canvas.style.transform='';
   hudTime+=dt;if(hudTime>.08){hudTime=0;updateHUD();}fpsFrames++;fpsTime+=realDt;if(fpsTime>=1){$('fps').textContent=Math.round(fpsFrames/fpsTime);fpsFrames=0;fpsTime=0;}
 }
-function frame(now){desktopFrame=0;if(vr.active)return;tick(now);desktopFrame=requestAnimationFrame(frame);}
+function frame(now){
+ desktopFrame=0;if(vr.active)return;
+ // BBS owns the gamepad/keyboard while displayed; don't run the solo menu
+ // underneath its iframe. Resume with a fresh frame delta on return.
+ if($('bbs-portal').hidden)tick(now);else lastFrame=now;
+ desktopFrame=requestAnimationFrame(frame);
+}
 void vr.probe();navigator.xr?.addEventListener?.('devicechange',()=>void vr.probe());
 mountSoundtrackControls({audio,settings,apply:applySettings,save:storeSettings});
 applySettings();showScreen('title-screen');if(location.hash==='#trophy-room'){openTrophyRoom();history.replaceState(null,'',location.pathname+location.search);}updateHUD();desktopFrame=requestAnimationFrame(frame);
 if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').then(()=>navigator.serviceWorker.ready).then(()=>{$('offline-status').textContent='OFFLINE READY';}).catch(()=>{$('offline-status').textContent='ONLINE';$('offline-status').title='Offline caching unavailable here. Keep the source download for local play.';});else $('offline-status').textContent='LOCAL BUILD';
 
-$('solo-bots-btn').addEventListener('click',async()=>{if(vr.active)await vr.exit();window.location.assign('./bbs.html#solo-bots');});
-$('bbs-btn').addEventListener('click',async()=>{if(vr.active)await vr.exit();window.location.assign('./bbs.html');});
+// In-game BBS scene: keep the solo page (and separate campaign checkpoints)
+// mounted. The embedded network document owns its own controls and sockets.
+let bbsReturnButton=null;
+const bbsPortal=$('bbs-portal'),bbsFrame=$('bbs-portal-frame');
+async function openBbsPortal(bots=false,button=null){
+ if(!bbsPortal.hidden)return;
+ if(vr.active)await vr.exit(); // only one immersive XR session can be active
+ if(game.mode==='playing')pause();
+ clearInput();
+ if(document.pointerLockElement)document.exitPointerLock?.();
+ audio.pause(true);
+ bbsReturnButton=button;
+ bbsPortal.hidden=false;
+ bbsFrame.src='./bbs.html?embedded=1'+(bots?'#solo-bots':'');
+ $('bbs-portal-close').focus({preventScroll:true});
+}
+function closeBbsPortal(){
+ if(bbsPortal.hidden)return;
+ try{bbsFrame.contentWindow?.bbs?.pause?.();bbsFrame.contentWindow?.bbs?.net?.disconnect?.();}catch{}
+ // Unload the embedded BBS document so its event handlers, animation, audio
+ // and network lifecycle can't run behind the solo game after returning.
+ bbsFrame.src='about:blank';
+ bbsPortal.hidden=true;
+ lastFrame=performance.now();
+ bbsReturnButton?.focus({preventScroll:true});
+}
+$('bbs-portal-close').addEventListener('click',closeBbsPortal);
+window.addEventListener('message',event=>{
+ if(event.origin!==location.origin||event.source!==bbsFrame.contentWindow||
+  event.data?.type!=='btm:bbs:close')return;
+ closeBbsPortal();
+});
+$('solo-bots-btn').addEventListener('click',()=>void openBbsPortal(true,$('solo-bots-btn')));
+$('bbs-btn').addEventListener('click',()=>void openBbsPortal(false,$('bbs-btn')));
