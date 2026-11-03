@@ -1,0 +1,47 @@
+# Deploy on an always-on VPS/container host, not Netlify.
+# Your existing Netlify site continues to serve www.enterthefield.org.
+services:
+  btm:
+    build:
+      context: ../..
+      dockerfile: deploy/bbs/Dockerfile
+    command:
+      - node
+      - server/index.mjs
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8787"
+      - --save-dir
+      - /saves
+      - --origin
+      - https://www.enterthefield.org
+      - --origin
+      - https://enterthefield.org
+      - --origin
+      - https://michaelwave369.github.io
+      - --origin
+      - https://phi-field.com
+    expose:
+      - "8787"
+    volumes:
+      - btm-saves:/saves
+    restart: unless-stopped
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      BBS_HOST: ${BBS_HOST:-play.enterthefield.org}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - btm
+    restart: unless-stopped
+volumes:
+  btm-saves:
+  caddy-data:
+  caddy-config:
