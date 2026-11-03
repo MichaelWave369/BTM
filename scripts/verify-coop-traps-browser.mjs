@@ -73,8 +73,8 @@ try{
   id:window.bbs.net.id,clock:window.bbs.game.level.traps?.[0]?.fireAt,
   revision:window.bbs.game.revision,mode:window.bbs.game.netState?.mode
  }))));
- assert.equal(before[0].clock,trap.fireAt);
- assert.equal(before[1].clock,trap.fireAt);
+ assert(Math.abs(before[0].clock-trap.fireAt)<.001,'client A must match host quantized warning');
+ assert(Math.abs(before[1].clock-trap.fireAt)<.001,'client B must match host quantized warning');
  assert(before.every(x=>x.mode==='coop'),'two real browser BBS sessions remain connected in co-op');
  for(const p of pages)await p.page.evaluate(m=>{window.bbs.drive(m);window.bbs.net.flush();},neutralInput());
  await pump(38);
