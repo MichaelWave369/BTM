@@ -5,6 +5,7 @@ import {destinationFor} from './genewrist-bridge.js';
 import {Game,SECTORS,WEAPONS,CAMPAIGN_HOSTS,clamp,angleDiff} from './core.js';
 import {Renderer} from './renderer.js';
 import {textureSettings} from './texture-packs.js';
+import {offlineTextureStyle,offlineTextureStatus,requestOfflineTextures} from './texture-offline.js';
 import {ArchiveLedger} from './archive-ledger.js';
 import {buildTrophyDossier,readGalleryCard} from './trophy-room.js';
 import {enterGallery,galleryResult,storeGalleryResult} from './shooting-gallery.js';
@@ -119,7 +120,7 @@ function lockMouse(){if(touch||vr.active||inputMode!=='keyboard'||settings.contr
 function play(fresh=false){if(fresh){communications.reset();game.start({energyMode:settings.energyMode});mapOpen=false;}else game.mode='playing';showScreen('');audio.pitAct=game.campaign==='pit'?game.definition.act:null;audio.sector=game.levelIndex;updateSoundtrackCue();audio.start();audio.pause(false);canvas.focus({preventScroll:true});lockMouse();processEvents();updateHUD();}
 function pause(){if(game.mode!=='playing')return;game.mode='paused';audio.pause(true);showScreen('pause-screen');updateHUD();}
 function home(){if(game.phiwadCustom)leavePhiWadMission(game);else if(!game.gallery&&(game.mode==='playing'||game.mode==='paused')){game.saveCheckpoint();saveCheckpoint();}game.gallery=null;game.mode='title';audio.pause(true);audio.setScore({kind:'title'});showScreen('title-screen');$('continue-btn').hidden=!saved;$('continue-pit-btn').hidden=!pitSaved;}
-function openSettings(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('settings-screen');}
+function openSettings(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('settings-screen');void refreshOfflineTextures();}
 function openHelp(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('help-screen');}
 
 function renderArchiveScreen(selectedId=null){
@@ -215,9 +216,57 @@ function applySettings(){
   $('mute-btn').setAttribute('aria-pressed',String(settings.muted));$('mute-btn').setAttribute('aria-label',settings.muted?'Unmute audio':'Mute audio');$('mute-btn').title=settings.muted?'Unmute [M]':'Mute [M]';
   for(const id of ['sensitivity','music','sfx','resolution','textureStyle','textureQuality','controlMode','controllerSensitivity','controllerDeadzone','vrDistance','vrWidth','vrTurnMode','vrSnapAngle','vrMoveReference','vrMoveSpeed','vrTurnSpeed','vrVignetteStrength','vrEyeHeight','vrPosture','vrQuality'])$(id).value=settings[id];$('crt').checked=settings.crt;$('reducedMotion').checked=settings.reducedMotion;$('controllerRumble').checked=settings.controllerRumble;for(const id of ['vrVignette','vrAimLine','vrDiagnostics'])$(id).checked=settings[id];
   $('controllerSensitivity-output').value=settings.controllerSensitivity.toFixed(1);$('controllerDeadzone-output').value=Math.round(settings.controllerDeadzone*100)+'%';
-  $('sensitivity-output').value=settings.sensitivity.toFixed(1);$('music-output').value=Math.round(settings.music*100)+'%';$('sfx-output').value=Math.round(settings.sfx*100)+'%';updateCapture();
+  $('sensitivity-output').value=settings.sensitivity.toFixed(1);$('music-output').value=Math.round(settings.music*100)+'%';$('sfx-output').value=Math.round(settings.sfx*100)+'%';updateCapture();updateOfflineTextureButtons();
 }
 for(const [id,value]of Object.entries(EQUIPMENT_DEFAULTS))$(id).addEventListener('input',()=>{settings[id]=typeof value==='boolean'?$(id).checked:typeof value==='number'?Number($(id).value):$(id).value;Object.assign(settings,equipmentSettings(settings));applySettings();storeSettings();});
+
+let hdTextureBusy=false,hdStatusSequence=0;
+function updateOfflineTextureButtons(){
+ const enabled=offlineTextureStyle(settings.textureStyle)&&!hdTextureBusy&&
+  location.protocol!=='file:'&&'serviceWorker'in navigator;
+ $('save-hd-style').disabled=!enabled;
+ $('remove-hd-style').disabled=!enabled;
+ if(!offlineTextureStyle(settings.textureStyle)){
+  $('hd-offline-status').textContent='Choose one enhanced style instead of Auto or Retro to manage its images.';
+ }else if(location.protocol==='file:'||!('serviceWorker'in navigator)){
+  $('hd-offline-status').textContent='Offline image caching requires HTTPS and browser service-worker support.';
+ }
+}
+async function refreshOfflineTextures(){
+ const token=++hdStatusSequence,style=settings.textureStyle;
+ if(!offlineTextureStyle(style)||hdTextureBusy){updateOfflineTextureButtons();return;}
+ if(location.protocol==='file:'||!('serviceWorker'in navigator)){updateOfflineTextureButtons();return;}
+ $('hd-offline-status').textContent='CHECKING SAVED '+style.toUpperCase().replaceAll('-',' ')+' TILES…';
+ try{
+  const status=await requestOfflineTextures('status',style);
+  if(token===hdStatusSequence&&style===settings.textureStyle)
+   $('hd-offline-status').textContent=offlineTextureStatus(status);
+ }catch(error){
+  if(token===hdStatusSequence)
+   $('hd-offline-status').textContent='OFFLINE CACHE UNAVAILABLE / '+error.message;
+ }
+}
+async function manageOfflineTextures(action){
+ const style=settings.textureStyle;
+ if(hdTextureBusy||!offlineTextureStyle(style))return;
+ hdTextureBusy=true;++hdStatusSequence;updateOfflineTextureButtons();
+ $('hd-offline-status').textContent=action==='save'?'SAVING '+style.toUpperCase()+' / 8 ORIGINAL TILES…':'REMOVING '+style.toUpperCase()+' OPTIONAL TILES…';
+ try{
+  const state=await requestOfflineTextures(action,style);
+  if(style===settings.textureStyle){
+   $('hd-offline-status').textContent=offlineTextureStatus(state);
+   showToast(state.ready?'HD STYLE SAVED / READY OFFLINE':'OPTIONAL HD STYLE REMOVED');
+  }
+ }catch(error){
+  $('hd-offline-status').textContent='OFFLINE MATERIAL OPERATION FAILED / '+error.message;
+ }finally{
+  hdTextureBusy=false;updateOfflineTextureButtons();
+  if(style!==settings.textureStyle)void refreshOfflineTextures();
+ }
+}
+$('save-hd-style').addEventListener('click',()=>void manageOfflineTextures('save'));
+$('remove-hd-style').addEventListener('click',()=>void manageOfflineTextures('remove'));
+$('textureStyle').addEventListener('input',()=>void refreshOfflineTextures());
 
 function toggleMute(){settings.muted=!settings.muted;applySettings();storeSettings();showToast(settings.muted?'AUDIO MUTED':'AUDIO ON');}
 const minutes=n=>Math.floor(n/60).toString().padStart(2,'0')+':'+Math.floor(n%60).toString().padStart(2,'0');

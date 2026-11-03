@@ -184,3 +184,13 @@ body[data-input=controller] #game,body[data-input=vr] #game{cursor:none}.reduced
 .archive-intel-options button:hover,.archive-intel-options button:focus-visible{
  background:#21445b;border-color:var(--gold);outline:2px solid var(--gold);outline-offset:2px}
 .archive-intel-feedback{min-height:1.4em;font-weight:700;color:var(--gold)}
+
+/* Optional, strictly opt-in HD image cache controls in Picture settings. */
+.hd-offline-controls{border:1px solid #46607b;border-radius:8px;background:#101e35;padding:14px;margin:12px 0 8px}
+.hd-offline-controls>b{display:block;font:700 11px var(--mono);letter-spacing:.6px;color:var(--cyan)}
+.hd-offline-controls p{margin:8px 0!important;line-height:1.5!important}
+.hd-offline-actions{display:flex;flex-wrap:wrap;gap:8px}
+.hd-offline-actions button{flex:1 1 155px;min-height:44px;text-align:center;justify-content:center;font-size:10px;padding:9px 12px;margin:0!important;cursor:pointer}
+.hd-offline-actions button:disabled{opacity:.46;cursor:not-allowed}
+.hd-offline-actions button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+#hd-offline-status{min-height:2em;color:var(--cyan)!important;font-weight:600}

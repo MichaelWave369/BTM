@@ -1,9 +1,9 @@
 import {readFile,writeFile} from 'node:fs/promises';import path from 'node:path';import vm from 'node:vm';import assert from 'node:assert/strict';
-const base=new URL('https://offline.example/MichaelWave-Ori-BreakTheMatrix/'),handlers={},buckets=new Map([['unrelated-cache',new Map()],['wave-ori-0.1.0-stale',new Map()]]);let online=true;
+const base=new URL('https://offline.example/MichaelWave-Ori-BreakTheMatrix/'),handlers={},buckets=new Map([['unrelated-cache',new Map()],['wave-ori-0.1.0-stale',new Map()],['btm-hd-materials-obsolete',new Map()]]);let online=true;
 const key=request=>new URL(typeof request==='string'?request:request.url,base).href;
 const local=async request=>{const url=new URL(key(request)),relative=url.pathname.slice(base.pathname.length)||'index.html';return readFile(path.join('dist',relative));};
-const caches={keys:async()=>[...buckets.keys()],delete:async name=>buckets.delete(name),open:async name=>{if(!buckets.has(name))buckets.set(name,new Map());const bucket=buckets.get(name);return {addAll:async urls=>{for(const url of urls)bucket.set(key(url),await local(url));}};},match:async request=>{const k=key(request);for(const bucket of buckets.values())if(bucket.has(k))return new Response(bucket.get(k));}};
-const self={location:{origin:base.origin},addEventListener:(name,fn)=>handlers[name]=fn,skipWaiting:async()=>{},clients:{claim:async()=>{}}};
+const caches={keys:async()=>[...buckets.keys()],delete:async name=>buckets.delete(name),open:async name=>{if(!buckets.has(name))buckets.set(name,new Map());const bucket=buckets.get(name);return {addAll:async urls=>{for(const url of urls)bucket.set(key(url),await local(url));},match:async request=>bucket.has(key(request))?new Response(bucket.get(key(request))):undefined,put:async(request,response)=>{bucket.set(key(request),Buffer.from(await response.arrayBuffer()));},delete:async request=>bucket.delete(key(request))};},match:async request=>{const k=key(request);for(const bucket of buckets.values())if(bucket.has(k))return new Response(bucket.get(k));}};
+const self={location:{origin:base.origin},registration:{scope:base.href},addEventListener:(name,fn)=>handlers[name]=fn,skipWaiting:async()=>{},clients:{claim:async()=>{}}};
 const fetch=async request=>{if(!online)throw Error('Network disconnected for the generated-worker test');return new Response(await local(request));};
 vm.runInNewContext(await readFile('dist/sw.js','utf8'),{self,caches,fetch,URL,Response},{filename:'generated-service-worker.js'});
 async function lifecycle(name){let work;handlers[name]({waitUntil:p=>work=p});await work;}
@@ -13,4 +13,35 @@ for(const required of ['./bbs.html','./src/net/bbs.js','./src/net/bbs.css','./sr
 for(const asset of assets){let response;handlers.fetch({request:{method:'GET',url:new URL(asset,base).href,mode:asset==='./'?'navigate':'cors'},respondWith:p=>response=p});assert.ok(response,asset+' was not intercepted');assert.ok((await(await response).arrayBuffer()).byteLength>0,asset+' empty offline');}
 let fallback;handlers.fetch({request:{method:'GET',url:new URL('saved-bookmark',base).href,mode:'navigate'},respondWith:p=>fallback=p});assert.match(await(await fallback).text(),/BREAK THE MATRIX/);
 let postIntercepted=false;handlers.fetch({request:{method:'POST',url:base.href},respondWith:()=>postIntercepted=true});assert.equal(postIntercepted,false);assert.ok(buckets.has('unrelated-cache'));assert.ok(!buckets.has('wave-ori-0.1.0-stale'));
-const report={passed:true,offlineAssets:assets.length,expansionCached:true,controlsCached:true,gamepadCached:true,vrCached:true,gauntletCached:true,immersiveWorldCached:true,equipmentCached:true,neonUiAndLocalFontsCached:true,navigationFallback:true,postRequestsIgnored:true,unrelatedCachePreserved:true,oldVersionCacheRemoved:true,method:'Generated service worker executed in a Node VM with local asset bytes and a disconnected fetch. This is a cache-logic test, not a browser airplane-mode test.'};await writeFile('docs/equipment/offline-check.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
+assert.ok(!buckets.has('btm-hd-materials-obsolete'),'only obsolete game HD cache may be deleted on activation');
+assert.equal(typeof handlers.message,'function','generated worker includes opt-in HD material endpoint');
+assert(!assets.some(x=>x.includes('texture-packs/')),'none of the 40 optional PNGs may enter mandatory offline shell');
+async function materialMessage(action,style){
+ let reply,pending;
+ handlers.message({data:{channel:'btm-hd-materials/1',action,style},
+  ports:[{postMessage:v=>reply=v}],waitUntil:task=>pending=task});
+ await pending;return reply;
+}
+const initial=await materialMessage('status','horror');
+assert.equal(initial.cached,0);
+assert.equal(initial.ready,false);
+const initialCache=buckets.get('unrelated-cache').size;
+online=true;
+const stored=await materialMessage('save','horror');
+assert.equal(stored.ready,true);
+assert.equal(stored.cached,8);
+online=false;
+for(const surface of ['wall1','wall2','wall3','wall4','wall5','wall6','floor','ceiling']){
+ const url='./texture-packs/horror/'+surface+'.png';
+ let result;
+ handlers.fetch({request:{method:'GET',url:new URL(url,base).href,mode:'cors'},respondWith:p=>result=p});
+ const bytes=Buffer.from(await(await result).arrayBuffer());
+ assert(bytes.subarray(0,8).equals(Buffer.from('89504e470d0a1a0a','hex')),'offline PNG bytes must survive the actual fetch handler');
+}
+const cleared=await materialMessage('remove','horror');
+assert.equal(cleared.cached,0);
+assert.equal(buckets.get('unrelated-cache').size,initialCache);
+const denied=await materialMessage('save','https://bad.example/x');
+assert.equal(denied.ok,false);
+
+const report={passed:true,offlineAssets:assets.length,expansionCached:true,controlsCached:true,gamepadCached:true,vrCached:true,gauntletCached:true,immersiveWorldCached:true,equipmentCached:true,neonUiAndLocalFontsCached:true,navigationFallback:true,postRequestsIgnored:true,unrelatedCachePreserved:true,oldVersionCacheRemoved:true,optionalMaterialCachedOffline:true,optionalMaterialRemovalPreservesCore:true,invalidStyleRejected:true,method:'Generated service worker executed in a Node VM with local asset bytes and a disconnected fetch. This is a cache-logic test, not a browser airplane-mode test.'};await writeFile('docs/equipment/offline-check.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
