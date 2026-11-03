@@ -405,7 +405,9 @@ let bbsReturnButton=null;
 const bbsPortal=$('bbs-portal'),bbsFrame=$('bbs-portal-frame');
 async function openBbsPortal(bots=false,button=null){
  if(!bbsPortal.hidden)return;
- if(vr.active)await vr.exit(); // only one immersive XR session can be active
+ if(vr.active){
+  try{await vr.exit();}catch{showToast('EXIT VR BEFORE OPENING BBS');return;}
+ } // only one immersive XR session can be active
  if(game.mode==='playing')pause();
  clearInput();
  if(document.pointerLockElement)document.exitPointerLock?.();
