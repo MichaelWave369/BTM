@@ -1,10 +1,10 @@
 // Solo Pit's three optional floor mechanisms. This file owns simulation,
 // not rendering or WebXR/controller state. Older Pit saves may omit floorTraps.
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-const nearSegment=(p,h)=>{
+const nearSegment=(p,h,radius=h.radius)=>{
  const dx=h.toX-h.x,dy=h.toY-h.y,len=dx*dx+dy*dy;
  const t=len?Math.max(0,Math.min(1,((p.x-h.x)*dx+(p.y-h.y)*dy)/len)):0;
- return Math.hypot(p.x-h.x-dx*t,p.y-h.y-dy*t)<=h.radius+.16;
+ return Math.hypot(p.x-h.x-dx*t,p.y-h.y-dy*t)<=radius+.16;
 };
 export function floorTrapState(h,time){
  if(h.kind==='pressure-pulse')
@@ -44,7 +44,7 @@ export function updatePitFloorTraps(g){
    continue;
   }
   const state=floorTrapState(h,g.time),cycle=Math.floor((g.time+(h.offset||0))/h.period);
-  const close= h.kind==='arc-lane'?nearSegment(g.player,{...h,radius:1.2}):
+  const close= h.kind==='arc-lane'?nearSegment(g.player,h,1.2):
    distance(g.player,h)<4;
   if(state==='warning'&&h.warned!==cycle&&close){
    h.warned=cycle;
