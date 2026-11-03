@@ -69,6 +69,12 @@ try{
  assert.equal(room.events.filter(e=>e.type==='pitTrapArmed').length,1,'one plate entry means one server warning');
  assert(Number.isFinite(trap.fireAt),'server schedules a real telegraph interval');
  host.broadcast();
+ // WebSocket delivery is asynchronous even under a manually stepped server.
+ // Await matching clocks on BOTH real clients instead of racing a page.evaluate.
+ const expectedClock=Math.round(trap.fireAt*1000)/1000;
+ for(const p of pages)await p.page.waitForFunction(clock=>
+  Math.abs((window.bbs?.game?.level?.traps?.[0]?.fireAt??-99)-clock)<.001,
+  expectedClock,{timeout:12000});
  const before=await Promise.all(pages.map(p=>p.page.evaluate(()=>({
   id:window.bbs.net.id,clock:window.bbs.game.level.traps?.[0]?.fireAt,
   revision:window.bbs.game.revision,mode:window.bbs.game.netState?.mode
