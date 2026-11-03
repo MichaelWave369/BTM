@@ -38,6 +38,35 @@ export const ARCHIVE_EVIDENCE_CASES=Object.freeze([
  Object.freeze({id:'case:ori-witness-protocol',requires:Object.freeze(['ori-signal-zero','ori-witness-fragment','ori-against-the-index','ori-last-packet']),title:'ORI / The Witness Protocol',subject:'ORI / Unknown Signal',kind:'EVIDENCE / LINKED CASE',type:'dossier',text:'Across four separate systems, an uncatalogued companion process repeatedly preserved the names the Demiurge ordered deleted. The evidence suggests a continuous witness protocol, but does not prove who originally wrote it or how Ori came to be. The final packet asks for one thing: remember the people, not merely the program that kept their records.'})
 ]);
 
+
+/**
+ * Optional, purely local witness-reconstruction exercises.
+ * A challenge becomes discoverable ONLY after every record in its evidence
+ * case was collected. Choosing an answer cannot unlock combat upgrades or
+ * modify the authoritative campaign/multiplayer save.
+ */
+export const ARCHIVE_INTEL_CHALLENGES=Object.freeze([
+ Object.freeze({id:'intel:mara',caseId:'case:mara-rhythm',title:'INTEL / Mara\'s Recognition',subject:'Mara and Jae Venn',kind:'INTELLIGENCE / OPTIONAL',type:'challenge',
+  question:'Which evidence shows that Mara Venn still recognized someone after conversion?',
+  options:Object.freeze(['The familiar two taps on the coolant pipe','A gold access-key serial number','The Warden\'s synthetic patrol report']),answer:0,
+  debrief:'WITNESS VERIFIED. Jae used a private family rhythm, and the worker wearing Mara\'s badge answered twice. The official report called it equipment noise. It was recognition.'}),
+ Object.freeze({id:'intel:choir',caseId:'case:forty-seventh-voice',title:'INTEL / The Unapproved Voice',subject:'Nessa Ro and Aster Finch',kind:'INTELLIGENCE / OPTIONAL',type:'challenge',
+  question:'What contradiction appears in the supposedly fully controlled broadcasts?',
+  options:Object.freeze(['All speakers were newly manufactured','Original voices still spoke outside the approved loop','Every registered voice had volunteered']),answer:1,
+  debrief:'WITNESS VERIFIED. The recovered words did not match approved scripts. The bureau wrote them off as errors, but independent recordings show human voices still resisting.'}),
+ Object.freeze({id:'intel:warden',caseId:'case:stolen-warden-lessons',title:'INTEL / The Manufactured Hunter',subject:'Dr. Selene Kade',kind:'INTELLIGENCE / OPTIONAL',type:'challenge',
+  question:'What did the Warden actually steal from human prisoners?',
+  options:Object.freeze(['Living bodies inside metal suits','Human escape attempts used as training data','An ancient supernatural command']),answer:1,
+  debrief:'WITNESS VERIFIED. The machine is a manufactured chassis trained on stolen recordings of escape attempts. Do not confuse a stolen lesson with a human body inside it.'}),
+ Object.freeze({id:'intel:ori',caseId:'case:ori-witness-protocol',title:'INTEL / The Last Witness',subject:'ORI / Signal',kind:'INTELLIGENCE / OPTIONAL',type:'challenge',
+  question:'What did the uncatalogued witness protocol repeatedly preserve?',
+  options:Object.freeze(['Captive names ordered deleted by the system','Only ammunition and inventory reports','A complete map of the final raid']),answer:0,
+  debrief:'WITNESS VERIFIED. The hidden signal retained names across multiple systems and wipes. This does not prove who created Ori, only that someone refused to forget.'})
+]);
+const byChallengeId=new Map(ARCHIVE_INTEL_CHALLENGES.map(x=>[x.id,x]));
+const intelVisible=(ledger,item)=>ARCHIVE_EVIDENCE_CASES.some(c=>
+ c.id===item.caseId&&c.requires.every(id=>ledger.reads.has(id)));
+
 export function recordForSign(campaign,sector,plaque){
  if(campaign!=='original'||!Number.isInteger(sector)||!Number.isInteger(plaque))return null;
  return byLocation.get(sector+':'+plaque)||null;
@@ -46,23 +75,27 @@ export function recordById(id){return byId.get(id)||null;}
 
 export class ArchiveLedger{
  constructor(storage=null){
-  this.storage=storage;this.reads=new Set();this.revision=0;
+  this.storage=storage;this.reads=new Set();this.intelSolved=new Set();this.revision=0;
   if(storage)this.restoreFromStorage();
  }
  get count(){return this.reads.size;}
  get total(){return ARCHIVE_RECORDS.length;}
  get unlocked(){return ARCHIVE_DOSSIERS.filter(d=>this.count>=d.threshold);}
  get evidence(){return ARCHIVE_EVIDENCE_CASES.filter(c=>c.requires.every(id=>this.reads.has(id)));}
+ get intelChallenges(){return ARCHIVE_INTEL_CHALLENGES.filter(c=>intelVisible(this,c)).map(c=>({...c,solved:this.intelSolved.has(c.id)}));}
+ get solvedIntelCount(){return this.intelChallenges.filter(c=>c.solved).length;}
  restoreFromStorage(){
   try{
    const payload=JSON.parse(this.storage.getItem(ARCHIVE_STORAGE_KEY)||'null');
    if(payload?.schema===ARCHIVE_SCHEMA&&Array.isArray(payload.ids)){
     this.reads=new Set(payload.ids.filter(id=>typeof id==='string'&&byId.has(id)));
+    this.intelSolved=new Set((Array.isArray(payload.intelSolved)?payload.intelSolved:[])
+     .filter(id=>typeof id==='string'&&byChallengeId.has(id)&&intelVisible(this,byChallengeId.get(id))));
    }
   }catch{/* Corrupt or unavailable storage never blocks the game. */}
  }
  persist(){
-  try{this.storage?.setItem(ARCHIVE_STORAGE_KEY,JSON.stringify({schema:ARCHIVE_SCHEMA,ids:[...this.reads].sort()}));}
+  try{this.storage?.setItem(ARCHIVE_STORAGE_KEY,JSON.stringify({schema:ARCHIVE_SCHEMA,ids:[...this.reads].sort(),intelSolved:[...this.intelSolved].sort()}));}
   catch{/* The current session still retains discoveries. */}
  }
  collect(id){
@@ -72,11 +105,21 @@ export class ArchiveLedger{
   this.reads.add(id);this.revision++;this.persist();
   return {new:true,entry,milestones:ARCHIVE_DOSSIERS.filter(d=>before<d.threshold&&this.count>=d.threshold)};
  }
+ submitIntel(id,answer){
+  const challenge=byChallengeId.get(id);
+  if(!challenge||!intelVisible(this,challenge)||!Number.isInteger(answer)||answer<0||answer>=challenge.options.length)
+   return {accepted:false,correct:false,new:false};
+  if(answer!==challenge.answer)return {accepted:true,correct:false,new:false};
+  if(this.intelSolved.has(id))return {accepted:true,correct:true,new:false};
+  this.intelSolved.add(id);this.revision++;this.persist();
+  return {accepted:true,correct:true,new:true};
+ }
  list(){
-  return [...ARCHIVE_RECORDS.filter(r=>this.reads.has(r.id)),...this.unlocked,...this.evidence];
+  return [...ARCHIVE_RECORDS.filter(r=>this.reads.has(r.id)),...this.unlocked,...this.evidence,...this.intelChallenges];
  }
  find(id){
   if(byId.has(id))return this.reads.has(id)?byId.get(id):null;
-  return this.unlocked.find(d=>d.id===id)||this.evidence.find(d=>d.id===id)||null;
+  return this.unlocked.find(d=>d.id===id)||this.evidence.find(d=>d.id===id)||
+   this.intelChallenges.find(c=>c.id===id)||null;
  }
 }
