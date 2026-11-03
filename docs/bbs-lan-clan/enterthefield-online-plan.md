@@ -15,6 +15,10 @@ Netlify is an excellent **static frontend** for `www.enterthefield.org`, but its
 - The existing standalone `bbs.html` URL is retained as a fallback for diagnostics and older bookmarks.
 - On Quest, switching between solo immersive XR and embedded multiplayer requires exiting the old XR session and entering the new one; browser permission support must be validated in a physical headset.
 
+## Free community-beta host: your Windows PC + Tailscale Funnel
+
+**No monthly server subscription required.** For a small invite-only beta, run BTM's authoritative Node server locally on the Windows gaming PC and publish its localhost-only port using Tailscale Funnel. It works behind ordinary Starlink CGNAT with no router changes and no Netlify redeploy. See the **[free Windows + Starlink home-server playbook](./free-windows-home-server.md)** and `scripts/start-bbs-home.ps1`. Funnel yields a `*.ts.net` URL; players paste its `wss://.../ws` endpoint into the **in-game** BBS Server Address field. This is not a permanent branded `play.enterthefield.org` address, and actual speed, bandwidth restrictions and uptime must be tested.
+
 ## Preferred managed host: Railway
 
 For the simplest deployment with no private VPS maintenance, use the step-by-step **[Railway public launch guide](./railway-launch.md)**. Railway terminates TLS, supports long-running WebSockets and mounts a real save volume. Use its temporary hostname first, then add the `play.enterthefield.org` custom domain with the **exact CNAME and TXT** records Railway supplies. No Caddy container or VPS-specific A record is needed on Railway. The public node is NOT live until an actual deployment and two-client verification succeed.
