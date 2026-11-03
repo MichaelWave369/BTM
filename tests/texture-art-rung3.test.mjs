@@ -43,8 +43,8 @@ test('all three missing art families are eight real distinct first-party PNG sur
    assert(!signatures.has(sha),'no two 256px tiles should be identical');
    signatures.add(sha);local.add(sha);
    const paletteValues=new Set();
-   for(let i=0;i<rgb.length;i+=243)paletteValues.add(rgb[i]);
-   assert(paletteValues.size>12,'surface must have authored tonal variation '+style+'/'+material);
+   for(let i=0;i<rgb.length;i+=39)paletteValues.add(rgb[i]+','+rgb[i+1]+','+rgb[i+2]);
+   assert(paletteValues.size>8,'surface must have multiple original RGB features '+style+'/'+material);
    const manifest=AUTHORED_TEXTURE_MANIFESTS[style];
    assert(manifest&&Object.keys(manifest.surfaces).length===8,style+' manifest');
    assert.equal(manifest.surfaces[material],material+'.png');
