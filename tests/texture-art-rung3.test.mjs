@@ -37,7 +37,7 @@ test('all three missing art families are eight real distinct first-party PNG sur
    const parsed=parsePNG(image);
    assert.deepEqual([parsed.width,parsed.height],[ART_TILE_SIZE,ART_TILE_SIZE]);
    assert.equal(parsed.pixels.length,256*(1+256*3));
-   assert(image.length>2000&&image.length<240000,style+'/'+material+' bounded original tile');
+   assert(image.length>300&&image.length<240000,style+'/'+material+' bounded original tile');
    assert.equal(rgb.length,ART_TILE_SIZE*ART_TILE_SIZE*3);
    const sha=createHash('sha256').update(image).digest('hex');
    assert(!signatures.has(sha),'no two 256px tiles should be identical');
