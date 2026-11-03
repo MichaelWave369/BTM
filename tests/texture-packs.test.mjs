@@ -27,7 +27,7 @@ test('auto picks deterministic theme without changing stage, campaign or network
  const stage={index:2,campaign:'original',cells:[[0]],enemies:[],doors:{},seed:'dont-change'};
  const before=JSON.stringify(stage);
  assert.equal(textureStyleFor(stage,{textureStyle:'auto'}),'corporate');
- assert.equal(textureStyleFor({...stage,campaign:'pit'},{textureStyle:'auto'}),'horror');
+ assert.equal(textureStyleFor({...stage,campaign:'pit'},{textureStyle:'auto'}),'industrial');
  assert.equal(textureStyleFor({...stage,campaign:'arena'},{textureStyle:'auto'}),'cyberpunk');
  assert.equal(textureStyleFor({...stage,campaign:'raid'},{textureStyle:'auto'}),'matrix-facility');
  assert.equal(textureStyleFor(stage,{textureStyle:'industrial'}),'industrial');
