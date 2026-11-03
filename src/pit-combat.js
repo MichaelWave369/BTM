@@ -47,8 +47,40 @@ export function updatePitBoss(g,e,dt){
  }
  if(e.pitBoss!=='tyrant'&&visible){const a=Math.atan2(p.y-e.y,p.x-e.x),speed=e.pitBoss==='mirror'?.55:.32,side=e.pitBoss==='mirror'?Math.sin(g.time*.7)*.9:0;if(d>4.5||side)moveBody(l,e,Math.cos(a+side)*speed*dt,Math.sin(a+side)*speed*dt,.28);}
 }
+// Solo Pit trap rung: the authored plate and wall head are part of the
+// simulation level, NOT presentation-driven or tied to the player's headset.
+// Trigger only when the player ENTERS. The electric orb is a real enemy
+// projectile using the engine's existing swept movement and shield damage.
+export function updatePitTraps(g){
+ if(g.campaign!=='pit'||g.mode!=='playing')return;
+ for(const t of g.level.traps||[]){
+  const inside=distance(g.player,t)<t.radius;
+  if(inside&&!t.wasInside&&!Number.isFinite(t.fireAt)&&g.time>=(t.readyAt||0)){
+   t.fireAt=g.time+t.warning;
+   t.readyAt=g.time+t.cooldown;
+   t.targetX=g.player.x;t.targetY=g.player.y;
+   warn(g,t,'PRESSURE PLATE / ELECTRIC ORB CHARGING');
+   g.emit('pitTrapArmed',{id:t.id,x:t.x,y:t.y,fireAt:t.fireAt});
+  }
+  t.wasInside=inside;
+  if(!Number.isFinite(t.fireAt)||g.time<t.fireAt)continue;
+  t.fireAt=null; // one launch per entry, even across pause/resume
+  if(g.projectiles.length>=96)continue;
+  const source={x:t.muzzleX,y:t.muzzleY},target={x:t.targetX,y:t.targetY};
+  const length=distance(source,target);
+  if(length<.1||!lineOfSight(g.level,source,target))continue;
+  g.projectiles.push({x:source.x,y:source.y,height:.7,
+   a:Math.atan2(target.y-source.y,target.x-source.x),
+   speed:t.speed,life:3,damage:t.damage,enemy:true,trap:'electric-orb',
+   color:'#59e7ff',r:.15});
+  g.emit('pitTrapFired',{id:t.id,x:source.x,y:source.y,targetX:target.x,targetY:target.y});
+  g.emit('sound',{name:'oriBolt',position:{x:source.x,y:source.y,height:.7}});
+  g.emit('burst',{x:source.x,y:source.y,height:.7,color:'#59e7ff',count:8});
+ }
+}
 export function updatePitEnvironment(g,dt){
  if(g.campaign!=='pit')return;
+ updatePitTraps(g);
  for(const h of g.level.hazards){const state=hazardState(h,g.time);
   if(state.warning&&h.warned!==state.cycle&&distance(g.player,h)<4&&lineOfSight(g.level,g.player,h)){h.warned=state.cycle;warn(g,h,'FLOOR '+h.kind.toUpperCase()+' / MOVE CLEAR');}
   if(state.active&&distance(g.player,h)<h.radius+.16&&g.time-(h.lastHit??-1)>.8){h.lastHit=g.time;g.damagePlayer(h.damage,h);g.emit('hazardHit',{kind:h.kind,damage:h.damage});}
