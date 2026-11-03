@@ -17,8 +17,12 @@ function announce(g,h,message){
  g.emit('sound',{name:'alarm',position:{x:h.x,y:h.y,height:.3}});
 }
 function hit(g,h,a){
- g.room.withActor(a,()=>g.damagePlayer(h.damage,h));
- g.emit('hazardHit',{id:h.id,kind:h.kind,damage:h.damage,actorId:a.id});
+ // Keep the victim's actor context active for BOTH the real damage and
+ // its event. SharedWorld.emit otherwise tags events with the primary actor.
+ g.room.withActor(a,()=>{
+  g.damagePlayer(h.damage,h);
+  g.emit('hazardHit',{id:h.id,kind:h.kind,damage:h.damage});
+ });
 }
 function insideNow(trap,actors,radius=trap.radius){
  return actors.filter(a=>dist(a.player,trap)<radius).map(a=>a.id);
