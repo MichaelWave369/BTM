@@ -4,6 +4,7 @@ import {Game,SECTORS,CAMPAIGN_HOSTS,WEAPONS,clamp,angleDiff,distance,moveBody,ca
 import {PIT_STAGES,PIT_HOSTS} from '../pit.js';
 import {safeTrackedAim,entityHeight,WALL_HEIGHT} from '../spatial.js';
 import {hazardState} from '../pit-combat.js';
+import {updateSharedPitTraps,recoverSharedPitTrapState} from './shared-pit-traps.js';
 import {createArena} from './arenas.js';
 import {botIntent} from './bot-pilot.js';
 import {freshControlState,controlZone,controlSnapshot,advanceControl} from './control-zones.js';
@@ -58,6 +59,9 @@ class SharedWorld extends Game{
  }
  updateEnvironment(dt){
   const room=this.room,l=this.level;
+  // One authoritative co-op trap advance AFTER all actors move, never once
+  // per player or per client. Competitive arenas retain their own rules.
+  if(!room.competitive&&this.campaign==='pit')updateSharedPitTraps(this);
   for(const h of l.hazards||[]){const state=hazardState(h,this.time);
    for(const a of room.live()){if(distance(a.player,h)>=h.radius+.16)continue;
     if(state.warning&&h.warned!==state.cycle){h.warned=state.cycle;this.emit('pitTell',{text:'FLOOR '+h.kind.toUpperCase()+' / MOVE CLEAR'});}
@@ -266,7 +270,8 @@ export class Room{
    const template=createRaidLevel(s.partySize),l=world.level;
    if(l?.campaign!=='raid'||JSON.stringify(l.cells)!==JSON.stringify(template.cells)||!Array.isArray(l.enemies)||l.enemies.length>64||l.enemies.filter(e=>e.raidRole==='core').length!==1||l.enemies.some(e=>!['plugged','repeater','enforcer','crawler','warden'].includes(e.type)||![e.x,e.y,e.hp,e.maxHp].every(Number.isFinite)||e.maxHp>50000||!canOccupy(template,e.x,e.y)))throw Error('Invalid finale world');
    Object.assign(game,world);game.level=structuredClone(l);game.campaign='original';game.levelIndex=0;game.ori={x:alive.player.x+.4,y:alive.player.y+.2};game.resetFeel();game.projectiles=[];game.events=[];
-  }else{if((s.world.campaign==='pit')!==(descriptor.campaign==='pit')||s.world.levelIndex!==descriptor.index)throw Error('Checkpoint stage mismatch');game.restore(world,{campaign:descriptor.campaign});}
+  }else{if((s.world.campaign==='pit')!==(descriptor.campaign==='pit')||s.world.levelIndex!==descriptor.index)throw Error('Checkpoint stage mismatch');game.restore(world,{campaign:descriptor.campaign});
+    if(descriptor.campaign==='pit')recoverSharedPitTrapState(game.level,descriptor.index,game.time,s.actors.map(a=>a.id));}
   const actors=new Map();for(const a of s.actors){if(!/^[a-f0-9]{48}$/.test(a.token)||!a.player||!['x','y','health','energy','reserve','a'].every(k=>Number.isFinite(a.player[k]))||!canOccupy(game.level,a.player.x,a.player.y)||a.player.energy<0||a.player.energy>100||a.player.reserve<0||a.player.reserve>180||actors.has(a.id))throw Error('Invalid saved avatar');actors.set(a.id,{...structuredClone(a),connected:!!a.bot||this.actors.get(a.id)?.connected||false,ready:!!a.bot,lastEvent:0,lastInput:-99,input:neutralInput(),actions:[],feel:{...a.feel,nav:null,navTime:0,combatPose:null,bufferedFire:null},revive:0,usedAt:-1,chargeTime:0,disconnectedAt:this.elapsed});}
   for(const [id,value]of actors){const existing=this.actors.get(id);if(existing){const seq=existing.lastSeq;Object.assign(existing,value);existing.lastSeq=Math.max(seq,value.lastSeq);actors.set(id,existing);}}
   this.started=true;this.game=game;this._definition=s.finale?RAID_DEFINITION:null;this.raid=s.finale?new Finale(this):null;if(this.raid)this.raid.restore(s.finale);this.stage=s.stage;this.receipts=structuredClone(s.receipts);this.partySize=s.partySize;this.owner=s.owner;this.state=s.state;this.actors=actors;this.stageStart=s.entry||s;this.spawns=this.coopSpawns(game.definition.spawn);game.mode='playing';game.player=this.actors.get(alive.id).player;this.revision++;this.dirty=true;
