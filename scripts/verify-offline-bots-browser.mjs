@@ -13,7 +13,7 @@ try{
  browser=await chromium.launch({headless:true,executablePath:process.env.BTM_CHROMIUM_EXECUTABLE||undefined,
   args:process.env.BTM_SOFTWARE_WEBGL==='1'?['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']:[]});
  const context=await browser.newContext({viewport:{width:1440,height:900}});
- const page=await context.newPage();
+ const outerPage=await context.newPage();let page=outerPage;
  page.on('pageerror',error=>errors.push(error.message));
  await page.addInitScript(()=>{
   // Deliberately crash any WebSocket attempt: solo bot play must never dial.
@@ -23,9 +23,14 @@ try{
   localStorage.setItem('mwave-ori-pit-checkpoint-v1','PIT-SAVE-UNTAMPERED');
  });
  await page.goto('http://127.0.0.1:5187/');
- await page.locator('#solo-bots-btn').click();
- await page.waitForURL('**/bbs.html#solo-bots',{timeout:20000});
- await page.waitForFunction(()=>window.bbs?.net?.connected,null,{timeout:20000});
+ await outerPage.locator('#solo-bots-btn').click();
+ // BBS is now an in-page scene, not a full browser navigation. Exercise the
+ // actual embedded production page and assert the original game URL survives.
+ await outerPage.waitForFunction(()=>document.querySelector('#bbs-portal-frame')?.contentWindow?.bbs?.net?.connected,null,{timeout:20000});
+ assert.equal(new URL(outerPage.url()).pathname,'/','BTM must remain in the same browser tab');
+ assert.equal(await outerPage.locator('#bbs-portal').isVisible(),true);
+ page=outerPage.frame({url:/\\/bbs\\.html\\?embedded=1#solo-bots$/});
+ assert(page,'embedded offline-bots document missing');
  assert.equal(await page.locator('#create-btn').textContent(),'START SOLO VS BOT PILOTS');
  assert.equal(await page.locator('#server-url').isHidden(),true);
  assert.equal(await page.locator('#connect-btn').isHidden(),true);
@@ -62,14 +67,14 @@ try{
  assert.equal(after.networkCalls,0);
  assert.equal(after.saveOriginal,'ORIGINAL-SAVE-UNTAMPERED');
  assert.equal(after.savePit,'PIT-SAVE-UNTAMPERED');
- const cdp=await context.newCDPSession(page);
+ const cdp=await context.newCDPSession(outerPage);
  const capture=await cdp.send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false});
  const png=Buffer.from(capture.data||'','base64');
  assert(png.length>2048&&png.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])));
  await writeFile(out+'/screenshots/offline-bots-12.png',png);
  await cdp.detach();
  // Local rematch: terminate the existing worker-owned room, then pick a new mode.
- await page.keyboard.press('Escape');
+ await outerPage.keyboard.press('Escape');
  await page.waitForFunction(()=>!window.bbs.game.inputEnabled);
  await page.locator('#lobby-btn').click();
  await page.waitForFunction(()=>!window.bbs.game.netState&&!window.bbs.net.id);
@@ -87,7 +92,7 @@ try{
   mode:before.mode,workerTickAdvanced:after.tick>before.tick,realBotNavigation:true,
   rematch:fresh,originalAndPitSavesUntouched:true,webSocketsCreated:0,
   screenshots:[out+'/screenshots/offline-bots-12.png'],browser:browser.version(),pageErrors:errors,
-  method:'Production BTM main-menu click, normal Chromium navigation, local Web Worker 30Hz authority, real bot movement and compositor capture. WebSocket constructor forbidden; no Node multiplayer server, mock scores, injected actor positions, or save writes.'};
+  method:'Production BTM main-menu click, same-tab embedded BBS scene, local Web Worker 30Hz authority, real bot movement and compositor capture. WebSocket constructor forbidden; no Node multiplayer server, mock scores, injected actor positions, or save writes.'};
  await writeFile(out+'/offline-bots-browser.json',JSON.stringify(report,null,2)+'\n');
  console.log(JSON.stringify(report,null,2));
 }finally{await browser?.close();server.kill();}
