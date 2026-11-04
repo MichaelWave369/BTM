@@ -44,6 +44,24 @@ export class WorldScene {
   for(const a of game.remotePlayers||[]){
    const x=a.renderX??a.x,y=a.renderY??a.y;if(!['alive','downed'].includes(a.status)||!visible(x,y))continue;
    if(a.status==='downed'){b.billboard(x*s,0,y*s,.85*s,.4*s,'net:downed',eye);continue;}
+   if(a.role==='beast'&&a.archetype==='plugged'){
+    // Heavy original Plugged silhouette with an illuminated power core.
+    const shell=[.27,.29,.31,1],copper=[.7,.51,.31,1],arc=[1,.89,.44,1];
+    const grounded=game.netState?.beast?.beastId===a.id&&(game.netState?.beast?.guardRemaining||0)>0;
+    b.box([x*s,.65*s,y*s],[.8*s,.84*s,.46*s],'white',shell);
+    b.box([x*s,.74*s,y*s],[.48*s,.43*s,.49*s],'white',copper);
+    b.box([x*s,.77*s,y*s],[.28*s,.28*s,.51*s],'white',grounded?[1,1,.68,1]:arc);
+    b.box([x*s,1.23*s,y*s],[.31*s,.31*s,.32*s],'white',shell);
+    const c=Math.cos(a.a),sn=Math.sin(a.a);
+    for(const side of [-1,1]){
+     const arm=[(x+side*(-sn*.52))*s,.75*s,(y+side*c*.52)*s];
+     b.line([x*s,.9*s,y*s],arm,.19*s,eye,copper);
+     b.box(arm,[.26*s,.22*s,.26*s],'white',arc);
+     b.box([(x+side*(-sn*.22))*s,.21*s,(y+side*c*.22)*s],[.24*s,.42*s,.25*s],'white',shell);
+    }
+    if(grounded)b.floor(x*s,.035,y*s,1.35*s,'hazard:arc',[1,.9,.35,1]);
+    this.counts.objects++;continue;
+   }
    if(a.role==='beast'&&a.archetype==='repeater'){
     // The Repeater has a tall frame, antennae and two cyan pulse emitters.
     const frame=[.15,.29,.4,1],bright=[.26,.91,.88,1],glow=[.8,1,1,1];
@@ -127,12 +145,22 @@ export class WorldScene {
   const visualDt=game.mode==='playing'?dt:0;for(let i=this.effects.length-1;i>=0;i--){const e=this.effects[i];e.life-=visualDt;if(e.life<=0){this.effects.splice(i,1);continue;}e.x+=e.vx*visualDt;e.y+=e.vy*visualDt;e.z+=e.vz*visualDt;e.vy-=visualDt*1.5;if(this.counts.particles<q.particles){b.billboard(e.x,e.y,e.z,.035,.035,'white',eye,e.color);this.counts.particles++;}}
   for(let i=this.beams.length-1;i>=0;i--){const beam=this.beams[i];beam.life-=visualDt;if(beam.life<=0){this.beams.splice(i,1);continue;}if(!beam.ori||this.presentation.oriVisible)b.line(beam.ori?this.presentation.ori:beam.from,beam.to,.012,eye,beam.color);}
   if(game.mode==='playing'&&rig.uiPointer){b.line(rig.uiPointer.from,rig.uiPointer.to,.003,eye,CYAN);b.billboard(...rig.uiPointer.to,.015,.015,'marker',eye,CYAN);}
-  if(rig.aim){const color=colorRGB(WEAPONS[game.weapon].color),hand=this.weaponWorld;hand.set(rig.weaponWorld||rig.rightWorld);const recoil=game.shotAnim*.008;for(let i=0;i<3;i++)hand[12+i]+=hand[8+i]*recoil;appendEquipment(b,weaponMesh(game.weapon,settings.vrQuality==='performance'?6:8),hand,settings.vrHologramBrightness??.85,game.charge*.3+game.muzzle*.2);
+  if(rig.aim){
+   if(game.beastRole){
+    // Never draw a human rifle on a Beast's tracked hand in native immersive
+    // VR. Creature gauntlets are visual-only; melee/pulse authority is on Node.
+    const o=rig.aim.origin,kind=game.beastArchetype;
+    const color=kind==='plugged'?[1,.85,.36,1]:kind==='repeater'?[.26,.91,.87,1]:[.72,.42,.88,1];
+    b.box([o.x*s,o.height*s,o.y*s],[.21*s,.16*s,.22*s],'white',color);
+    if(game.shotAnim>.05)b.billboard(o.x*s,o.height*s,o.y*s,.18*s,.18*s,'marker',eye,color);
+   }else{
+    const color=colorRGB(WEAPONS[game.weapon].color),hand=this.weaponWorld;hand.set(rig.weaponWorld||rig.rightWorld);const recoil=game.shotAnim*.008;for(let i=0;i<3;i++)hand[12+i]+=hand[8+i]*recoil;appendEquipment(b,weaponMesh(game.weapon,settings.vrQuality==='performance'?6:8),hand,settings.vrHologramBrightness??.85,game.charge*.3+game.muzzle*.2);
    const o=rig.aim.origin;this.from.set([o.x*s,o.height*s,o.y*s]);if(game.muzzle>.05)b.billboard(this.from[0],this.from[1],this.from[2],[.09,.055,.13,.055,.085,.11][game.weapon],[.09,.055,.13,.055,.085,.11][game.weapon],'marker',eye,color);if(game.charge>.1)b.billboard(this.from[0],this.from[1],this.from[2],.08+game.charge*.15,.08+game.charge*.15,'ori',eye,color);
    if(settings.vrDiagnostics&&game.mode==='playing'&&game.weapon!==3&&!rig.uiCaptured){
     const preview=previewTrackedShot(l,rig.aim,WEAPONS[game.weapon]);
     if(preview){b.line(preview.from,preview.rayEnd,.002,eye,CYAN);b.billboard(...preview.rayEnd,.045,.045,'marker',eye,preview.target?CYAN:TELL);if(preview.targetMarker)b.billboard(...preview.targetMarker,.06,.06,'marker',eye,STUN);}
    }else if(settings.vrAimLine&&!rig.uiCaptured){const hit=traceEnvironment(l,o,rig.aim.direction,1.7/s),d=hit.distance*s;this.to.set([this.from[0]+rig.aim.direction.x*d,this.from[1]+rig.aim.direction.z*d,this.from[2]+rig.aim.direction.y*d]);b.line(this.from,this.to,.0035,eye,CYAN);}
+   }
   }
 
   this.counts.vertices=b.length/9;this.counts.dropped=b.dropped;return b;
