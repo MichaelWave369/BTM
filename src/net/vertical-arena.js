@@ -113,6 +113,28 @@ export function verticalSight(level,from,to){
  const ray=traceEnvironment(level,a,vec,length+.015);
  return ray.distance>=length-.06;
 }
+// Bot Pilots are still bounded intent producers, never privileged movers.
+// Two waypoints force every inter-floor pursuit through the only authored
+// ramp, instead of using a flat shortest path through the deck underside.
+// Their movement and landing remain owned by Room.step/advanceVerticalBody.
+export function stackyardBotWaypoint(level,from,target){
+ if(!isVertical(level)||!from||!target)return null;
+ const ramp=level.vertical.ramp,midY=(ramp.y0+ramp.y1)/2,
+  foot={x:ramp.x0-.5,y:midY},crest={x:ramp.x1+.5,y:midY};
+ const onRamp=rampHeight(level,from.x,from.y)!==null;
+ const upper=o=>o.supportSurface==='upper'||
+  (upperAt(level,o.x,o.y)&&Number.isFinite(o.height)&&o.height>=STACK_HEIGHT-.18);
+ const targetHigh=upper(target),selfHigh=upper(from);
+ if(targetHigh){
+  if(selfHigh&&!onRamp)return null;
+  if(onRamp||Math.hypot(from.x-foot.x,from.y-foot.y)<.65)return crest;
+  return foot;
+ }
+ if(onRamp)return foot;
+ if(!selfHigh)return null;
+ if(Math.hypot(from.x-crest.x,from.y-crest.y)<.65)return foot;
+ return crest;
+}
 export function verticalSnapshot(body){
  return {height:round(body.height||0),vz:round(body.vz||0),grounded:!!body.grounded,
   supportSurface:body.supportSurface||'ground'};
