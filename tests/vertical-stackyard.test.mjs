@@ -87,7 +87,7 @@ test('continuous authored ramp reaches upper deck, and stepping off falls withou
  // A mid-height sideways entry must not phase through the upper deck edge.
  const collision=body(9.8,14.5);collision.height=1.2;collision.grounded=false;
  const cx=collision.x;collision.x=10.1;
- tick(level,collision);
+ advanceVerticalBody(level,collision,1/60,{oldX:cx,oldY:14.5});
  assert.equal(collision.x,cx,'upper platform side collides before feet clear the deck');
 });
 
@@ -142,9 +142,9 @@ test('client predicts jump only in Stackyard and keeps Dash Bash / gamepad help 
  view.update(1/30,{});
  assert(view.player.height>0);
  let help=0,jumps=0;
- controllerActions({level:stack(),jump(){jumps++;}}, {actions:['help'],moveStrafe:0,moveForward:0},{help:()=>help++});
+ controllerActions({level:stack(),jump(){jumps++;}}, {actions:['help'],moveStrafe:0,moveForward:0},{help:()=>help++,fire:false});
  assert.equal(jumps,1);assert.equal(help,0);
- controllerActions({level:baseOrNull(),jump(){jumps++;}}, {actions:['help'],moveStrafe:0,moveForward:0},{help:()=>help++});
+ controllerActions({level:baseOrNull(),jump(){jumps++;}}, {actions:['help'],moveStrafe:0,moveForward:0},{help:()=>help++,fire:false});
  assert.equal(jumps,1);assert.equal(help,1);
 });
 
