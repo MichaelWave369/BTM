@@ -43,6 +43,7 @@ export function advanceExtraction(state,actors,level,dt){
  if(!Number.isFinite(dt)||dt<=0||dt>.1)throw Error('Invalid extraction tick');
  if(state.completed)return {success:false,failed:false,alarm:false};
  state.remaining=Math.max(0,state.remaining-dt);
+ if(state.remaining<1e-7)state.remaining=0; // Float subtraction must not extend a timed mission.
  const humans=[...actors].filter(a=>a.connected&&a.status==='alive');
  const carrier=humans.find(a=>a.id===state.holderId);
  if(state.holderId&&!carrier){
