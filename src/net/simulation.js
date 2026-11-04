@@ -220,16 +220,22 @@ export class Room{
   a.status=this.competitive?'dead':'downed';a.respawnAt=this.game.time+3;a.bleedAt=this.game.time+45;a.feel.bufferedFire=null;this.event(this.competitive?'death':'downed',{player:a.id});
  }
  use(a,dt){
-  const down=[...this.actors.values()].find(p=>p!==a&&p.status==='downed'&&distance(a.player,p.player)<1.45&&lineOfSight(this.game.level,a.player,p.player));
-  if(!this.competitive&&down){if(down.reviveBy&&down.reviveBy!==a.id&&down.reviveTick===this.tick)return;if(down.reviveBy&&down.reviveBy!==a.id)down.revive=0;down.reviveBy=a.id;down.reviveTick=this.tick;down.revive=(down.revive||0)+dt;if(down.revive>=2){down.status='alive';down.player.health=35;down.revive=0;this.event('revived',{player:down.id,by:a.id});}return;}
-  if(this.raid?.use(a))return;
-  if(this.extraction){
-   if(extractionPickup(this.extraction,a,this.game.level)){
-    this.event('intelRecovered',{player:a.id,text:'WITNESS INTEL SECURED / RETURN TO EXFIL'});
-    this.updateExtractionNodes();return;
-   }
-   if(distance(a.player,this.extraction.pad)<1.6)return; // channel is tick-driven
+  // Reclaim dropped intel promptly, even when its former carrier is down nearby.
+  // A second USE after retrieval can still revive them through the usual rules.
+  if(this.extraction&&extractionPickup(this.extraction,a,this.game.level)){
+   this.event('intelRecovered',{player:a.id,text:'WITNESS INTEL SECURED / RETURN TO EXFIL'});
+   this.updateExtractionNodes();return;
   }
+  const down=[...this.actors.values()].find(p=>p!==a&&p.status==='downed'&&distance(a.player,p.player)<1.45&&lineOfSight(this.game.level,a.player,p.player));
+  if(!this.competitive&&down&&!(this.extraction&&this.extraction.holderId===a.id&&distance(a.player,this.extraction.pad)<1.6)){
+   if(down.reviveBy&&down.reviveBy!==a.id&&down.reviveTick===this.tick)return;
+   if(down.reviveBy&&down.reviveBy!==a.id)down.revive=0;down.reviveBy=a.id;down.reviveTick=this.tick;
+   down.revive=(down.revive||0)+dt;
+   if(down.revive>=2){down.status='alive';down.player.health=35;down.revive=0;this.event('revived',{player:down.id,by:a.id});}
+   return;
+  }
+  if(this.raid?.use(a))return;
+  if(this.extraction&&distance(a.player,this.extraction.pad)<1.6)return; // carrier channel is fixed-tick
   if(this.game.time-(a.usedAt??-1)>.25){a.usedAt=this.game.time;this.withActor(a,()=>this.game.interact());}
  }
  extract(){
