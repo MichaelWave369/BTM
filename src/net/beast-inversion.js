@@ -1,4 +1,4 @@
-// BBS LAN CLAN / The Inversion, first asymmetric Hunters vs Crawler Beast rung.
+// BBS LAN CLAN / The Inversion, server-owned Crawler and Repeater forms.
 // All role, HP, objective and cooldown state stays in the authoritative Room.
 import {lineOfSight} from '../collision.js';
 
@@ -11,31 +11,43 @@ export const BEAST_MELEE_COOLDOWN=1.0;
 export const BEAST_LUNGE_DISTANCE=1.3;
 export const BEAST_LUNGE_COOLDOWN=3.5;
 export const BEAST_RECONNECT_GRACE=15;
+export const BEAST_ARCHETYPES=Object.freeze({
+ crawler:Object.freeze({name:'CRAWLER',health:BEAST_BASE_HEALTH,perHunter:BEAST_HEALTH_PER_EXTRA_HUNTER,damage:BEAST_MELEE_DAMAGE,range:BEAST_MELEE_RANGE,cone:.8,cooldown:BEAST_MELEE_COOLDOWN,lunge:BEAST_LUNGE_DISTANCE,lungeCooldown:BEAST_LUNGE_COOLDOWN,walk:3.3,sprint:4.7}),
+ repeater:Object.freeze({name:'REPEATER',health:260,perHunter:75,damage:18,range:8,cone:.23,cooldown:1.35,lunge:.85,lungeCooldown:4.5,walk:2.7,sprint:3.7})
+});
 
 const round=n=>Math.round(Math.max(0,n)*10)/10;
 const turnDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 
-export function freshBeastMatch(ownerId,actors){
+export function freshBeastMatch(ownerId,actors,archetype='crawler'){
+ if(!Object.hasOwn(BEAST_ARCHETYPES,archetype))throw Error('Unsupported Beast archetype');
+ const profile=BEAST_ARCHETYPES[archetype];
  const participants=[...actors];
  if(!ownerId||!participants.some(a=>a.id===ownerId&&!a.bot)||participants.length<2||participants.length>5)
   throw Error('Beast match needs a human owner and one to four hunters');
  const hunterIds=participants.filter(a=>a.id!==ownerId).map(a=>a.id);
  if(hunterIds.length<1||hunterIds.length>4)throw Error('Invalid hunter roster');
- return {beastId:ownerId,hunterIds,remaining:BEAST_ROUND_SECONDS,
-  health:BEAST_BASE_HEALTH+BEAST_HEALTH_PER_EXTRA_HUNTER*(hunterIds.length-1),
+ return {beastId:ownerId,hunterIds,archetype,remaining:BEAST_ROUND_SECONDS,
+  health:profile.health+profile.perHunter*(hunterIds.length-1),
   strikeAt:0,lungeAt:0,complete:false};
 }
 
 // Return the closest physically reachable Hunter in the Beast's frontal claw arc.
 // The controller can only transmit ordinary bounded angle/intent, not hit targets.
-export function beastClawTarget(state,attacker,actors,level){
+function selectBeastTarget(state,attacker,actors,level,profile){
  if(!state||state.beastId!==attacker?.id||attacker.status!=='alive'||!attacker.connected)return null;
  const p=attacker.player;
  return [...actors].filter(a=>state.hunterIds.includes(a.id)&&a.connected&&a.status==='alive')
   .map(a=>({actor:a,dist:Math.hypot(a.player.x-p.x,a.player.y-p.y),
    dir:Math.atan2(a.player.y-p.y,a.player.x-p.x)}))
-  .filter(t=>t.dist<=BEAST_MELEE_RANGE&&Math.abs(turnDiff(t.dir,p.a))<=.8&&lineOfSight(level,p,t.actor.player))
+  .filter(t=>t.dist<=profile.range&&Math.abs(turnDiff(t.dir,p.a))<=profile.cone&&lineOfSight(level,p,t.actor.player))
   .sort((a,b)=>a.dist-b.dist)[0]?.actor||null;
+}
+export function beastClawTarget(state,attacker,actors,level){
+ return state?.archetype==='repeater'?null:selectBeastTarget(state,attacker,actors,level,BEAST_ARCHETYPES.crawler);
+}
+export function beastPulseTarget(state,attacker,actors,level){
+ return state?.archetype==='repeater'?selectBeastTarget(state,attacker,actors,level,BEAST_ARCHETYPES.repeater):null;
 }
 
 // A round ends only from host-known deaths and fixed host time.
@@ -63,7 +75,7 @@ export function advanceBeast(state,actors,now,dt){
 
 export function beastSnapshot(state,now,actors){
  const beast=[...actors].find(a=>a.id===state.beastId);
- return {archetype:'crawler',beastId:state.beastId,remaining:round(state.remaining),
+ return {archetype:state.archetype,beastId:state.beastId,remaining:round(state.remaining),
   hunters:state.hunterIds.length,beastHealth:Math.max(0,Math.ceil(beast?.player?.health||0)),
   beastMaxHealth:state.health,strikeIn:round(state.strikeAt-now),
   lungeIn:round(state.lungeAt-now),completed:state.complete};
