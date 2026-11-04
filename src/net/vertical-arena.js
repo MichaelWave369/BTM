@@ -58,6 +58,13 @@ export function advanceVerticalBody(level,body,dt,{oldX=body.x,oldY=body.y}={}){
   if(body.jumpBuffer>0&&(body.grounded||body.coyote>0)){
    body.vz=JUMP_IMPULSE;body.grounded=false;body.coyote=0;body.jumpBuffer=0;
   }
+  // The platform edge has real side collision. A jumping player must clear
+  // its top before moving horizontally over the deck, unless they arrived
+  // along the authored ramp near its top.
+  if(upperAt(level,body.x,body.y)&&!upperAt(level,oldX,oldY)&&
+   body.height<STACK_HEIGHT-.055&&body.height+VERTICAL_BODY_HEIGHT>STACK_HEIGHT+.001){
+   body.x=oldX;body.y=oldY;
+  }
   const ground=supportHeight(level,body.x,body.y,body.height);
   if(body.grounded){
    const oldGround=supportHeight(level,oldX,oldY,body.height);
