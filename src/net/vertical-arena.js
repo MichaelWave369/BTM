@@ -15,7 +15,7 @@ const within=(r,x,y)=>x>=r.x0&&x<r.x1&&y>=r.y0&&y<r.y1;
 const round=n=>Math.round(n*1000)/1000;
 
 export function stackyardLayout(){
- return {schema:'btm.vertical-prototype/1',upper:{x0:10,x1:23,y0:7,y1:13,height:STACK_HEIGHT},
+ return {schema:'btm.vertical-prototype/1',upper:{x0:10,x1:26,y0:4,y1:21,height:STACK_HEIGHT},
   ramp:{x0:4,x1:10,y0:9,y1:11},ceiling:STACK_CEILING};
 }
 export function isVertical(level){return level?.vertical?.schema==='btm.vertical-prototype/1';}
@@ -65,10 +65,12 @@ export function advanceVerticalBody(level,body,dt,{oldX=body.x,oldY=body.y}={}){
    // authored ramp or jump in from the side, crossing above the slab.
    if(ground-body.height>.32){
     body.x=oldX;body.y=oldY;
+   }else if(body.height-ground>.22){
+    // Leaving the high ledge creates a fall, never an instant drop to ground.
+    body.grounded=false;body.vz=Math.min(0,body.vz);
    }else{
-    body.height=Math.max(0,ground);
+    body.height=Math.max(0,ground);body.vz=0;
    }
-   body.vz=0;
   }else{
    const prior=body.height;
    body.vz=Math.max(-18,body.vz-JUMP_GRAVITY*h);
