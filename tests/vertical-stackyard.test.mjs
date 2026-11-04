@@ -126,7 +126,7 @@ test('server accepts jump intent only, owns feet state, and filters shots by flo
  const world=r.snapshot(a),me=world.players.find(p=>p.id===a.id);
  assert.equal(me.height,STACK_HEIGHT);
  assert.equal(me.supportSurface,'upper');
- assert.equal(world.world.level?.vertical?.schema,'btm.vertical-prototype/1');
+ assert.equal(r.init().level.vertical?.schema,'btm.vertical-prototype/1');
  r.input(a,{type:'input',seq:1,...neutralInput(),actions:['jump'],angle:0});
  r.step();
  assert(a.player.height>STACK_HEIGHT,'jump progresses from the actual upper surface');
