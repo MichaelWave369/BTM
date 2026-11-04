@@ -53,6 +53,7 @@ export class Renderer {
       // Ceiling trim reinforces the industrial corridor silhouette.
       if(d<14){g.fillStyle=game.levelIndex===1?'#786181':theme;g.globalAlpha=Math.max(0,.42-d*.025);g.fillRect(x,y+wallH*.035,stripe,Math.max(1,wallH*.008));g.globalAlpha=1;}
     }
+    if(l.vertical)this.paintVerticalDeck(game,horizon);
     const things=[];
     for(const prop of l.props||[])things.push(prop);
     for(const e of l.enemies)if(!e.dead)things.push({x:e.x,y:e.y,type:e.type,height:e.type==='warden'?1.65:1,frame:Math.floor(e.walk)%4,e});
@@ -113,10 +114,51 @@ export class Renderer {
     if(map)this.drawMap(game,true);
     else if(!demo&&!settings.externalMap)this.drawMap(game,false);
   }
+  paintVerticalDeck(game,horizon){
+    const level=game.level,layout=level.vertical,upper=layout.upper,ramp=layout.ramp,
+      p=game.player,g=this.g,w=this.canvas.width,h=this.canvas.height;
+    const c=Math.cos(p.a),s=Math.sin(p.a),eye=(p.height||0)+.9;
+    const project=(x,y,z)=>{
+      const dx=x-p.x,dy=y-p.y,d=dx*c+dy*s;
+      if(d<.25||d>20)return null;
+      const side=-dx*s+dy*c;
+      return {x:w*.5*(1+side/(d*.7)),y:horizon+(eye-z)*h/(d*1.45),depth:d};
+    };
+    const quads=[];
+    for(let y=upper.y0;y<upper.y1;y++)for(let x=upper.x0;x<upper.x1;x++){
+      const mid=project(x+.5,y+.5,upper.height);
+      if(!mid||Math.abs(x+.5-p.x)>13||Math.abs(y+.5-p.y)>13)continue;
+      if(mid.x<0||mid.x>=w||mid.depth>this.depth[Math.min(w-1,Math.max(0,Math.floor(mid.x)))]+.05)continue;
+      quads.push({x,y,z0:upper.height,z1:upper.height,deck:true,d:mid.depth});
+    }
+    for(let y=ramp.y0;y<ramp.y1;y++)for(let x=ramp.x0;x<ramp.x1;x++){
+      const mid=project(x+.5,y+.5,0);
+      if(!mid||mid.x<0||mid.x>=w||mid.depth>this.depth[Math.min(w-1,Math.max(0,Math.floor(mid.x)))]+.05)continue;
+      const t=x-ramp.x0,z0=upper.height*t/(ramp.x1-ramp.x0),
+       z1=upper.height*(t+1)/(ramp.x1-ramp.x0);
+      quads.push({x,y,z0,z1,deck:false,d:mid.depth});
+    }
+    // Conservative near clip keeps the old raycaster stable, while real
+    // collision and full double-sided geometry live in the shared 3D model.
+    quads.sort((a,b)=>b.d-a.d);
+    g.save();g.globalAlpha=.82;
+    for(const tile of quads){
+      const {x,y,z0,z1,deck}=tile;
+      const q=[project(x,y+1,z0),project(x+1,y+1,z1),
+       project(x+1,y,z1),project(x,y,z0)];
+      if(q.some(v=>!v))continue;
+      g.beginPath();g.moveTo(q[0].x,q[0].y);
+      for(let i=1;i<4;i++)g.lineTo(q[i].x,q[i].y);
+      g.closePath();
+      g.fillStyle=deck?(eye<upper.height?'#283c50':'#526b81'):'#6a7c89';
+      g.fill();g.strokeStyle=deck?'#87bde0':'#b6c9db';g.lineWidth=1;g.stroke();
+    }
+    g.restore();
+  }
   pitFloor(o,game,horizon,state){const p=this.project(o,game.player),g=this.g,w=this.canvas.width,h=this.canvas.height;if(!p||p.depth>=this.depth[clamp(Math.floor(p.x),0,w-1)]||p.x<0||p.x>w)return;const r=Math.min(w*.5,o.radius*w/(p.depth*1.4)),y=horizon+h/(2*p.depth),ry=Math.max(2,r*.22);g.strokeStyle=state==='warning'?'#ffce73':o.wardenField?'#ff745e':game.definition.color;g.fillStyle=state==='active'?(o.wardenField?'#c13c31':game.definition.color):'#10131e';g.globalAlpha=state==='active'?.65:state==='warning'?.8:.3;g.beginPath();g.moveTo(p.x-r,y);g.lineTo(p.x,y-ry);g.lineTo(p.x+r,y);g.lineTo(p.x,y+ry);g.closePath();g.fill();g.stroke();g.globalAlpha=1;}
   project(o,p){const dx=o.x-p.x,dy=o.y-p.y,forward=dx*Math.cos(p.a)+dy*Math.sin(p.a);if(forward<=.12)return null;const side=-dx*Math.sin(p.a)+dy*Math.cos(p.a);return {x:this.canvas.width/2*(1+side/(forward*.70)),depth:forward,y:this.canvas.height*.46};}
   sprite(o,game,horizon){
-    const g=this.g,w=this.canvas.width,h=this.canvas.height,p=game.player,s=this.project(o,p);if(!s||s.x< -w||s.x>w*2)return;const height=Math.min(h*5,h/s.depth*o.height),width=o.e?.raidRole==='core'?height*4:o.type==='warden'?height:height*(o.type==='relay'||o.type==='relayOn'?.8:1),x=Math.floor(s.x-width/2),y=Math.floor(horizon+h/(2*s.depth)-height+(o.bob?Math.sin(this.lastTime*3+o.x)*h*.04/s.depth:0));
+    const g=this.g,w=this.canvas.width,h=this.canvas.height,p=game.player,s=this.project(o,p);if(!s||s.x< -w||s.x>w*2)return;const height=Math.min(h*5,h/s.depth*o.height),width=o.e?.raidRole==='core'?height*4:o.type==='warden'?height:height*(o.type==='relay'||o.type==='relayOn'?.8:1),x=Math.floor(s.x-width/2),y=Math.floor(horizon+h/(2*s.depth)-height+(((p.height||0)-(o.remote?.height||0)-(o.floorHeight||0))*h/(s.depth*1.75))+(o.bob?Math.sin(this.lastTime*3+o.x)*h*.04/s.depth:0));
     if(o.type==='portal'){
       for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++){if(s.depth>=this.depth[xx])continue;const f=(xx-x)/width-.5,curve=Math.sqrt(Math.max(0,1-4*f*f)),yy=height/2*curve;g.fillStyle=game.exitReady?'#64e8cd':'#614279';g.globalAlpha=.75;g.fillRect(xx,y+height/2-yy,1,yy*2);g.fillStyle='#091d25';g.globalAlpha=.8;g.fillRect(xx,y+height/2-yy*.82,1,yy*1.64);g.fillStyle=game.exitReady?'#b9ff53':'#bc89e8';g.globalAlpha=.4;for(let k=0;k<6;k++){const py=y+height/2-yy+((this.lastTime*.2+k/6)%1)*yy*2;g.fillRect(xx,py,1,1);}}g.globalAlpha=1;return;
     }
