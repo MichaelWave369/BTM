@@ -38,6 +38,12 @@ jobs:
           BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
           BTM_SOFTWARE_WEBGL: '1'
         run: node scripts/verify-equipment-browser.mjs
+      - name: Capture six actual HD materials with matched production stereo poses
+        env:
+          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
+          BTM_SOFTWARE_WEBGL: '1'
+          BTM_MATERIALS_OUTPUT: docs/equipment/ci/materials
+        run: node scripts/verify-materials-browser.mjs
       - name: Existing browser, Arcade, Xbox and offline regressions
         env:
           BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
