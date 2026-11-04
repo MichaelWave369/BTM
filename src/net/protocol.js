@@ -1,8 +1,8 @@
 // Shared wire contract. Clients submit intent; no transform, health, ammo or score writes.
 export const PROTOCOL=1,TICK_RATE=30,SNAPSHOT_RATE=10,INPUT_RATE=20,MAX_MESSAGE=4096;
 export const MODES=['deathmatch','coop','team','clan','control','extraction','beast'];
-export const ARENAS=['no-carrier','sysops-revenge','kill-switch'];
-export const ACTIONS=['fire','alternate','reload','dash','ori','bass','vision'];
+export const ARENAS=['no-carrier','sysops-revenge','kill-switch','stackyard'];
+export const ACTIONS=['fire','alternate','reload','dash','ori','bass','vision','jump'];
 const number=(v,min,max)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
 const object=v=>v&&typeof v==='object'&&!Array.isArray(v);
 function keys(v,allowed){if(!object(v)||Object.keys(v).some(k=>!allowed.includes(k)))throw Error('Unknown protocol field');}
