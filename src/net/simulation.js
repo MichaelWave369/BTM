@@ -8,6 +8,7 @@ import {updateSharedPitTraps,recoverSharedPitTrapState} from './shared-pit-traps
 import {createArena} from './arenas.js';
 import {botIntent} from './bot-pilot.js';
 import {freshControlState,controlZone,controlSnapshot,advanceControl} from './control-zones.js';
+import {freshExtraction,extractionPickup,extractionDrop,advanceExtraction,extractionSnapshot,EXTRACTION_MAX_RETRIES} from './extraction.js';
 import {neutralInput,TICK_RATE} from './protocol.js';
 export const AVATAR_FIELDS=['damageDirection','weapon','cooldown','recharge','vent','shotAnim','hurt','shake','dodgeCooldown','dodgeFlash','shieldTime','shieldCharge','oriCooldown','objectiveTime','hitPulse','assistTime','scanTime','equipAnim','portraitTime','speechCooldown','muzzle','shift','charge','stats','playerMotion','combatPose','lessonDistance','footDistance','moving','sprinting','bufferedFire','nav','navTime'];
 const round=n=>Math.round(n*1000)/1000;
@@ -16,9 +17,20 @@ class SharedWorld extends Game{
  constructor(room){super();this.room=room;}
  get definition(){return this.room?._definition||super.definition;}
  get liberation(){return this.room&&!this.room.competitive?Math.round(this.totalFreed/(CAMPAIGN_HOSTS+PIT_HOSTS)*100):super.liberation;}
- get objective(){return this.room?.raid?this.room.raid.state==='escape'?'SQUAD EXTRACT / SOUTH BRIDGE':this.room.raid.phase===1?'DESTROY THE FOUR SHIELD PYLONS':this.room.raid.phase===2?'TWO CONSOLES / USE THE END BRIDGES':this.room.raid.phase===3?'RESTORE ORI / BOTH REPAIR DISHES':'SYNCHRONIZE RESONATORS / EXPOSE PRIME':super.objective;}
- get objectiveTarget(){return this.room?.raid?raidObjectiveTarget(this.level,this.player,{...this.room.raid.snapshot(),time:this.time}):super.objectiveTarget;}
- get exitReady(){return this.room?.raid?this.room.raid.state==='escape':this.room?.competitive?false:super.exitReady;}
+ get objective(){
+  if(this.room?.extraction){
+   const s=this.room.extraction,remaining=Math.ceil(s.remaining);
+   return s.holderId?'SIGNAL INTEL / REACH EXFIL PAD / HOLD USE '+Math.max(0,Math.ceil(3-s.channel))+'s · '+remaining+'s LEFT':
+    (s.dropped?'RECOVER DROPPED INTEL':'BREACH THE VAULT / RECOVER WITNESS INTEL')+' · '+remaining+'s LEFT';
+  }
+  return this.room?.raid?this.room.raid.state==='escape'?'SQUAD EXTRACT / SOUTH BRIDGE':this.room.raid.phase===1?'DESTROY THE FOUR SHIELD PYLONS':this.room.raid.phase===2?'TWO CONSOLES / USE THE END BRIDGES':this.room.raid.phase===3?'RESTORE ORI / BOTH REPAIR DISHES':'SYNCHRONIZE RESONATORS / EXPOSE PRIME':super.objective;}
+ get objectiveTarget(){
+  if(this.room?.extraction){
+   const s=this.room.extraction;
+   return s.holderId?s.pad:s.dropped||s.vault;
+  }
+  return this.room?.raid?raidObjectiveTarget(this.level,this.player,{...this.room.raid.snapshot(),time:this.time}):super.objectiveTarget;}
+ get exitReady(){if(this.room?.extraction)return false;return this.room?.raid?this.room.raid.state==='escape':this.room?.competitive?false:super.exitReady;}
  complete(){return this.room?.extract()||false;}
  saveCheckpoint(){if(this.room)this.room.dirty=true;return true;}
  banter(key,...args){if(this.room?.raid&&key==='boss-down')return false;return super.banter(key,...args);}
@@ -85,7 +97,7 @@ class SharedWorld extends Game{
 }
 export class Room{
  constructor({code,mode='deathmatch',arena='no-carrier',limit=10,capacity=2,finaleEnabled=true,localBots=false}){
-  this.localBots=!!localBots;this.finaleEnabled=finaleEnabled;this.raid=null;this.control=null;this.code=code;this.mode=mode;this.arena=arena;this.limit=limit;this.capacity=capacity;this.competitive=mode!=='coop';this.actors=new Map();this.owner=null;this.state='lobby';this.tick=0;this.elapsed=0;this.revision=0;this.eventId=0;this.events=[];this.stage=0;this.receipts=[];this.teamScore={cyan:0,pink:0};this.round=1;this.dirty=false;this.game=new SharedWorld(this);this.game.events=[];
+  this.localBots=!!localBots;this.finaleEnabled=finaleEnabled;this.raid=null;this.control=null;this.extraction=null;this.extractionRetries=0;this.code=code;this.mode=mode;this.arena=arena;this.limit=limit;this.capacity=capacity;this.competitive=!['coop','extraction'].includes(mode);this.actors=new Map();this.owner=null;this.state='lobby';this.tick=0;this.elapsed=0;this.revision=0;this.eventId=0;this.events=[];this.stage=0;this.receipts=[];this.teamScore={cyan:0,pink:0};this.round=1;this.dirty=false;this.game=new SharedWorld(this);this.game.events=[];
  }
  addBot(token){
   if(this.state!=='lobby'||this.started||this.actors.size>=this.capacity)throw Error('Bots may only fill lobby slots');
@@ -96,11 +108,11 @@ export class Room{
  }
  add({id,nickname,token}){
   if(this.state!=='lobby'||!this.competitive&&this.started)throw Error('Campaign in progress; use your reconnect token');if(this.actors.size>=this.capacity)throw Error('Room full');
-  const a={id,nickname,token,connected:true,ready:false,team:this.mode==='coop'?'cyan':this.actors.size%2?'pink':'cyan',status:'lobby',frags:0,deaths:0,lastSeq:0,lastInput:-99,input:neutralInput(),actions:[],player:null,feel:{},lastEvent:0};this.actors.set(id,a);this.owner??=id;this.event('joined',{player:id});return a;
+  const a={id,nickname,token,connected:true,ready:false,team:['coop','extraction'].includes(this.mode)?'cyan':this.actors.size%2?'pink':'cyan',status:'lobby',frags:0,deaths:0,lastSeq:0,lastInput:-99,input:neutralInput(),actions:[],player:null,feel:{},lastEvent:0};this.actors.set(id,a);this.owner??=id;this.event('joined',{player:id});return a;
  }
- disconnect(id){const a=this.actors.get(id);if(!a)return;a.connected=false;a.disconnectedAt=this.elapsed;a.input=neutralInput();a.actions=[];if(this.owner===id)this.owner=[...this.actors.values()].find(p=>p.connected&&!p.bot)?.id||id;this.event('disconnected',{player:id});this.dirty=true;}
+ disconnect(id){const a=this.actors.get(id);if(!a)return;if(extractionDrop(this.extraction,a,this.game.level))this.event('intelDropped',{player:a.id});a.connected=false;a.disconnectedAt=this.elapsed;a.input=neutralInput();a.actions=[];if(this.owner===id)this.owner=[...this.actors.values()].find(p=>p.connected&&!p.bot)?.id||id;this.event('disconnected',{player:id});this.dirty=true;}
  reconnect(a){a.connected=true;a.input=neutralInput();a.actions=[];a.lastInput=this.elapsed;this.event('reconnected',{player:a.id});return a;}
- remove(id){this.actors.delete(id);if(this.owner===id)this.owner=[...this.actors.values()].find(a=>a.connected&&!a.bot)?.id||[...this.actors.values()].find(a=>!a.bot)?.id||null;this.event('left',{player:id});}
+ remove(id){const actor=this.actors.get(id);if(extractionDrop(this.extraction,actor,this.game.level))this.event('intelDropped',{player:id});this.actors.delete(id);if(this.owner===id)this.owner=[...this.actors.values()].find(a=>a.connected&&!a.bot)?.id||[...this.actors.values()].find(a=>!a.bot)?.id||null;this.event('left',{player:id});}
  live(){return [...this.actors.values()].filter(a=>a.status==='alive');}
  withActor(a,fn){
   const g=this.game;if(g.actorId===a.id)return fn();const old={player:g.player,actorId:g.actorId};for(const k of AVATAR_FIELDS)old[k]=g[k];
@@ -121,14 +133,47 @@ export class Room{
  start(id){
   if(id!==this.owner||this.state!=='lobby')throw Error('Only the room owner can start from the lobby');for(const a of this.actors.values())if(!a.connected)this.remove(a.id);const connected=[...this.actors.values()].filter(a=>a.connected);if(connected.length<2||connected.some(a=>!a.ready))throw Error('At least two connected, ready players are required');
   if(['team','clan','control'].includes(this.mode))connected.forEach((a,i)=>a.team=i%2?'pink':'cyan');
-  this.started=true;this.raid=null;this.game.totalFreed=0;this.game.totalArtifacts=0;this.game.totalSecrets=0;this.game.campaignTime=0;this.game.rng=369;this.partySize=connected.length;this.stage=0;this.receipts=[];this.teamScore={cyan:0,pink:0};this.round=1;for(const a of this.actors.values()){a.frags=a.deaths=0;}this.load(false);this.event('started');
+  if(this.mode==='extraction')connected.forEach(a=>a.team='cyan');
+  this.started=true;this.raid=null;this.extraction=null;this.extractionRetries=0;this.game.totalFreed=0;this.game.totalArtifacts=0;this.game.totalSecrets=0;this.game.campaignTime=0;this.game.rng=369;this.partySize=connected.length;this.stage=0;this.receipts=[];this.teamScore={cyan:0,pink:0};this.round=1;for(const a of this.actors.values()){a.frags=a.deaths=0;}this.load(false);this.event('started');
  }
  load(carry=true){
   const g=this.game;this.state='playing';this.result=null;this.revision++;g.events=[];g.projectiles=[];g.mode='playing';g.energyMode='survival';g.unlocked=6;g.totalArtifacts??=0;
-  if(this.competitive){const a=createArena(this.arena,this.localBots?12:8);this._definition=a.definition;g.campaign='original';g.levelIndex=0;g.level=a.level;g.time=0;this.spawns=a.spawns;this.control=this.mode==='control'?freshControlState(this.arena,g.level):null;if(this.control){const z=controlZone(this.control);g.level.raidNodes=[{x:z.x,y:z.y,active:false}];}}
+  if(this.mode==='extraction'){
+   // Reuse the original authored Wake-Up Call facility and its PvE enemies;
+   // do NOT advance or mutate the saved 24-stage co-op campaign.
+   this._definition={...SECTORS[0],name:'THE SIGNAL VAULT',tag:'BBS / WITNESS RECOVERY'};
+   g.campaign='original';g.loadLevel(0,false);g.unlocked=6;g.time=0;
+   g.level.relays=[];g.level.captives=[];g.level.signs=[];g.level.key.taken=true;
+   g.level.items=g.level.items.filter(i=>i.type!=='artifact');
+   this.extraction=freshExtraction(g.level,this.extractionRetries);
+   this.spawns=this.coopSpawns(this._definition.spawn);
+   this.updateExtractionNodes();
+  }
+  else if(this.competitive){const a=createArena(this.arena,this.localBots?12:8);this._definition=a.definition;g.campaign='original';g.levelIndex=0;g.level=a.level;g.time=0;this.spawns=a.spawns;this.control=this.mode==='control'?freshControlState(this.arena,g.level):null;if(this.control){const z=controlZone(this.control);g.level.raidNodes=[{x:z.x,y:z.y,active:false}];}}
   else{const d=STAGES[this.stage];this._definition=null;g.campaign=d.campaign;g.loadLevel(d.index,false);g.unlocked=6;g.level.items.forEach(i=>{if(i.type==='energy'){i.remaining=45*this.partySize;i.claims={};}});for(const e of g.level.enemies){e.hp=e.maxHp=Math.round(e.maxHp*(1+.45*(this.partySize-1))/Math.sqrt(d.campaign==='original'&&d.index>=6?g.definition.difficulty||1:1));e.damage*=1+.12*(this.partySize-1);}if(d.campaign==='original'&&d.index>=6)this.addSquadCaches();this.spawns=this.coopSpawns(g.definition.spawn);}
   let i=0;for(const a of this.actors.values())this.spawn(a,i++,carry&&!this.competitive);
   g.player=this.actors.values().next().value.player;g.resetFeel();g.mode='playing';g.events=[];this.stageStart=this.checkpoint(false);this.dirty=true;
+ }
+ updateExtractionNodes(){
+  const s=this.extraction;if(!s)return;
+  const position=s.holderId?s.pad:s.dropped||s.vault;
+  this.game.level.raidNodes=[{id:s.holderId?'EXFIL':'INTEL',x:position.x,y:position.y,active:false}];
+ }
+ extractionWave(){
+  const g=this.game,template=g.level.enemies.find(e=>e.type==='plugged');
+  if(!template)return;
+  const points=[[7.5,8.5],[12.5,18.5],[15.5,8.5],[24.5,16.5]];
+  let spawned=0;
+  for(const [x,y]of points){
+   if(spawned===2)break;
+   if(!canOccupy(g.level,x,y)||this.live().some(a=>distance(a.player,{x,y})<2)||
+    g.level.enemies.some(e=>!e.dead&&distance(e,{x,y})<1.2))continue;
+   const next=structuredClone(template);
+   Object.assign(next,{id:100+this.extraction.alarms*4+spawned,x,y,homeX:x,homeY:y,hp:70,maxHp:70,
+    dead:false,state:'patrol',cooldown:1,stun:0,flash:0,pathTimer:0});
+   g.level.enemies.push(next);spawned++;
+  }
+  this.event('extractionAlarm',{level:this.extraction.alarms,text:'SIGNAL ALARM / HOSTILE PATROLS INCOMING'});
  }
  addSquadCaches(){
   const l=this.game.level,p=this.game.definition.spawn,room=this.game.definition.rooms[0],used=new Set([...l.items,...l.enemies,...l.relays,...l.captives].map(i=>Math.floor(i.x)+','+Math.floor(i.y))),spots=[];
@@ -154,10 +199,10 @@ export class Room{
  command(a,m){
   if(m.type==='ready'){if(this.state!=='lobby')throw Error('Return to lobby first');a.ready=m.ready;}
   else if(m.type==='start'){if(!this.competitive&&this.state==='suspended'){if(a.id!==this.owner)throw Error('Only SYSOP can resume the shared session');this.state=this.resumeState||'playing';return;}this.start(a.id);}
-  else if(m.type==='lobby'){if(!this.competitive&&this.state==='wipe')throw Error('Retry the squad checkpoint before suspending');if(a.id!==this.owner)throw Error('Only owner returns the room to lobby');this.resumeState=this.state;this.state=this.competitive?'lobby':'suspended';for(const p of this.actors.values()){p.ready=false;p.input=neutralInput();p.actions=[];}this.dirty=true;}
+  else if(m.type==='lobby'){if(this.mode==='extraction'&&a.id===this.owner){this.state='lobby';this.started=false;this.extraction=null;for(const p of this.actors.values()){p.ready=false;p.input=neutralInput();p.actions=[];}return;}if(!this.competitive&&this.state==='wipe')throw Error('Retry the squad checkpoint before suspending');if(a.id!==this.owner)throw Error('Only owner returns the room to lobby');this.resumeState=this.state;this.state=this.competitive?'lobby':'suspended';for(const p of this.actors.values()){p.ready=false;p.input=neutralInput();p.actions=[];}this.dirty=true;}
   else if(m.type==='next'){if(a.id!==this.owner||this.competitive||this.state!=='cleared')throw Error('A cleared cooperative stage is required');if(this.stage>=23){if(!this.finaleEnabled||this.receipts.length!==24)throw Error('The Final Frequency is not available on this node');this.loadRaid();return;}this.stage++;this.load(true);}
-  else if(m.type==='retry'){if(a.id!==this.owner||this.state!=='wipe')throw Error('Retry requires a squad wipe');this.restore(this.stageStart);this.state='playing';for(const p of this.actors.values())p.player.health=Math.max(65,p.player.health);this.revision++;}
-  else if(m.type==='save'){if(this.competitive)throw Error('Only co-op campaigns have host saves');this.dirty=true;}
+  else if(m.type==='retry'){if(this.mode==='extraction'){if(a.id!==this.owner||this.state!=='wipe'||this.extractionRetries>=EXTRACTION_MAX_RETRIES)throw Error('Extraction retries exhausted or not authorized');this.extractionRetries++;this.load(false);this.event('extractionRetry',{attempt:this.extractionRetries});return;}if(a.id!==this.owner||this.state!=='wipe')throw Error('Retry requires a squad wipe');this.restore(this.stageStart);this.state='playing';for(const p of this.actors.values())p.player.health=Math.max(65,p.player.health);this.revision++;}
+  else if(m.type==='save'){if(this.mode!=='coop')throw Error('Only campaign co-op sessions have host saves');if(this.competitive)throw Error('Only co-op campaigns have host saves');this.dirty=true;}
  }
  target(e){
   const live=this.live().filter(a=>a.connected);if(!live.length)return null;
@@ -171,16 +216,24 @@ export class Room{
   if(a.status!=='alive'&&killer.id!==a.id){killer.frags++;if(this.mode==='team')this.teamScore[killer.team]++;this.event('frag',{killer:killer.id,victim:a.id});if(['deathmatch','team'].includes(this.mode)&&(this.mode==='team'?this.teamScore[killer.team]:killer.frags)>=this.limit){this.state='results';this.result={winner:this.mode==='team'?killer.team:killer.id,reason:'frag-limit'};}}
  }
  defeat(a){
-  if(a.status!=='alive')return;a.player.health=0;a.input=neutralInput();a.actions=[];a.deaths++;
+  if(a.status!=='alive')return;if(extractionDrop(this.extraction,a,this.game.level))this.event('intelDropped',{player:a.id});a.player.health=0;a.input=neutralInput();a.actions=[];a.deaths++;
   a.status=this.competitive?'dead':'downed';a.respawnAt=this.game.time+3;a.bleedAt=this.game.time+45;a.feel.bufferedFire=null;this.event(this.competitive?'death':'downed',{player:a.id});
  }
  use(a,dt){
   const down=[...this.actors.values()].find(p=>p!==a&&p.status==='downed'&&distance(a.player,p.player)<1.45&&lineOfSight(this.game.level,a.player,p.player));
   if(!this.competitive&&down){if(down.reviveBy&&down.reviveBy!==a.id&&down.reviveTick===this.tick)return;if(down.reviveBy&&down.reviveBy!==a.id)down.revive=0;down.reviveBy=a.id;down.reviveTick=this.tick;down.revive=(down.revive||0)+dt;if(down.revive>=2){down.status='alive';down.player.health=35;down.revive=0;this.event('revived',{player:down.id,by:a.id});}return;}
   if(this.raid?.use(a))return;
+  if(this.extraction){
+   if(extractionPickup(this.extraction,a,this.game.level)){
+    this.event('intelRecovered',{player:a.id,text:'WITNESS INTEL SECURED / RETURN TO EXFIL'});
+    this.updateExtractionNodes();return;
+   }
+   if(distance(a.player,this.extraction.pad)<1.6)return; // channel is tick-driven
+  }
   if(this.game.time-(a.usedAt??-1)>.25){a.usedAt=this.game.time;this.withActor(a,()=>this.game.interact());}
  }
  extract(){
+  if(this.extraction)return false; // only the fixed-step extraction channel awards success
   if(this.raid)return this.raid.extract();
   if(this.competitive||this.state!=='playing'||!this.game.exitReady)return false;
   const active=this.live().filter(a=>a.connected);if(!active.length||active.some(a=>distance(a.player,this.game.level.exit)>1.8))return false;
@@ -225,6 +278,18 @@ export class Room{
   }
   if(primary)this.withActor(primary,()=>{g.updateShared(dt);if(this.competitive){g.updateEnvironment(dt);g.updateProjectiles(dt);}else{const auto=g.oriAuto;if(this.raid?.corrupted)g.oriAuto=1e9;g.updateWorld(dt);if(this.raid?.corrupted)g.oriAuto=auto;}});
   if(this.state!=='playing'){this.flushEvents();return;}
+  if(this.extraction){
+   const result=advanceExtraction(this.extraction,this.actors.values(),g.level,dt);
+   this.updateExtractionNodes();
+   if(result.alarm)this.extractionWave();
+   if(result.success){
+    this.state='results';this.result={winner:'squad',reason:'extraction-complete'};
+    this.event('extractionComplete',{text:'WITNESS INTEL RECOVERED / SQUAD EXFILTRATED'});
+   }else if(result.failed){
+    this.state='wipe';this.result={reason:'extraction-timeout'};
+    this.event('extractionFailed',{text:'MISSION TIMER EXPIRED / INTEL LOST'});
+   }
+  }
   if(this.competitive){for(const item of g.level.items){if(item.taken&&item.respawnAt===undefined)item.respawnAt=g.time+(item.type==='energy'?10:15);if(item.taken&&g.time>=item.respawnAt){item.taken=false;delete item.remaining;delete item.respawnAt;}}
    if(this.mode==='control'&&this.control){
      const change=advanceControl(this.control,this.actors.values(),g.level,g.time,dt,this.teamScore,this.limit);
@@ -245,10 +310,10 @@ export class Room{
  snapshot(a){
   const g=this.game,events=this.events.filter(e=>e.id>a.lastEvent);a.lastEvent=this.eventId;
   const players=[...this.actors.values()].filter(a=>a.player).map(a=>({id:a.id,nickname:a.nickname,bot:!!a.bot,team:a.team,connected:a.connected,status:a.status,frags:a.frags,deaths:a.deaths,seq:a.lastSeq,revive:round(a.revive||0),respawn:round(Math.max(0,(a.respawnAt||0)-g.time)),...Object.fromEntries(Object.entries(a.player).map(([k,v])=>[k,typeof v==='number'?round(v):v])),pose:a.feel.combatPose?{eye:a.feel.combatPose.head.height,right:{x:round(a.feel.combatPose.aim.origin.x-a.player.x),y:round(a.feel.combatPose.aim.origin.y-a.player.y),height:round(a.feel.combatPose.aim.origin.height),dx:round(a.feel.combatPose.aim.direction.x),dy:round(a.feel.combatPose.aim.direction.y),dz:round(a.feel.combatPose.aim.direction.z)}}:null,weapon:a.feel.weapon,cooldown:round(a.feel.cooldown||0),recharge:round(a.feel.recharge||0),oriCooldown:round(a.feel.oriCooldown||0),dodgeCooldown:round(a.feel.dodgeCooldown||0),stats:a.feel.stats,hurt:round(a.feel.hurt||0),hitPulse:round(a.feel.hitPulse||0),assistTime:round(a.feel.assistTime||0),scanTime:round(a.feel.scanTime||0),damageDirection:a.feel.damageDirection??null,vent:round(a.feel.vent||0),shield:round(a.feel.shieldTime||0),shieldCharge:a.feel.shieldCharge||0,shotAnim:round(a.feel.shotAnim||0)}));
-  return{type:'snapshot',tick:this.tick,time:round(g.time),revision:this.revision,code:this.code,owner:this.owner,mode:this.mode,arena:this.arena,limit:this.limit,capacity:this.capacity,state:this.state,stage:this.stage,completed:this.receipts.length,raid:this.raid?.snapshot()||null,control:this.control?controlSnapshot(this.control,this.teamScore):null,finaleAvailable:this.finaleEnabled&&this.receipts.length===24&&!this.raid,round:this.round,teamScore:this.teamScore,result:this.result,roster:this.roster(),players,world:packWorld(g,a.id),events};
+  return{type:'snapshot',tick:this.tick,time:round(g.time),revision:this.revision,code:this.code,owner:this.owner,mode:this.mode,arena:this.arena,limit:this.limit,capacity:this.capacity,state:this.state,stage:this.stage,completed:this.receipts.length,extraction:this.extraction?extractionSnapshot(this.extraction):null,raid:this.raid?.snapshot()||null,control:this.control?controlSnapshot(this.control,this.teamScore):null,finaleAvailable:this.finaleEnabled&&this.receipts.length===24&&!this.raid,round:this.round,teamScore:this.teamScore,result:this.result,roster:this.roster(),players,world:packWorld(g,a.id),events};
  }
  checkpoint(includeEntry=true){
-  if(this.competitive)return null;const g=this.game,state=this.state==='suspended'?this.resumeState:this.state;g.pitRecord=this.receipts.filter(r=>r.campaign==='pit').map(r=>({...r,stage:r.index+1}));
+  if(this.mode!=='coop')return null;const g=this.game,state=this.state==='suspended'?this.resumeState:this.state;g.pitRecord=this.receipts.filter(r=>r.campaign==='pit').map(r=>({...r,stage:r.index+1}));
   const world=g.snapshot();if(g.campaign==='pit'){world.pitCleared=['cleared','campaign-complete'].includes(state);}
   return structuredClone({schema:'btm.coop/1',code:this.code,owner:this.owner,stage:this.stage,state,partySize:this.partySize,finale:this.raid?.snapshot()||null,receipts:structuredClone(this.receipts),world,actors:[...this.actors.values()].map(a=>({id:a.id,nickname:a.nickname,bot:!!a.bot,botIndex:a.botIndex||0,token:a.token,team:a.team,player:a.player,status:a.status,invulnerable:a.invulnerable,bleedAt:a.bleedAt,frags:a.frags,deaths:a.deaths,lastSeq:a.lastSeq,feel:Object.fromEntries(AVATAR_FIELDS.filter(k=>!['nav','combatPose','bufferedFire'].includes(k)).map(k=>[k,a.feel[k]]))})),...(includeEntry?{entry:this.stageStart}:{} )});
  }
