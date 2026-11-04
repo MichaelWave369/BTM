@@ -28,6 +28,28 @@ export const ARCHIVE_DOSSIERS=Object.freeze([
  Object.freeze({id:'dossier:warden-origin',threshold:9,title:'THE WARDEN / Memory Theft',subject:'Demiurge Security',kind:'CLASSIFIED / DOSSIER',type:'dossier',text:'The Warden is an artificial security machine. It was trained on the movements, faces and fears of captives, and the institution erased the evidence after training. The recordings still exist in archive fragments. Ori appears to have copied some of them to preserve the names. There is more to discover beyond this first ledger.'})
 ]);
 export const ARCHIVE_MILESTONES=Object.freeze(ARCHIVE_DOSSIERS.map(d=>d.threshold));
+// Search ONLY the current, locally earned catalog. Never use sealed master data,
+// unsolved answer options or unverified debriefs as search terms.
+export const ARCHIVE_SEARCH_FILTERS=Object.freeze(['all','records','dossiers','intel']);
+export function searchRecoveredArchive(ledger,query='',filter='all'){
+ if(!ledger||typeof ledger.list!=='function')return [];
+ const entries=ledger.list();
+ if(!Array.isArray(entries))return [];
+ const active=ARCHIVE_SEARCH_FILTERS.includes(filter)?filter:'all';
+ const terms=String(query??'').slice(0,96).trim().toLocaleLowerCase().split(/\s+/u).filter(Boolean).slice(0,8);
+ return entries.filter(item=>{
+  if(!item||!['record','dossier','challenge'].includes(item.type))return false;
+  if(active==='records'&&item.type!=='record')return false;
+  if(active==='dossiers'&&item.type!=='dossier')return false;
+  if(active==='intel'&&item.type!=='challenge')return false;
+  const visibleText=item.type==='challenge'
+   ?[item.question,item.solved===true?item.debrief:''].join(' ')
+   :item.text;
+  const corpus=[item.title,item.subject,item.kind,visibleText].join(' ').toLocaleLowerCase();
+  return terms.every(term=>corpus.includes(term));
+ });
+}
+
 // An evidence case never appears until EVERY required testimony is recovered.
 // This is a narrative reconstruction, not a password, map secret, combat buff,
 // multiplayer authorization or alteration to the campaign's completion rules.
