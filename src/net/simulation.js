@@ -147,7 +147,7 @@ export class Room{
  spawn(a,index,carry=false){
   const g=this.game,prior=a.player,positions=this.spawns;
   let s=positions[index%positions.length];
-  if(this.competitive){
+  if(this.competitive&&!isVertical(g.level)){
    const foes=this.live().filter(p=>p!==a),clearance=point=>Math.min(99,...foes.map(p=>distance(p.player,{x:point[0],y:point[1]})));
    s=[...positions].sort((a,b)=>clearance(b)-clearance(a))[0];
   }
