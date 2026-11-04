@@ -74,3 +74,28 @@ export function pluggedBeastSprite(){
  }
  cache.set(key,c);return c;
 }
+
+// An original titan silhouette for the BBS Warden Beast, not the campaign
+// Warden sprite. Broad shield shoulders and a red furnace eye are deliberate
+// legibility cues in the asymmetric arena and Quest presentation.
+export function wardenBeastSprite(){
+ const key='inversion:warden';if(cache.has(key))return cache.get(key);
+ const c=document.createElement('canvas');c.width=96;c.height=96;
+ const g=c.getContext('2d'),box=(x,y,w,h,v)=>{g.fillStyle=v;g.fillRect(x,y,w,h);};
+ const iron='#28303e',dark='#141923',plate='#59647a',red='#f4715b',ember='#ffd18a';
+ box(15,35,66,47,dark);box(21,33,54,47,iron);box(26,39,44,36,plate);
+ box(31,45,34,22,iron);box(42,47,12,17,red);box(46,50,4,11,ember);
+ box(28,17,40,24,dark);box(34,22,28,15,plate);
+ box(35,27,26,6,red);box(42,28,12,4,ember);
+ for(const side of [-1,1]){
+  const x=side<0?1:78;
+  box(x,29,17,40,iron);box(x+2,31,13,30,plate);
+  box(x+4,48,9,24,dark);box(x+1,63,16,14,red);
+  box(side<0?13:67,18,16,13,plate);
+  box(side<0?9:74,12,13,9,iron);
+ }
+ box(23,74,20,22,iron);box(53,74,20,22,iron);
+ box(20,89,24,7,dark);box(52,89,24,7,dark);
+ box(36,7,24,13,iron);box(43,1,10,13,red);
+ cache.set(key,c);return c;
+}
