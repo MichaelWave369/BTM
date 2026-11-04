@@ -10,7 +10,7 @@ const walkable=(level,x,y)=>level.cells[y]?.[x]===0||!!level.doors[x+','+y];
 export function doorAxis(level,d){const ns=walkable(level,d.x,d.y-1)&&walkable(level,d.x,d.y+1),ew=walkable(level,d.x-1,d.y)&&walkable(level,d.x+1,d.y);return ns&&!ew?'z':'x';}
 export function doorGeometry(level,d){const s=WORLD_SCALE,h=WALL_HEIGHT*s,axis=doorAxis(level,d);return {center:[(d.x+.5)*s,h*(.5+d.open),(d.y+.5)*s],size:axis==='x'?[.12,h,s]:[s,h,.12],material:doorSurfaceMaterial(d.type),axis,solid:d.open<.84};}
 export function buildLevelGeometry(level){
- const chunks=new Map(),s=WORLD_SCALE,h=WALL_HEIGHT*s,signs=new Map((level.signs||[]).map((o,i)=>[o.x+','+o.y,'sign:'+i]));
+ const chunks=new Map(),s=WORLD_SCALE,h=(level.vertical?.ceiling??WALL_HEIGHT)*s,signs=new Map((level.signs||[]).map((o,i)=>[o.x+','+o.y,'sign:'+i]));
  const get=(x,y)=>{const key=Math.floor(x/8)+','+Math.floor(y/8);if(!chunks.has(key))chunks.set(key,{key,vertices:[],bounds:{min:[Math.floor(x/8)*8*s,0,Math.floor(y/8)*8*s],max:[(Math.floor(x/8)+1)*8*s,h,(Math.floor(y/8)+1)*8*s]}});return chunks.get(key).vertices;};
  for(let y=0;y<level.h;y++)for(let x=0;x<level.w;x++){
   const v=get(x,y),x0=x*s,x1=(x+1)*s,z0=y*s,z1=(y+1)*s;
@@ -20,6 +20,33 @@ export function buildLevelGeometry(level){
   if(walkable(level,x,y+1))pushQuad(v,[[x0,0,z1],[x1,0,z1],[x1,h,z1],[x0,h,z1]],material,[.8,.86,.82,1]);
   if(walkable(level,x-1,y))pushQuad(v,[[x0,0,z0],[x0,0,z1],[x0,h,z1],[x0,h,z0]],material,[.72,.8,.75,1]);
   if(walkable(level,x+1,y))pushQuad(v,[[x1,0,z1],[x1,0,z0],[x1,h,z0],[x1,h,z1]],material,[.85,.9,.86,1]);
+ }
+ if(level.vertical?.schema==='btm.vertical-prototype/1'){
+  const {upper,ramp}=level.vertical,H=upper.height*s;
+  // The elevated deck uses actual double-sided geometry; shots and actors
+  // separately collide with the same height in server vertical-arena rules.
+  for(let y=upper.y0;y<upper.y1;y++)for(let x=upper.x0;x<upper.x1;x++){
+   if(!walkable(level,x,y))continue;
+   const v=get(x,y),x0=x*s,x1=(x+1)*s,z0=y*s,z1=(y+1)*s;
+   pushQuad(v,[[x0,H,z1],[x1,H,z1],[x1,H,z0],[x0,H,z0]],'floor',[.75,.9,1,1]);
+   pushQuad(v,[[x0,H-.035,z0],[x1,H-.035,z0],[x1,H-.035,z1],[x0,H-.035,z1]],'ceiling',[.44,.57,.72,1]);
+   if(x===upper.x0||x===upper.x1-1||y===upper.y0||y===upper.y1-1){
+    const color=[.4,.75,.94,1],thin=.07*s;
+    if(y===upper.y0)pushBox(v,[(x+.5)*s,H,(y+.03)*s],[s,.055*s,thin],'white',color);
+    if(y===upper.y1-1)pushBox(v,[(x+.5)*s,H,(y+.97)*s],[s,.055*s,thin],'white',color);
+    if(x===upper.x1-1)pushBox(v,[(x+.97)*s,H,(y+.5)*s],[thin,.055*s,s],'white',color);
+    if(x===upper.x0&&!(y>=ramp.y0&&y<ramp.y1))
+     pushBox(v,[(x+.03)*s,H,(y+.5)*s],[thin,.055*s,s],'white',color);
+   }
+  }
+  // Continuous ramp rise, instead of a floor-change teleport. Its top surface
+  // exactly meets the upper deck at x=upper.x0 and shows the same gradient
+  // encoded in server supportHeight.
+  for(let y=ramp.y0;y<ramp.y1;y++)for(let x=ramp.x0;x<ramp.x1;x++){
+   const v=get(x,y),a=upper.height*(x-ramp.x0)/(ramp.x1-ramp.x0)*s,
+    z=upper.height*(x+1-ramp.x0)/(ramp.x1-ramp.x0)*s;
+   pushQuad(v,[[x*s,a,(y+1)*s],[(x+1)*s,z,(y+1)*s],[(x+1)*s,z,y*s],[x*s,a,y*s]],'floor',[.73,.81,.9,1]);
+  }
  }
  const result=[...chunks.values()].filter(c=>c.vertices.length).map(c=>({...c,vertices:new Float32Array(c.vertices),vertexCount:c.vertices.length/9}));
  return {schemaVersion:LEVEL_SCHEMA,scale:s,wallHeight:h,chunks:result,vertexCount:result.reduce((n,c)=>n+c.vertexCount,0),doorCount:Object.keys(level.doors).length};

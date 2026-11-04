@@ -62,7 +62,7 @@ export function controllerActions(game,pad,{map=()=>{},help=()=>{},fire=true,dod
     if(action==='vision')game.vision();if(action==='bass')game.bassDrop();
     if(action==='dodge')game.dodge({left:pad.moveStrafe<-.25,right:pad.moveStrafe>.25,back:pad.moveForward<-.25,...(Number.isFinite(dodgeAngle)?{angle:dodgeAngle}:{})});
     if(action==='previous'||action==='next')game.selectWeapon((game.weapon+(action==='next'?1:game.unlocked-1))%game.unlocked);
-    if(action==='map')map();if(action==='help')help();
+    if(action==='map')map();if(action==='help'){if(game.level?.vertical&&typeof game.jump==='function')game.jump();else help();}
   }
   if(fire){if(pad.firePressed)game.requestFire();if(pad.alternate!==null)game.requestFire(true,pad.alternate);}
 }

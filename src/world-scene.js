@@ -34,7 +34,7 @@ export class WorldScene {
     b.box(v.center,v.size,doorSurfaceMaterial(d.type,game.shift),WHITE);
    }
   for(const e of l.enemies){if(e.dead||!visible(e.x,e.y))continue;const h=entityHeight(e.type)*s,frame=Math.floor(e.walk||0)%4;b.billboard(e.x*s,0,e.y*s,e.raidRole==='core'?6.4*s:h,h,e.raidRole?(e.raidRole==='core'?(e.exposed>0?'raid:open':'raid:core'):'raid:pylon'):e.pitBoss?'pitboss:'+e.pitBoss+(e.exposed>0?':open':''):(e.pain>0?'pain:':'enemy:')+e.type+':'+frame,eye,e.stun>0?STUN:WHITE);this.counts.enemies++;if(e.tell>0)b.floor(e.x*s,.025,e.y*s,.7,'marker',TELL);}
-  for(const i of l.items)if(!i.taken&&visible(i.x,i.y)){b.billboard(i.x*s,.04,i.y*s,.85,.85,'item:'+i.type,eye);this.counts.objects++;}
+  for(const i of l.items)if(!i.taken&&visible(i.x,i.y)){b.billboard(i.x*s,(i.floorHeight||0)*s+.04,i.y*s,.85,.85,'item:'+i.type,eye);this.counts.objects++;}
   if(!l.key.taken){b.billboard(l.key.x*s,.12,l.key.y*s,.75,.75,'item:key',eye);this.counts.objects++;}
   for(const r of l.relays){b.billboard(r.x*s,0,r.y*s,.9,1.15,r.active?'relay:on':'relay:off',eye);this.counts.objects++;}
   for(const c of l.captives)if(!c.freed){b.billboard(c.x*s,0,c.y*s,1.3,1.65,'captive',eye);this.counts.objects++;}
@@ -122,11 +122,13 @@ export class WorldScene {
     }
     this.counts.objects++;continue;
    }
-   const color=a.team==='pink'?[1,.44,.56,1]:[.5,.91,.83,1],eyeHeight=a.pose?.eye||1.03,c=Math.cos(a.a),sn=Math.sin(a.a),right=a.pose?.right;
-   const hand=right?[(x+right.x)*s,right.height*s,(y+right.y)*s]:[(x+c*.28-sn*.2)*s,eyeHeight*.65*s,(y+sn*.28+c*.2)*s];
-   const left=[(x+c*.15+sn*.2)*s,eyeHeight*.6*s,(y+sn*.15-c*.2)*s],shoulder=[x*s,eyeHeight*.65*s,y*s];
-   b.box([x*s,eyeHeight*.5*s,y*s],[.35*s,eyeHeight*.52*s,.25*s],'white',[.16,.24,.33,1]);
-   b.box([x*s,(eyeHeight-.1)*s,y*s],[.22*s,.22*s,.22*s],'white',color);
+   const color=a.team==='pink'?[1,.44,.56,1]:[.5,.91,.83,1],base=(a.height||0)*s,
+    eyeHeight=a.pose?.eye?(a.pose.eye-(a.height||0)):1.03,
+    c=Math.cos(a.a),sn=Math.sin(a.a),right=a.pose?.right;
+   const hand=right?[(x+right.x)*s,right.height*s,(y+right.y)*s]:[(x+c*.28-sn*.2)*s,base+eyeHeight*.65*s,(y+sn*.28+c*.2)*s];
+   const left=[(x+c*.15+sn*.2)*s,base+eyeHeight*.6*s,(y+sn*.15-c*.2)*s],shoulder=[x*s,base+eyeHeight*.65*s,y*s];
+   b.box([x*s,base+eyeHeight*.5*s,y*s],[.35*s,eyeHeight*.52*s,.25*s],'white',[.16,.24,.33,1]);
+   b.box([x*s,base+(eyeHeight-.1)*s,y*s],[.22*s,.22*s,.22*s],'white',color);
    b.line(shoulder,hand,.055*s,eye,color);b.line(shoulder,left,.055*s,eye,color);
    for(const h of[hand,left])b.box(h,[.11*s,.11*s,.11*s],'white',color);
    const direction=right?[right.dx,right.dz,right.dy]:[c,0,sn],barrel=hand.map((v,i)=>v+direction[i]*.3*s);b.line(hand,barrel,.045*s,eye,[.58,.64,.7,1]);if(a.shotAnim>0)b.box(barrel,[.12*s,.12*s,.12*s],'white',colorRGB(WEAPONS[a.weapon].color));

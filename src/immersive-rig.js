@@ -15,14 +15,14 @@ export class ImmersiveRig {
   this.input={moveForward:0,moveStrafe:0,sprint:false,fire:false,deferFire:true,afterMovement:()=>this.finish(this.game,this.pose,this.game.mode==='playing')};
  }
  recenter(){this.equipmentEpoch++;this.uiCaptured=false;this.uiWristOpen=false;this.wristRearm=false;this.calibrated=false;this.snapReady=false;this.fade=.18;}
- calibrate(game,pose){this.equipmentEpoch++;this.yaw=directionAngle(pose.head)-game.player.a;this.headBase=pose.head[13];this.lastX=pose.head[12];this.lastZ=pose.head[14];this.calibrated=true;this.level=game.level;this.menuActive=false;this.menuPosition={x:game.player.x,y:game.player.y};this.fade=.18;}
+ calibrate(game,pose){this.equipmentEpoch++;this.yaw=directionAngle(pose.head)-game.player.a;this.headBase=pose.head[13];this.lastX=pose.head[12];this.lastZ=pose.head[14];this.calibrated=true;this.level=game.level;this.menuActive=false;this.menuPosition={x:game.player.x,y:game.player.y,height:game.player.height||0};this.fade=.18;}
  prepare(game,pose,pad,settings={},dt=.014,playing=true,beforeInput=null){
   this.game=game;this.pose=pose;this.settings=immersiveSettings(settings);settings=this.settings;this.fade=Math.max(0,this.fade-dt);this.trackingJump=false;
   if(!this.calibrated||this.level!==game.level)this.calibrate(game,pose);
   const dx=pose.head[12]-this.lastX,dz=pose.head[14]-this.lastZ;this.lastX=pose.head[12];this.lastZ=pose.head[14];this.blocked=false;
   if(Math.hypot(dx,dz)>.75){this.trackingJump=true;this.fade=.25;this.finish(game,pose,playing);return this.zeroInput();}
-  if(playing&&this.menuActive){this.menuActive=false;this.fade=.16;this.menuPosition={x:game.player.x,y:game.player.y};}
-  if(!playing&&!this.menuActive){this.menuActive=true;this.menuPosition={x:game.player.x,y:game.player.y};}
+  if(playing&&this.menuActive){this.menuActive=false;this.fade=.16;this.menuPosition={x:game.player.x,y:game.player.y,height:game.player.height||0};}
+  if(!playing&&!this.menuActive){this.menuActive=true;this.menuPosition={x:game.player.x,y:game.player.y,height:game.player.height||0};}
   const c=Math.cos(this.yaw),s=Math.sin(this.yaw),wx=(c*dx+s*dz)/WORLD_SCALE,wy=(-s*dx+c*dz)/WORLD_SCALE,body=playing?game.player:this.menuPosition,oldX=body.x,oldY=body.y;
   if(playing){if(game.moveTrackedBody)game.moveTrackedBody(wx,wy);else moveBody(game.level,body,wx,wy);}
   else{const max=.6/WORLD_SCALE,px=body.x+wx-game.player.x,py=body.y+wy-game.player.y,n=Math.hypot(px,py),ratio=n>max?max/n:1;moveBody(game.level,body,game.player.x+px*ratio-body.x,game.player.y+py*ratio-body.y);}
@@ -42,11 +42,11 @@ export class ImmersiveRig {
   if(safe){m[12]=safe.origin.x*WORLD_SCALE;m[13]=safe.origin.height*WORLD_SCALE;m[14]=safe.origin.y*WORLD_SCALE;}
  }
  finish(game,pose,playing=true){
-  if(!playing&&!this.menuActive){this.menuActive=true;this.menuPosition={x:game.player.x,y:game.player.y};}
-  const settings=this.settings||IMMERSIVE_DEFAULTS,head=pose.head,body=playing?game.player:this.menuPosition,height=clamp(settings.vrEyeHeight+head[13]-this.headBase,.5,WALL_HEIGHT*WORLD_SCALE-.15),c=Math.cos(this.yaw),s=Math.sin(this.yaw);
-  const x=body.x*WORLD_SCALE-(c*head[12]+s*head[14]),z=body.y*WORLD_SCALE-(-s*head[12]+c*head[14]),y=height-head[13];
+  if(!playing&&!this.menuActive){this.menuActive=true;this.menuPosition={x:game.player.x,y:game.player.y,height:game.player.height||0};}
+  const settings=this.settings||IMMERSIVE_DEFAULTS,head=pose.head,body=playing?game.player:this.menuPosition,elevation=(game.level?.vertical?(body.height||0)*WORLD_SCALE:0),limit=(game.level?.vertical?.ceiling??WALL_HEIGHT)*WORLD_SCALE-elevation-.15,height=clamp(settings.vrEyeHeight+head[13]-this.headBase,.5,limit),c=Math.cos(this.yaw),s=Math.sin(this.yaw);
+  const x=body.x*WORLD_SCALE-(c*head[12]+s*head[14]),z=body.y*WORLD_SCALE-(-s*head[12]+c*head[14]),y=height+elevation-head[13];
   rigidY(this.root,this.yaw,x,y,z);inverseRigidY(this.inverse,this.yaw,x,y,z);transformPoint(this.eye,this.root,head[12],head[13],head[14]);matMultiply(this.headWorld,this.root,head);
-  this.headAngle=directionAngle(head,this.yaw);this.head={x:body.x,y:body.y,height:height/WORLD_SCALE,angle:this.headAngle};this.aim=null;this.hasLeft=!!pose.leftGrip;this.hasVisualLeft=false;this.hasRightGrip=!!(pose.rightGrip||pose.rightRay);
+  this.headAngle=directionAngle(head,this.yaw);this.head={x:body.x,y:body.y,height:(height+elevation)/WORLD_SCALE,angle:this.headAngle};this.aim=null;this.hasLeft=!!pose.leftGrip;this.hasVisualLeft=false;this.hasRightGrip=!!(pose.rightGrip||pose.rightRay);
   if(pose.leftGrip){
    matMultiply(this.leftWorld,this.root,pose.leftGrip);this.clipGrip(game,this.leftWorld);
    // Measure the WATCH turn from real tracking. The rest-palm model changes

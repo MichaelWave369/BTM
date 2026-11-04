@@ -2,11 +2,12 @@ import {Finale,createRaidLevel,RAID_DEFINITION} from './finale.js';
 import {packWorld,raidObjectiveTarget} from './codec.js';
 import {Game,SECTORS,CAMPAIGN_HOSTS,WEAPONS,clamp,angleDiff,distance,moveBody,canOccupy,lineOfSight,solidAt,createLevel} from '../core.js';
 import {PIT_STAGES,PIT_HOSTS} from '../pit.js';
-import {safeTrackedAim,entityHeight,WALL_HEIGHT} from '../spatial.js';
+import {safeTrackedAim,entityHeight,WALL_HEIGHT,traceEnvironment} from '../spatial.js';
 import {hazardState} from '../pit-combat.js';
 import {updateSharedPitTraps,recoverSharedPitTrapState} from './shared-pit-traps.js';
 import {createArena} from './arenas.js';
 import {botIntent} from './bot-pilot.js';
+import {isVertical,initVerticalBody,requestVerticalJump,advanceVerticalBody,verticalSight} from './vertical-arena.js';
 import {freshControlState,controlZone,controlSnapshot,advanceControl} from './control-zones.js';
 import {freshExtraction,extractionPickup,extractionDrop,advanceExtraction,extractionSnapshot,EXTRACTION_MAX_RETRIES} from './extraction.js';
 import {freshBeastMatch,beastClawTarget,advanceBeast,beastSnapshot,BEAST_ARCHETYPES,beastPulseTarget,beastArcTargets,beastWardenTarget,deployWardenField,wardenFieldTargets} from './beast-inversion.js';
@@ -53,7 +54,7 @@ class SharedWorld extends Game{
   if(a.input.aim)this.room.trackedPose(a,a.input.aim);
   const old=this.level.enemies,start=this.projectiles.length;
   if(room.competitive)this.level.enemies=room.targets(a);
-  try{const fired=super.shoot(alternate,charge);if(fired){a.invulnerable=0;for(const b of this.projectiles.slice(start)){b.owner=a.id;b.weapon=this.weapon;}if(this.projectiles.length>128)this.projectiles.length=128;}return fired;}
+  try{const fired=super.shoot(alternate,charge);if(fired){a.invulnerable=0;for(const b of this.projectiles.slice(start)){b.owner=a.id;b.weapon=this.weapon;if(isVertical(this.level)&&!Number.isFinite(b.height))b.height=(a.player.height||0)+.75;}if(this.projectiles.length>128)this.projectiles.length=128;}return fired;}
   finally{this.level.enemies=old;}
  }
  dodge(input={}){
@@ -67,7 +68,15 @@ class SharedWorld extends Game{
  }
  collectPlayerItems(){
   if(this.room.beast?.beastId===this.actorId)return;
-  if(this.room.competitive)return super.collectPlayerItems();
+  if(this.room.competitive){
+   if(!isVertical(this.level))return super.collectPlayerItems();
+   const actor=this.room.actors.get(this.actorId);
+   const inaccessible=this.level.items.filter(i=>!i.taken&&
+    Math.abs((i.floorHeight||0)-(actor?.player?.height||0))>.7);
+   for(const item of inaccessible)item.taken=true;
+   try{return super.collectPlayerItems();}
+   finally{for(const item of inaccessible)item.taken=false;}
+  }
   const reserved=this.level.items.filter(i=>i.ownerId&&i.ownerId!==this.actorId&&!i.taken);for(const i of reserved)i.taken=true;
   const entries=[];for(const i of this.level.items)if(i.type==='energy'&&i.claims){const available=Math.max(0,45-(i.claims[this.actorId]||0));entries.push({item:i,pool:i.remaining,taken:i.taken,available});i.remaining=Math.min(i.remaining,available);if(available<=0)i.taken=true;}
   super.collectPlayerItems();
@@ -92,9 +101,18 @@ class SharedWorld extends Game{
   const l=this.level,room=this.room;
   for(const b of this.projectiles){
    for(let i=0;i<3&&!b.dead;i++){
+    const prior={x:b.x,y:b.y,height:b.height};
     b.x+=Math.cos(b.a)*b.speed*dt/3;b.y+=Math.sin(b.a)*b.speed*dt/3;if(Number.isFinite(b.height))b.height+=(b.vh||0)*dt/3;
-    if(solidAt(l,b.x,b.y)||Number.isFinite(b.height)&&(b.height<0||b.height>WALL_HEIGHT)){b.dead=true;break;}
-    if(b.enemy||room.competitive){const a=room.live().find(a=>a.id!==b.owner&&distance(a.player,b)<.28&&(!Number.isFinite(b.height)||b.height>=.08&&b.height<=(a.input.aim?.eye||1.03)+.08));if(a){if(b.enemy)room.withActor(a,()=>this.damagePlayer(b.damage,b));else room.hurt(a,b.damage,room.actors.get(b.owner));b.dead=true;}}
+    if(isVertical(l)&&Number.isFinite(prior.height)){
+     const dir={x:b.x-prior.x,y:b.y-prior.y,z:b.height-prior.height},
+      length=Math.hypot(dir.x,dir.y,dir.z);
+     if(length>.00001){
+      const hit=traceEnvironment(l,prior,dir,length+.001);
+      if(hit.type!=='range'&&hit.distance<length-.001){b.dead=true;break;}
+     }
+    }
+    if(solidAt(l,b.x,b.y)||Number.isFinite(b.height)&&(b.height<0||b.height>(l.vertical?.ceiling??WALL_HEIGHT))){b.dead=true;break;}
+    if(b.enemy||room.competitive){const a=room.live().find(a=>a.id!==b.owner&&distance(a.player,b)<.28&&(!Number.isFinite(b.height)||b.height>=(a.player.height||0)+.08&&b.height<=(a.player.height||0)+(a.input.aim?.eye||1.03)+.08));if(a){if(b.enemy)room.withActor(a,()=>this.damagePlayer(b.damage,b));else room.hurt(a,b.damage,room.actors.get(b.owner));b.dead=true;}}
     else{const e=l.enemies.find(e=>!e.dead&&distance(e,b)<.4&&(!Number.isFinite(b.height)||b.height>=0&&b.height<=entityHeight(e.type)));if(e){const a=room.actors.get(b.owner);if(a)room.withActor(a,()=>{const weapon=this.weapon;this.weapon=b.weapon;this.damageEnemy(e,b.damage,.2);this.weapon=weapon;});b.dead=true;}}
    }b.life-=dt;
   }this.projectiles=this.projectiles.filter(b=>!b.dead&&b.life>0).slice(0,128);
@@ -103,6 +121,7 @@ class SharedWorld extends Game{
 export class Room{
  constructor({code,mode='deathmatch',arena='no-carrier',limit=10,capacity=2,beastType='crawler',finaleEnabled=true,localBots=false}){
   if(mode==='beast'&&!Object.hasOwn(BEAST_ARCHETYPES,beastType))throw Error('Invalid Beast selection');
+  if(arena==='stackyard'&&!['deathmatch','team'].includes(mode))throw Error('Stackyard is a gated vertical test arena');
   this.localBots=!!localBots;this.finaleEnabled=finaleEnabled;this.raid=null;this.control=null;this.beast=null;this.extraction=null;this.extractionRetries=0;this.code=code;this.mode=mode;this.beastType=mode==='beast'?beastType:null;this.arena=arena;this.limit=limit;this.capacity=capacity;this.competitive=!['coop','extraction'].includes(mode);this.actors=new Map();this.owner=null;this.state='lobby';this.tick=0;this.elapsed=0;this.revision=0;this.eventId=0;this.events=[];this.stage=0;this.receipts=[];this.teamScore={cyan:0,pink:0};this.round=1;this.dirty=false;this.game=new SharedWorld(this);this.game.events=[];
  }
  addBot(token){
@@ -128,11 +147,12 @@ export class Room{
  spawn(a,index,carry=false){
   const g=this.game,prior=a.player,positions=this.spawns;
   let s=positions[index%positions.length];
-  if(this.competitive){
+  if(this.competitive&&!isVertical(g.level)){
    const foes=this.live().filter(p=>p!==a),clearance=point=>Math.min(99,...foes.map(p=>distance(p.player,{x:point[0],y:point[1]})));
    s=[...positions].sort((a,b)=>clearance(b)-clearance(a))[0];
   }
   a.player={x:s[0],y:s[1],a:s[2],health:carry?Math.max(40,prior?.health||0):100,armor:carry?Math.max(0,prior?.armor||0):25,energy:carry?prior?.energy??100:100,reserve:carry?prior?.reserve??45:45,ori:100,vision:100,key:false};
+  if(isVertical(g.level))initVerticalBody(a.player,s[3]||0);
   if(this.beast?.beastId===a.id){a.player.health=this.beast.health;a.player.armor=0;a.player.energy=0;a.player.reserve=0;}
   a.usedAt=-1;a.chargeTime=0;a.status='alive';a.invulnerable=g.time+(this.competitive?1.25:2);a.revive=0;a.input=neutralInput();a.input.angle=s[2];a.actions=[];
   const old={};for(const k of AVATAR_FIELDS)old[k]=g[k];g.resetFeel();for(const k of AVATAR_FIELDS)a.feel[k]=typeof g[k]==='number'?0:g[k];a.feel.weapon=this.beast?.beastId===a.id?0:1;a.feel.recharge=a.feel.vent=a.feel.cooldown=0;a.feel.shieldCharge=0;a.feel.shieldTime=0;a.feel.stats={distance:0,damageTaken:0,damageDealt:0,shots:0,doors:0,pickups:0,oriAssists:0};a.feel.nav=null;a.feel.navTime=0;a.feel.bufferedFire=null;for(const k of AVATAR_FIELDS)g[k]=old[k];
@@ -239,7 +259,8 @@ export class Room{
  }
  coopSpawns(p){const points=[[p.x,p.y,p.a]];for(let radius=.6;radius<2&&points.length<4;radius+=.5)for(let i=0;i<8&&points.length<4;i++){const x=p.x+Math.cos(i*Math.PI/4)*radius,y=p.y+Math.sin(i*Math.PI/4)*radius;if(canOccupy(this.game.level,x,y))points.push([x,y,p.a]);}return points;}
  trackedPose(a,m){
-  const g=this.game,head={x:a.player.x,y:a.player.y,height:m.eye},aim=safeTrackedAim(g.level,head,{origin:{x:a.player.x+m.x,y:a.player.y+m.y,height:m.height},direction:{x:m.dx,y:m.dy,z:m.dz}});
+  const g=this.game,elevation=isVertical(g.level)?a.player.height||0:0,
+   head={x:a.player.x,y:a.player.y,height:m.eye+elevation},aim=safeTrackedAim(g.level,head,{origin:{x:a.player.x+m.x,y:a.player.y+m.y,height:m.height+elevation},direction:{x:m.dx,y:m.dy,z:m.dz}});
   g.setCombatPose({head,aim});
  }
  input(a,m){
@@ -260,7 +281,9 @@ export class Room{
   const prior=this.actors.get(e.targetId);if(prior?.status==='alive'&&prior.connected&&e.targetUntil>this.game.time&&distance(e,prior.player)<13)return prior;
   const best=[...live].sort((a,b)=>distance(e,a.player)-distance(e,b.player))[0];e.targetId=best.id;e.targetUntil=this.game.time+.7;return best;
  }
- targets(shooter){return this.live().filter(a=>a!==shooter&&(this.mode==='deathmatch'||a.team!==shooter.team)).map(a=>({...a.player,networkId:a.id,type:'plugged',human:false,dead:false,hp:a.player.health,maxHp:100,stun:0,phase:1}));}
+ targets(shooter){return this.live().filter(a=>a!==shooter&&(this.mode==='deathmatch'||a.team!==shooter.team)&&
+   (!isVertical(this.game.level)||verticalSight(this.game.level,shooter.player,a.player)))
+  .map(a=>({...a.player,floorHeight:a.player.height||0,networkId:a.id,type:'plugged',human:false,dead:false,hp:a.player.health,maxHp:100,stun:0,phase:1}));}
  hurt(a,amount,killer){
   if(!a||a.status!=='alive'||a.invulnerable>this.game.time||!killer||a.id===killer.id||this.mode!=='deathmatch'&&a.team===killer.team)return;
   // Only the grounded Plugged takes half of Hunter-origin damage.
@@ -320,6 +343,7 @@ export class Room{
    this.withActor(a,()=>{
     const isBeast=this.beast?.beastId===a.id;
     const grounded=!!(isBeast&&this.beast.archetype==='plugged'&&g.time<this.beast.groundedUntil);
+    a.stepStartX=a.player.x;a.stepStartY=a.player.y;
     g.player.a=angleDiff(m.angle,0);g.weapon=isBeast?0:m.weapon;
     const speed=grounded?0:isBeast?(m.sprint?BEAST_ARCHETYPES[this.beast.archetype].sprint:BEAST_ARCHETYPES[this.beast.archetype].walk):(m.sprint?4.1:2.65),
      c=Math.cos(g.player.a),s=Math.sin(g.player.a),wx=grounded?0:(m.roomX||0),wy=grounded?0:(m.roomY||0),
@@ -330,10 +354,12 @@ export class Room{
     if(m.charging&&!isBeast)a.chargeTime=Math.min(1.5,(a.chargeTime||0)+dt);
     for(const action of a.actions.splice(0)){
      if(isBeast){
+      if(action==='jump'&&isVertical(g.level))requestVerticalJump(g.level,a.player);
       if(action==='fire')this.beastStrike(a);
       else if(action==='dash')this.beastLunge(a,m.dashAngle??g.player.a);
       continue;
      }
+     if(action==='jump'&&isVertical(g.level))requestVerticalJump(g.level,a.player);
      if(action==='alternate'){if((a.chargeTime||0)>.12)g.requestFire(true,a.chargeTime/1.5);a.chargeTime=0;}
      else if(action==='fire')g.requestFire();
      else if(action==='reload')g.reload();
@@ -341,6 +367,11 @@ export class Room{
      else if(action==='ori'&&!this.competitive&&!this.raid?.corrupted)g.oriAbility();
      else if(action==='bass'&&!this.competitive)g.bassDrop();
      else if(action==='vision')g.vision();
+    }
+    if(isVertical(g.level)){
+     const before=a.player.height||0;
+     const landed=advanceVerticalBody(g.level,a.player,dt,{oldX:a.stepStartX,oldY:a.stepStartY});
+     if(landed)this.event('landed',{player:a.id,from:before,to:a.player.height});
     }
     if(isBeast){if(m.fire&&!m.charging)this.beastStrike(a);}
     else{if(!m.charging)a.chargeTime=0;g.advanceCombat(dt,m.fire&&!m.charging);if(m.use)this.use(a,dt);}

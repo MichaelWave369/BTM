@@ -9,9 +9,23 @@ export function traceEnvironment(level,origin,direction,max=25){
  const d=normalizeDirection(direction);if(!d)return null;
  let t=max,type='range',cell=null;const horizontal=Math.hypot(d.x,d.y);
  if(horizontal>.00001){const hit=castRay(level,origin.x,origin.y,d.x/horizontal,d.y/horizontal,max*horizontal+.01),along=hit.distance/horizontal;if(hit.type&&along<t){t=along;type='wall';cell=hit;}}
- const vertical=d.z>0?(WALL_HEIGHT-origin.height)/d.z:d.z<0?-origin.height/d.z:Infinity;
+ const ceiling=level.vertical?.ceiling??WALL_HEIGHT;
+ const vertical=d.z>0?(ceiling-origin.height)/d.z:d.z<0?-origin.height/d.z:Infinity;
+ // An elevated deck is a true occluder from above AND below. Its surface
+ // is independently intersected after ordinary 2D walls, without making
+ // its lower floor impassable in horizontal x/y.
+ const deck=level.vertical?.upper;
+ if(deck&&Math.abs(d.z)>.000001){
+  const along=(deck.height-origin.height)/d.z;
+  if(along>.00001&&along<t){
+   const xx=origin.x+d.x*along,yy=origin.y+d.y*along;
+   if(xx>=deck.x0&&xx<deck.x1&&yy>=deck.y0&&yy<deck.y1){
+    t=along;type='platform';cell=null;
+   }
+  }
+ }
  if(vertical>=0&&vertical<t){t=vertical;type=d.z>0?'ceiling':'floor';cell=null;}
- if(solidAt(level,origin.x,origin.y)||origin.height<0||origin.height>WALL_HEIGHT){t=0;type='blocked';cell=null;}
+ if(solidAt(level,origin.x,origin.y)||origin.height<0||origin.height>ceiling){t=0;type='blocked';cell=null;}
  return {distance:Math.max(0,t),type,cell,x:origin.x+d.x*t,y:origin.y+d.y*t,height:origin.height+d.z*t};
 }
 export function safeTrackedAim(level,head,desired){
@@ -25,12 +39,12 @@ export function rayEntityDistance(o,d,e,spread=0,range=25){
  const dx=e.x-o.x,dy=e.y-o.y,planar=d.x*d.x+d.y*d.y;if(planar<.00001)return null;
  const t=(dx*d.x+dy*d.y)/planar;if(t<0||t>range)return null;
  const horizontal=Math.hypot(dx-d.x*t,dy-d.y*t),padding=Math.tan(spread)*t,radius=(e.type==='warden'?.38:e.type==='crawler'?.24:.25)+padding,z=o.height+d.z*t;
- return horizontal<=radius&&z>=-padding&&z<=entityHeight(e.type)+padding?t:null;
+ const base=e.floorHeight||0;return horizontal<=radius&&z>=base-padding&&z<=base+entityHeight(e.type)+padding?t:null;
 }
 export function traceTrackedShot(level,aim,weapon){
  if(!validAim(aim))return {targets:[],impact:null};const d=normalizeDirection(aim.direction),impact=traceEnvironment(level,aim.origin,d,weapon.range),targets=[];
  for(const e of level.enemies){if(e.dead)continue;const t=rayEntityDistance(aim.origin,d,e,weapon.spread,Math.min(weapon.range,impact.distance));if(t===null)continue;
-  const center={x:e.x,y:e.y,height:clamp(aim.origin.height+d.z*t,.05,entityHeight(e.type))},delta={x:center.x-aim.origin.x,y:center.y-aim.origin.y,z:center.height-aim.origin.height},distance=Math.hypot(delta.x,delta.y,delta.z),wall=traceEnvironment(level,aim.origin,delta,distance+.02);
+  const center={x:e.x,y:e.y,height:clamp(aim.origin.height+d.z*t,(e.floorHeight||0)+.05,(e.floorHeight||0)+entityHeight(e.type))},delta={x:center.x-aim.origin.x,y:center.y-aim.origin.y,z:center.height-aim.origin.height},distance=Math.hypot(delta.x,delta.y,delta.z),wall=traceEnvironment(level,aim.origin,delta,distance+.02);
   if(wall.distance>=distance-.08)targets.push({entity:e,distance:t,height:center.height});
  }targets.sort((a,b)=>a.distance-b.distance);return {targets,impact};
 }
