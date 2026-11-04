@@ -28,3 +28,25 @@ export function crawlerBeastSprite(){
  box(34,35,4,5,'#f1e2a6');box(42,35,4,5,'#f1e2a6');
  cache.set(key,c);return c;
 }
+
+// A tall, antenna-crowned original Repeater, visually distinct from the squat
+// Crawler. All pixels are generated locally, with no external image assets.
+export function repeaterBeastSprite(){
+ const key='inversion:repeater';if(cache.has(key))return cache.get(key);
+ const c=document.createElement('canvas');c.width=80;c.height=80;
+ const g=c.getContext('2d'),box=(x,y,w,h,color)=>{g.fillStyle=color;g.fillRect(x,y,w,h);};
+ const steel='#172e3b',cyan='#4edbd8',light='#d9fff5',shadow='#102332';
+ box(27,55,11,22,steel);box(42,55,11,22,steel);
+ box(23,22,34,37,steel);box(28,26,24,25,'#315166');
+ box(32,30,16,8,cyan);box(37,32,6,4,light);
+ box(28,9,24,17,shadow);box(31,13,18,7,'#315166');
+ box(33,15,14,3,light);box(25,4,4,13,cyan);box(51,4,4,13,cyan);
+ box(21,8,8,5,light);box(51,8,8,5,light);
+ box(13,26,11,28,'#315166');box(56,26,11,28,'#315166');
+ box(8,46,18,10,steel);box(54,46,18,10,steel);
+ box(5,43,12,6,cyan);box(63,43,12,6,cyan);
+ box(9,38,4,6,light);box(67,38,4,6,light);
+ box(33,60,5,13,cyan);box(42,60,5,13,cyan);
+ box(26,76,16,4,shadow);box(42,76,16,4,shadow);
+ cache.set(key,c);return c;
+}
