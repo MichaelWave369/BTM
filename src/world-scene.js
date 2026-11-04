@@ -44,6 +44,23 @@ export class WorldScene {
   for(const a of game.remotePlayers||[]){
    const x=a.renderX??a.x,y=a.renderY??a.y;if(!['alive','downed'].includes(a.status)||!visible(x,y))continue;
    if(a.status==='downed'){b.billboard(x*s,0,y*s,.85*s,.4*s,'net:downed',eye);continue;}
+   if(a.role==='beast'&&a.archetype==='repeater'){
+    // The Repeater has a tall frame, antennae and two cyan pulse emitters.
+    const frame=[.15,.29,.4,1],bright=[.26,.91,.88,1],glow=[.8,1,1,1];
+    b.box([x*s,.6*s,y*s],[.39*s,.91*s,.28*s],'white',frame);
+    b.box([x*s,1.12*s,y*s],[.31*s,.25*s,.27*s],'white',frame);
+    b.box([x*s,1.15*s,y*s],[.26*s,.08*s,.29*s],'white',bright);
+    const c=Math.cos(a.a),sn=Math.sin(a.a);
+    for(const side of [-1,1]){
+     const sx=side*(-sn*.25),sy=side*(c*.25);
+     const shoulder=[(x+sx)*s,.88*s,(y+sy)*s],emitter=[(x+c*.28+sx)*s,.63*s,(y+sn*.28+sy)*s];
+     b.line(shoulder,emitter,.09*s,eye,frame);
+     b.box(emitter,[.16*s,.16*s,.16*s],'white',a.shotAnim>0?glow:bright);
+     b.box([(x+side*(-sn*.12))*s,1.46*s,(y+side*c*.12)*s],[.06*s,.28*s,.06*s],'white',bright);
+    }
+    for(const side of [-1,1])b.box([(x+side*(-sn*.11))*s,.24*s,(y+side*c*.11)*s],[.14*s,.44*s,.15*s],'white',frame);
+    this.counts.objects++;continue;
+   }
    if(a.role==='beast'){
     // Original lower-bodied Crawler shape, not a rifle-wielding human avatar.
     const shell=[.36,.18,.47,1],lit=[.72,.39,.86,1],eyeGlow=[1,.83,.42,1];
