@@ -44,6 +44,22 @@ export class WorldScene {
   for(const a of game.remotePlayers||[]){
    const x=a.renderX??a.x,y=a.renderY??a.y;if(!['alive','downed'].includes(a.status)||!visible(x,y))continue;
    if(a.status==='downed'){b.billboard(x*s,0,y*s,.85*s,.4*s,'net:downed',eye);continue;}
+   if(a.role==='beast'){
+    // Original lower-bodied Crawler shape, not a rifle-wielding human avatar.
+    const shell=[.36,.18,.47,1],lit=[.72,.39,.86,1],eyeGlow=[1,.83,.42,1];
+    b.box([x*s,.42*s,y*s],[.72*s,.36*s,.54*s],'white',shell);
+    b.box([x*s,.58*s,y*s],[.45*s,.31*s,.39*s],'white',lit);
+    b.box([x*s,.69*s,y*s],[.36*s,.21*s,.37*s],'white',shell);
+    const c=Math.cos(a.a),sn=Math.sin(a.a);
+    b.box([(x+c*.24-sn*.13)*s,.72*s,(y+sn*.24+c*.13)*s],[.075*s,.07*s,.07*s],'white',eyeGlow);
+    b.box([(x+c*.24+sn*.13)*s,.72*s,(y+sn*.24-c*.13)*s],[.075*s,.07*s,.07*s],'white',eyeGlow);
+    for(const side of [-1,1]){
+     const hx=(x+side*(-sn*.34))*s,hy=(y+side*(c*.34))*s;
+     b.line([hx,.52*s,hy],[(x+c*.33+side*(-sn*.46))*s,.12*s,(y+sn*.33+side*c*.46)*s],.12*s,eye,lit);
+     b.box([(x+c*.33+side*(-sn*.46))*s,.11*s,(y+sn*.33+side*c*.46)*s],[.19*s,.14*s,.19*s],'white',eyeGlow);
+    }
+    this.counts.objects++;continue;
+   }
    const color=a.team==='pink'?[1,.44,.56,1]:[.5,.91,.83,1],eyeHeight=a.pose?.eye||1.03,c=Math.cos(a.a),sn=Math.sin(a.a),right=a.pose?.right;
    const hand=right?[(x+right.x)*s,right.height*s,(y+right.y)*s]:[(x+c*.28-sn*.2)*s,eyeHeight*.65*s,(y+sn*.28+c*.2)*s];
    const left=[(x+c*.15+sn*.2)*s,eyeHeight*.6*s,(y+sn*.15-c*.2)*s],shoulder=[x*s,eyeHeight*.65*s,y*s];
