@@ -3,13 +3,14 @@
 <style>body{margin:24px;background:#080e21;color:#e8f6ff;font:16px monospace}h1,a{color:#55eaff}button,select{padding:12px;margin:4px;background:#172543;color:#edfaff;border:1px solid #e77aff;font:inherit}canvas{display:block;max-width:100%;border:1px solid #557da9;margin:16px 0}pre{white-space:pre-wrap}label{display:inline-block}</style>
 <h1>NEON SIGNAL / IMMERSIVE NEXT</h1><p>Actual production renderer with synthetic stereo poses. This is a developer viewer, not a headset acceptance result. No saved games are read or written.</p>
 <nav><button id="checks">CHECK LOGIC + CANVAS</button><button id="graphics">CHECK WEBGL + CLEANUP</button><a href="./immersive-qa.html">Campaign QA</a> · <a href="./">Game</a></nav>
-<label>Sector <select id="sector"></select></label><label>Quality <select id="quality"><option>balanced</option><option>performance</option><option>high</option></select></label><label>Weapon <select id="weapon"></select></label><button id="preview">RENDER STEREO PREVIEW</button>
+<label>Sector <select id="sector"></select></label><label>Quality <select id="quality"><option>balanced</option><option>performance</option><option>high</option></select></label><label>Weapon <select id="weapon"></select></label><label>Material <select id="material"></select></label><button id="preview">RENDER STEREO PREVIEW</button>
 <p id="status" role="status">Ready.</p><canvas id="world" width="1280" height="720"></canvas><canvas id="wrist" width="512" height="512"></canvas><pre id="raw"></pre>
 <script type="module">
 import {loadHostedMission} from './src/phi-content/hosted-missions.js';
 import {enterPhiWadMission,leavePhiWadMission} from './src/phi-content/runtime.js';
 import {browserSignalChecks} from './tests/signal-checks.js';
 import {VRWorldRenderer} from './src/vr-world-renderer.js';
+import {TEXTURE_PACKS} from './src/texture-packs.js';
 import {Game, SECTORS, WEAPONS} from './src/core.js';
 import {ImmersiveRig} from './src/immersive-rig.js';
 import {matIdentity} from './src/immersive-math.js';
@@ -17,8 +18,9 @@ import {perspective} from './src/vr-math.js';
 const $ = id => document.getElementById(id);
 SECTORS.forEach((s, i) => $('sector').add(new Option((i + 1) + ' / ' + s.name, i)));
 WEAPONS.forEach((w, i) => $('weapon').add(new Option(w.name, i))); $('weapon').value = 1;
+Object.entries(TEXTURE_PACKS).forEach(([id,pack])=>$('material').add(new Option(pack.label,id)));
 const report = data => { $('raw').textContent = JSON.stringify(data, null, 2); $('status').textContent = (data.passed === true ? 'PASS' : data.status || 'FAIL') + ' / ' + (data.total || '') + ' ' + (data.method || data.error || ''); };
-function frame(renderer, index, quality, weapon = 1, customGame = null) {
+function frame(renderer, index, quality, weapon = 1, customGame = null, style = 'retro') {
  const game = customGame || new Game(); if(!customGame)game.loadLevel(index, false); game.weapon = weapon;
  const rig = new ImmersiveRig(), head = matIdentity(), right = matIdentity(), left = matIdentity();
  head[13] = 1.65; right[12] = .22; right[13] = 1.35; right[14] = -.25;
@@ -30,7 +32,7 @@ function frame(renderer, index, quality, weapon = 1, customGame = null) {
   const inverse = matIdentity(); inverse[12] = -x; inverse[13] = -1.65;
   return {viewport: {x: i * 640, y: 0, width: 640, height: 720}, projectionMatrix: perspective(Math.PI / 2, 640 / 720), transform: {inverse: {matrix: inverse}}};
  });
- const settings = {vrQuality: quality, reducedMotion: true, vrAimLine: true};
+ const settings = {vrQuality: quality, textureStyle:style, textureQuality:'ultra', reducedMotion: true, vrAimLine: true};
  const stats = renderer.renderWorld(views, game, rig, .014, {game, settings, screen: '', activate: () => {}, dialogue: 'ORI: Signal is clear, Michael. Let’s break the loop.'});
  $('wrist').getContext('2d').drawImage(renderer.ui.canvas, 0, 0);
  const gl = renderer.gl, pixels = new Uint8Array(1280 * 720 * 4); gl.readPixels(0, 0, 1280, 720, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
@@ -41,11 +43,28 @@ function frame(renderer, index, quality, weapon = 1, customGame = null) {
   rightHash = (Math.imul(rightHash, 31) + pixels[b] + pixels[b + 1] * 7 + pixels[b + 2] * 13) | 0;
   if (pixels[a] + pixels[a + 1] + pixels[a + 2] > 35) lit++;
  }
- return {sector: index + 1, quality, ...structuredClone(stats), leftHash, rightHash, lit,
+ return {sector: index + 1, quality, textureStyle:style, ...structuredClone(stats), leftHash, rightHash, lit,
   pass: gl.getError() === gl.NO_ERROR && leftHash !== rightHash && lit > 100 && stats.entities.dropped === 0};
 }
 $('checks').onclick = async () => report(await browserSignalChecks());
-$('preview').onclick = () => { let renderer; try { renderer = new VRWorldRenderer($('world')); report({...frame(renderer, Number($('sector').value), $('quality').value, Number($('weapon').value)), status: 'PREVIEW', method: 'Production WebGL stereo render / synthetic poses.'}); } catch (e) { report({status: e.message === 'WebGL is unavailable.' ? 'UNAVAILABLE' : 'FAIL', error: e.message}); } finally { renderer?.dispose(); } };
+// Explicit same-pose, image-loaded material comparison. The renderer must
+// finish its own local-only authored-image promise before the measured frame.
+window.previewMaterial = async ({style=$('material').value,sector=Number($('sector').value),quality=$('quality').value}={})=>{
+ if(!Object.hasOwn(TEXTURE_PACKS,style)||!Number.isInteger(sector)||sector<0||sector>=SECTORS.length||!['performance','balanced','high'].includes(quality))throw Error('Unsupported material proof settings');
+ let renderer;
+ try{
+  renderer=new VRWorldRenderer($('world'));
+  frame(renderer,sector,quality,1,null,style);
+  if(renderer.packPending.get(style))await renderer.packPending.get(style);
+  const authored=Object.keys(renderer.packImages||{}).length;
+  const result={...frame(renderer,sector,quality,1,null,style),authoredTextures:authored,
+   method:'Actual native WebGL stereo, original sector and synthetic eye/hand poses; NOT Quest frame-rate or real-headset proof.'};
+  report({...result,status:'MATERIAL PROOF'});
+  return result;
+ }catch(e){report({status:'FAIL',error:e.stack||e.message});throw e;}
+ finally{renderer?.dispose();}
+};
+$('preview').onclick=()=>void window.previewMaterial();
 $('graphics').onclick = async () => {
  let renderer; const results = [], live = new Set();
  try {
