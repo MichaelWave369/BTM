@@ -66,7 +66,7 @@ test('real fixed-step Bot Pilot descends the ramp in a live deathmatch without t
   largestStep=Math.max(largestStep,Math.abs(bot.player.height-last));
   last=bot.player.height;
   if(bot.player.supportSurface==='ramp')visitedRamp=true;
-  if(visitedRamp&&bot.player.height<.3)descended=true;
+  if(visitedRamp&&bot.player.supportSurface==='ground'&&bot.player.height<.12)descended=true;
   if(descended)break;
  }
  assert(visitedRamp,'autonomous Bot Pilot reaches real authored connector');
