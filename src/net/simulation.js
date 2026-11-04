@@ -2,7 +2,7 @@ import {Finale,createRaidLevel,RAID_DEFINITION} from './finale.js';
 import {packWorld,raidObjectiveTarget} from './codec.js';
 import {Game,SECTORS,CAMPAIGN_HOSTS,WEAPONS,clamp,angleDiff,distance,moveBody,canOccupy,lineOfSight,solidAt,createLevel} from '../core.js';
 import {PIT_STAGES,PIT_HOSTS} from '../pit.js';
-import {safeTrackedAim,entityHeight,WALL_HEIGHT} from '../spatial.js';
+import {safeTrackedAim,entityHeight,WALL_HEIGHT,traceEnvironment} from '../spatial.js';
 import {hazardState} from '../pit-combat.js';
 import {updateSharedPitTraps,recoverSharedPitTrapState} from './shared-pit-traps.js';
 import {createArena} from './arenas.js';
@@ -101,7 +101,16 @@ class SharedWorld extends Game{
   const l=this.level,room=this.room;
   for(const b of this.projectiles){
    for(let i=0;i<3&&!b.dead;i++){
+    const prior={x:b.x,y:b.y,height:b.height};
     b.x+=Math.cos(b.a)*b.speed*dt/3;b.y+=Math.sin(b.a)*b.speed*dt/3;if(Number.isFinite(b.height))b.height+=(b.vh||0)*dt/3;
+    if(isVertical(l)&&Number.isFinite(prior.height)){
+     const dir={x:b.x-prior.x,y:b.y-prior.y,z:b.height-prior.height},
+      length=Math.hypot(dir.x,dir.y,dir.z);
+     if(length>.00001){
+      const hit=traceEnvironment(l,prior,dir,length+.001);
+      if(hit.type!=='range'&&hit.distance<length-.001){b.dead=true;break;}
+     }
+    }
     if(solidAt(l,b.x,b.y)||Number.isFinite(b.height)&&(b.height<0||b.height>(l.vertical?.ceiling??WALL_HEIGHT))){b.dead=true;break;}
     if(b.enemy||room.competitive){const a=room.live().find(a=>a.id!==b.owner&&distance(a.player,b)<.28&&(!Number.isFinite(b.height)||b.height>=(a.player.height||0)+.08&&b.height<=(a.player.height||0)+(a.input.aim?.eye||1.03)+.08));if(a){if(b.enemy)room.withActor(a,()=>this.damagePlayer(b.damage,b));else room.hurt(a,b.damage,room.actors.get(b.owner));b.dead=true;}}
     else{const e=l.enemies.find(e=>!e.dead&&distance(e,b)<.4&&(!Number.isFinite(b.height)||b.height>=0&&b.height<=entityHeight(e.type)));if(e){const a=room.actors.get(b.owner);if(a)room.withActor(a,()=>{const weapon=this.weapon;this.weapon=b.weapon;this.damageEnemy(e,b.damage,.2);this.weapon=weapon;});b.dead=true;}}
@@ -112,6 +121,7 @@ class SharedWorld extends Game{
 export class Room{
  constructor({code,mode='deathmatch',arena='no-carrier',limit=10,capacity=2,beastType='crawler',finaleEnabled=true,localBots=false}){
   if(mode==='beast'&&!Object.hasOwn(BEAST_ARCHETYPES,beastType))throw Error('Invalid Beast selection');
+  if(arena==='stackyard'&&!['deathmatch','team'].includes(mode))throw Error('Stackyard is a gated vertical test arena');
   this.localBots=!!localBots;this.finaleEnabled=finaleEnabled;this.raid=null;this.control=null;this.beast=null;this.extraction=null;this.extractionRetries=0;this.code=code;this.mode=mode;this.beastType=mode==='beast'?beastType:null;this.arena=arena;this.limit=limit;this.capacity=capacity;this.competitive=!['coop','extraction'].includes(mode);this.actors=new Map();this.owner=null;this.state='lobby';this.tick=0;this.elapsed=0;this.revision=0;this.eventId=0;this.events=[];this.stage=0;this.receipts=[];this.teamScore={cyan:0,pink:0};this.round=1;this.dirty=false;this.game=new SharedWorld(this);this.game.events=[];
  }
  addBot(token){
