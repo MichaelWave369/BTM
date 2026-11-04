@@ -49,7 +49,7 @@ test('one real browser-equivalent WebSocket sees a real Bot Pilot descend from u
   for(let i=0;i<570&&room.state==='playing';i++){
    server.step();
    ramp ||= bot.player.supportSurface==='ramp';
-   lower ||= ramp&&bot.player.height<.3;
+   lower ||= ramp&&bot.player.supportSurface==='ground'&&bot.player.height<.12;
    if(i%15===0||lower)server.broadcast();
    if(lower)break;
   }
