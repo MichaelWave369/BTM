@@ -18,21 +18,21 @@ export class NetworkClient{
  disconnect(){clearInterval(this.timer);clearInterval(this.pingTimer);if(this.ws){this.ws.onclose=null;this.ws.close();}this.ws=null;this.id=null;this.connected=false;this.actions.clear();}
 }
 export class NetworkView extends Game{
- constructor(net){super();this.net=net;this.netDefinition=null;this.mode='paused';this.unlocked=6;this.remotePlayers=[];this.selectedWeapon=1;this.inputEnabled=false;this.networkCompetitive=true;this.roomMotion={x:0,y:0};this.useUntil=0;this.previousRemote=[];this.remoteStamp=now();this.lastEvent=0;this.netState=null;this.revision=-1;this.flashUntil=0;}
+ constructor(net){super();this.net=net;this.netDefinition=null;this.mode='paused';this.unlocked=6;this.remotePlayers=[];this.selectedWeapon=1;this.inputEnabled=false;this.networkCompetitive=true;this.beastRole=false;this.roomMotion={x:0,y:0};this.useUntil=0;this.previousRemote=[];this.remoteStamp=now();this.lastEvent=0;this.netState=null;this.revision=-1;this.flashUntil=0;}
  get definition(){return this.netDefinition||super.definition;}
- get networkLabel(){return this.netState?.raid?'FINAL / P'+this.netState.raid.phase+' / '+this.netState.raid.state.toUpperCase():this.netState?.mode==='coop'?'CO-OP / '+(this.netState.stage+1)+' OF 24':this.netState?.mode==='extraction'?'EXTRACTION / WITNESS INTEL':'BBS / '+this.definition.name;}
+ get networkLabel(){return this.netState?.raid?'FINAL / P'+this.netState.raid.phase+' / '+this.netState.raid.state.toUpperCase():this.netState?.mode==='coop'?'CO-OP / '+(this.netState.stage+1)+' OF 24':this.netState?.mode==='extraction'?'EXTRACTION / WITNESS INTEL':this.netState?.mode==='beast'?'THE INVERSION / CRAWLER VS HUNTERS':'BBS / '+this.definition.name;}
  get objective(){return this.netObjective||'ENTER THE NODE';}
  get liberation(){return this.netLiberation||0;}
  get exitReady(){return !!this.netExitReady;}
- get objectiveTarget(){if(this.netState?.raid)return raidObjectiveTarget(this.level,this.player,{...this.netState.raid,time:this.time});if(this.netState?.control?.zone)return this.netState.control.zone;if(this.netState?.extraction){const e=this.netState.extraction;return e.carrier?e.pad:e.dropped||e.vault;}return this.networkCompetitive?(this.remotePlayers.find(a=>a.status==='alive')||this.player):super.objectiveTarget;}
+ get objectiveTarget(){if(this.netState?.raid)return raidObjectiveTarget(this.level,this.player,{...this.netState.raid,time:this.time});if(this.netState?.control?.zone)return this.netState.control.zone;if(this.netState?.beast){return this.beastRole?this.remotePlayers.find(a=>a.role==='hunter'&&a.status==='alive'&&a.connected)||this.player:this.remotePlayers.find(a=>a.role==='beast'&&a.status==='alive')||this.player;}if(this.netState?.extraction){const e=this.netState.extraction;return e.carrier?e.pad:e.dropped||e.vault;}return this.networkCompetitive?(this.remotePlayers.find(a=>a.status==='alive')||this.player):super.objectiveTarget;}
  accept(m){
   if(m.type==='world'){
    if(!m.level||m.level.w!==29||m.level.h!==25||m.level.cells?.length!==25||m.level.cells.some(r=>r.length!==29)||!Array.isArray(m.level.enemies)||m.level.enemies.length>128||!m.definition)throw Error('Invalid world dimensions');
-   this.level=structuredClone(m.level);this.netDefinition=m.definition;this.networkCompetitive=m.competitive;this.levelIndex=m.level.index;this.campaign=m.level.campaign==='pit'?'pit':'original';this.revision=m.revision;this.projectiles=[];this.remotePlayers=[];this.netState=null;this.needsRecenter=true;return;
+   this.level=structuredClone(m.level);this.netDefinition=m.definition;this.networkCompetitive=m.competitive;this.levelIndex=m.level.index;this.campaign=m.level.campaign==='pit'?'pit':'original';this.revision=m.revision;this.beastRole=false;this.projectiles=[];this.remotePlayers=[];this.netState=null;this.needsRecenter=true;return;
   }
   if(m.type!=='snapshot'||m.revision!==this.revision)return;
   if(!Array.isArray(m.players)||m.players.length>(this.net.offlineBots?12:8)||!m.world||!Array.isArray(m.events)||m.events.length>96||m.world.enemies?.length>128||m.world.projectiles?.length>128)throw Error('Invalid snapshot');
-  const mine=m.players.find(p=>p.id===this.net.id);this.netState=m;this.oriCorrupted=m.raid?.phase===3&&m.raid.state!=='escape';this.time=m.time;this.netObjective=m.control?'CONTROL / '+(m.control.contested?'CONTESTED':m.control.holder?.toUpperCase()||'NEUTRAL')+' · CYAN '+m.teamScore.cyan+' / PINK '+m.teamScore.pink:this.networkCompetitive?'FRAG LIMIT '+m.limit+' / '+m.state.toUpperCase():m.world.objective;this.netLiberation=m.world.liberation;this.netExitReady=m.world.exitReady;
+  const mine=m.players.find(p=>p.id===this.net.id);this.netState=m;this.beastRole=!!(m.beast&&m.beast.beastId===this.net.id);if(this.beastRole)this.selectedWeapon=0;this.oriCorrupted=m.raid?.phase===3&&m.raid.state!=='escape';this.time=m.time;this.netObjective=m.beast?'INVERSION / '+Math.ceil(m.beast.remaining)+'s · '+(this.beastRole?'ELIMINATE HUNTERS / CLAW + LUNGE':'SURVIVE OR DEFEAT THE BEAST'):m.control?'CONTROL / '+(m.control.contested?'CONTESTED':m.control.holder?.toUpperCase()||'NEUTRAL')+' · CYAN '+m.teamScore.cyan+' / PINK '+m.teamScore.pink:this.networkCompetitive?'FRAG LIMIT '+m.limit+' / '+m.state.toUpperCase():m.world.objective;this.netLiberation=m.world.liberation;this.netExitReady=m.world.exitReady;
   const w=m.world;applyWorld(this.level,w);
   this.ori={...w.ori};this.projectiles=structuredClone(w.projectiles);this.bassCharge=w.bassCharge;this.totalFreed=w.totalFreed;this.totalArtifacts=w.totalArtifacts;
   this.previousRemote=this.remotePlayers;this.remotePlayers=m.players.filter(p=>p.id!==this.net.id).map(p=>({...p}));this.remoteStamp=now();
@@ -47,13 +47,13 @@ export class NetworkView extends Game{
  update(dt,input={}){
   this.advanceVisual(dt);if(!this.inputEnabled||this.mode!=='playing'||this.status!=='alive'){this.net.intent={...neutralInput(),angle:this.player.a,weapon:this.selectedWeapon};return;}
   if(input.turn)this.player.a+=input.turn*dt*1.9;if(input.look)this.player.a+=input.look;this.player.a=angleDiff(this.player.a,0);
-  const f=input.moveForward??((input.forward?1:0)-(input.back?1:0)),r=input.moveStrafe??((input.right?1:0)-(input.left?1:0)),norm=Math.max(1,Math.hypot(f,r)),speed=(input.sprint?4.1:2.65)*Math.min(.05,dt),c=Math.cos(this.player.a),s=Math.sin(this.player.a);
+  const f=input.moveForward??((input.forward?1:0)-(input.back?1:0)),r=input.moveStrafe??((input.right?1:0)-(input.left?1:0)),norm=Math.max(1,Math.hypot(f,r)),speed=this.beastRole?(input.sprint?4.7:3.3):(input.sprint?4.1:2.65)*Math.min(.05,dt),c=Math.cos(this.player.a),s=Math.sin(this.player.a);
   moveBody(this.level,this.player,(c*f-s*r)/norm*speed,(s*f+c*r)/norm*speed);this.moving=!!(f||r);this.sprinting=!!input.sprint;
   let aim=null;const pose=this.combatPose;if(pose?.aim){const d=pose.aim.direction,o=pose.aim.origin;aim={x:clamp(o.x-this.player.x,-.53,.53),y:clamp(o.y-this.player.y,-.53,.53),height:clamp(o.height,.08,1.6),eye:clamp(pose.head.height,.35,1.6),dx:d.x,dy:d.y,dz:d.z};}
-  this.net.intent={move:clamp(f,-1,1),strafe:clamp(r,-1,1),angle:this.player.a,sprint:!!input.sprint,fire:!!input.fire,charging:!!this.altHeld||this.charge>0,use:!!this.useHeld||now()<this.useUntil,weapon:this.selectedWeapon,actions:[],aim,dashAngle:this.dashAngle??this.player.a,roomX:clamp(this.roomMotion.x/Math.max(.01,dt),-1,1),roomY:clamp(this.roomMotion.y/Math.max(.01,dt),-1,1)};this.roomMotion.x=this.roomMotion.y=0;
+  this.net.intent={move:clamp(f,-1,1),strafe:clamp(r,-1,1),angle:this.player.a,sprint:!!input.sprint,fire:!!input.fire,charging:!!this.altHeld||this.charge>0,use:!!this.useHeld||now()<this.useUntil,weapon:this.beastRole?0:this.selectedWeapon,actions:[],aim,dashAngle:this.dashAngle??this.player.a,roomX:clamp(this.roomMotion.x/Math.max(.01,dt),-1,1),roomY:clamp(this.roomMotion.y/Math.max(.01,dt),-1,1)};this.roomMotion.x=this.roomMotion.y=0;
  }
  moveTrackedBody(dx,dy){moveBody(this.level,this.player,dx,dy);this.roomMotion.x+=dx;this.roomMotion.y+=dy;}
- selectWeapon(index){if(Number.isInteger(index)&&index>=0&&index<6){this.selectedWeapon=this.weapon=index;this.equipAnim=.24;return true;}return false;}
+ selectWeapon(index){if(this.beastRole)return false;if(Number.isInteger(index)&&index>=0&&index<6){this.selectedWeapon=this.weapon=index;this.equipAnim=.24;return true;}return false;}
  requestFire(alternate=false){if(this.inputEnabled&&this.mode==='playing'&&this.status==='alive')this.net.action(alternate?'alternate':'fire');return true;}
  advanceCombat(dt,fire){if(this.net.intent)this.net.intent.fire=!!fire&&this.inputEnabled&&this.status==='alive';}
  reload(){if(this.inputEnabled)this.net.action('reload');}
@@ -63,6 +63,7 @@ export class NetworkView extends Game{
  vision(){this.shift=!this.shift;if(this.inputEnabled)this.net.action('vision');}
  interact(){if(this.inputEnabled)this.useUntil=now()+3000;}
  interactionHint(){
+  if(this.netState?.beast)return this.beastRole?'[ FIRE ] CLAW · [ DASH ] LUNGE · HUNT THE SURVIVORS':'HUNTERS / ELIMINATE OR OUTLAST THE BEAST';
   const down=this.remotePlayers.find(a=>a.status==='downed'&&distance(this.player,a)<1.45);if(down)return '[ E ] REVIVE '+down.nickname;
   if(this.netState?.raid?.phase===2&&distance(this.player,{x:14.5,y:13.5})<1.8)return 'FRACTURE BARRIER / USE END BRIDGES';
   const node=this.level.raidNodes?.find(n=>distance(this.player,n)<1.5);if(node)return this.netState?.extraction?node.id==='EXFIL'?'[ E ] HOLD TO EXTRACT INTEL':'[ E ] RECOVER WITNESS INTEL':'[ E ] CHANNEL '+node.id.toUpperCase();return super.interactionHint();

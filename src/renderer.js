@@ -1,4 +1,4 @@
-import {playerSprite,finaleSprite} from './net/presentation.js';
+import {playerSprite,finaleSprite,crawlerBeastSprite} from './net/presentation.js';
 import {castRay,distance,angleDiff,findRoute,SECTORS,WEAPONS,clamp} from './core.js';
 import {pitBossSprite,pitFloorState} from './pit-presentation.js';
 import {floorTrapState} from './pit-floor-traps.js';
@@ -61,7 +61,7 @@ export class Renderer {
     for(const relay of l.relays)things.push({...relay,type:relay.active?'relayOn':'relay',height:1});
     if(!l.key.taken)things.push({...l.key,type:'key',height:.48,bob:true});
     if(!game.networkCompetitive&&!game.gallery)things.push({...l.exit,type:'portal',height:1.6});
-    for(const a of game.remotePlayers||[])if(['alive','downed'].includes(a.status))things.push({x:a.renderX??a.x,y:a.renderY??a.y,type:'remote',remote:a,height:a.status==='downed'?.4:1.03});
+    for(const a of game.remotePlayers||[])if(['alive','downed'].includes(a.status))things.push({x:a.renderX??a.x,y:a.renderY??a.y,type:'remote',remote:a,height:a.status==='downed'?.4:a.role==='beast'?1.08:1.03});
     for(const trap of l.traps||[]){
       const charging=Number.isFinite(trap.fireAt);
       things.push({type:'trapEmitter',height:.30,x:trap.muzzleX,y:trap.muzzleY,charging});
@@ -127,13 +127,32 @@ export class Renderer {
       return;
     }
     if(o.type==='projectile'){if(s.depth<this.depth[clamp(Math.floor(s.x),0,w-1)]){g.fillStyle=o.color;g.fillRect(s.x-width/2,horizon-height/2,width,height);g.fillStyle='#fff9d5';g.fillRect(s.x-width/6,horizon-height/6,width/3,height/3);}return;}
-    let sprite=o.e?.raidRole?finaleSprite(o.e.raidRole,o.e.exposed>0):o.remote?playerSprite(o.remote.team,o.remote.status==='downed'):o.e?.pitBoss?pitBossSprite(o.e.pitBoss,o.e.exposed>0):o.e?.pain>0?this.assets.pain[o.type]:this.assets.sprites[o.type];if(Array.isArray(sprite))sprite=sprite[o.frame??0];if(!sprite)return;
+    let sprite=o.e?.raidRole?finaleSprite(o.e.raidRole,o.e.exposed>0):o.remote?(o.remote.role==='beast'?crawlerBeastSprite():playerSprite(o.remote.team,o.remote.status==='downed')):o.e?.pitBoss?pitBossSprite(o.e.pitBoss,o.e.exposed>0):o.e?.pain>0?this.assets.pain[o.type]:this.assets.sprites[o.type];if(Array.isArray(sprite))sprite=sprite[o.frame??0];if(!sprite)return;
     const recoil=this.reducedMotion?0:o.e?.recoil||0,lean=recoil*height*.3,tell=!this.reducedMotion&&o.e?.tell>0?Math.sin(this.lastTime*20)*height*.015:0;
     for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++)if(s.depth<this.depth[xx]){const tx=clamp(Math.floor((xx-x)/width*sprite.width),0,sprite.width-1);g.drawImage(sprite,tx,0,1,sprite.height,xx+tell,y+lean,1,height-lean);}
     // Telegraphs and health bars are drawn only when their world position is visible.
     const center=clamp(Math.floor(s.x),0,w-1);if(o.remote&&s.depth<this.depth[center]){g.fillStyle=o.remote.team==='pink'?'#ff718e':'#80e8d4';g.font=`${clamp(height*.12,7,12)}px monospace`;g.textAlign='center';g.fillText(o.remote.nickname.slice(0,20)+' / '+Math.ceil(o.remote.health),s.x,y-8);g.textAlign='left';if(o.remote.shotAnim>0){const size=clamp(height*.1,2,9);g.fillStyle=WEAPONS[o.remote.weapon].color;g.fillRect(s.x+width*.37,y+height*.61,size,size);}}if(o.e&&s.depth<this.depth[center]+.4){if(o.e.tell>0){g.fillStyle='#ffac7b';g.font=`bold ${clamp(height*.18,8,38)}px monospace`;g.textAlign='center';g.fillText('!',s.x,y-4);g.textAlign='left';}if(o.e.stun>0){g.fillStyle='#5df6ec';g.fillRect(s.x-7,y-6,14,2);}if(o.e.hp<o.e.maxHp&&s.depth<10){const bw=Math.min(40,height*.7);g.fillStyle='#17171a';g.fillRect(s.x-bw/2,y-12,bw,3);g.fillStyle=o.type==='warden'?'#ffb86b':'#b9ff53';g.fillRect(s.x-bw/2,y-12,bw*o.e.hp/o.e.maxHp,3);}if(o.e.flash>0){g.globalAlpha=.15;g.fillStyle='#e9ffc7';g.fillRect(s.x-width*.2,y+height*.2,width*.4,height*.5);g.globalAlpha=1;}}
   }
   weapon(game,settings,bob){
+    if(game.beastRole){
+      // The Beast sees its own original claw silhouette instead of a human gun.
+      const g=this.g,w=this.canvas.width,h=this.canvas.height;
+      g.save();
+      const sway=settings.reducedMotion?0:Math.sin(game.time*5)*h*.007;
+      for(const sign of [-1,1]){
+        g.save();
+        g.translate(w*(sign<0?.19:.81),h*.89+sway);g.scale(sign*w/640,h/360);
+        g.fillStyle='#251b35';g.fillRect(-44,-12,91,88);
+        g.fillStyle='#72508c';g.fillRect(-28,-35,80,54);
+        g.fillStyle='#4e315f';g.fillRect(-13,-48,70,30);
+        for(let i=0;i<3;i++){
+          g.fillStyle='#d2c4eb';g.fillRect(-5+i*20,-77-i*4,11,44+i*4);
+          g.fillStyle='#f6e7c5';g.fillRect(-2+i*20,-83-i*4,5,10);
+        }
+        g.restore();
+      }
+      g.restore();return;
+    }
     const g=this.g,w=this.canvas.width,h=this.canvas.height,k=w/640,id=game.weapon,fire=game.shotAnim,color=WEAPONS[id].color;
     g.save();const recoil=settings.reducedMotion?0:Math.sin(fire*Math.PI*.65)*[10,13,31,16,24,35][id]*k,equip=Math.max(0,game.equipAnim||0)/.24;
     g.translate(w*.55+(settings.reducedMotion?0:Math.sin(game.time*6)*bob*1.6),h+recoil+(Math.max(0,game.vent)*45+equip*55)*k);g.scale(k,k);if(!settings.reducedMotion)g.rotate((id===2?-.035:id===4?.025:-.012)*fire);
