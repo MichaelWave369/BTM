@@ -9,7 +9,7 @@ import {createArena} from './arenas.js';
 import {botIntent} from './bot-pilot.js';
 import {freshControlState,controlZone,controlSnapshot,advanceControl} from './control-zones.js';
 import {freshExtraction,extractionPickup,extractionDrop,advanceExtraction,extractionSnapshot,EXTRACTION_MAX_RETRIES} from './extraction.js';
-import {freshBeastMatch,beastClawTarget,advanceBeast,beastSnapshot,BEAST_ARCHETYPES,beastPulseTarget,beastArcTargets} from './beast-inversion.js';
+import {freshBeastMatch,beastClawTarget,advanceBeast,beastSnapshot,BEAST_ARCHETYPES,beastPulseTarget,beastArcTargets,beastWardenTarget,deployWardenField,wardenFieldTargets} from './beast-inversion.js';
 import {neutralInput,TICK_RATE} from './protocol.js';
 export const AVATAR_FIELDS=['damageDirection','weapon','cooldown','recharge','vent','shotAnim','hurt','shake','dodgeCooldown','dodgeFlash','shieldTime','shieldCharge','oriCooldown','objectiveTime','hitPulse','assistTime','scanTime','equipAnim','portraitTime','speechCooldown','muzzle','shift','charge','stats','playerMotion','combatPose','lessonDistance','footDistance','moving','sprinting','bufferedFire','nav','navTime'];
 const round=n=>Math.round(n*1000)/1000;
@@ -196,14 +196,14 @@ export class Room{
    return victims.length>0;
   }
   const ranged=s.archetype==='repeater',victim=ranged?
-   beastPulseTarget(s,a,this.actors.values(),g.level):
-   beastClawTarget(s,a,this.actors.values(),g.level);
+   beastPulseTarget(s,a,this.actors.values(),g.level):s.archetype==='warden'?
+   beastWardenTarget(s,a,this.actors.values(),g.level):beastClawTarget(s,a,this.actors.values(),g.level);
   // All damage is host-checked, not client-targeted.
   g.shotAnim=ranged?.4:.2;
   if(victim){
    this.hurt(victim,profile.damage,a);
-   this.event(ranged?'beastPulse':'beastClaw',{
-    player:a.id,target:victim.id,text:ranged?'REPEATER PULSE':'CRAWLER STRIKE'});
+   this.event(ranged?'beastPulse':s.archetype==='warden'?'beastCrush':'beastClaw',{
+    player:a.id,target:victim.id,text:ranged?'REPEATER PULSE':s.archetype==='warden'?'WARDEN CRUSH':'CRAWLER STRIKE'});
   }else this.event('beastMiss',{player:a.id});
   return !!victim;
  }
@@ -211,6 +211,11 @@ export class Room{
   const s=this.beast,g=this.game;if(!s||s.beastId!==a.id||a.status!=='alive'||!a.connected||g.time+1e-7<s.lungeAt)return false;
   const profile=BEAST_ARCHETYPES[s.archetype];
   s.lungeAt=g.time+profile.lungeCooldown;a.invulnerable=0;
+  if(s.archetype==='warden'){
+   if(!deployWardenField(s,a,g.time))return false;
+   this.event('beastField',{player:a.id,x:s.field.x,y:s.field.y,text:'WARDEN FIELD WARNING / LEAVE THE MARKED AREA'});
+   return true;
+  }
   if(s.archetype==='plugged'){
    s.groundedUntil=g.time+profile.guardDuration;
    this.event('beastGuard',{player:a.id,text:'PLUGGED GROUNDED / INCOMING HUNTER DAMAGE HALVED'});
@@ -364,6 +369,14 @@ export class Room{
    }
   }
   if(this.mode==='beast'&&this.beast){
+   if(this.beast.archetype==='warden'){
+    const active=wardenFieldTargets(this.beast,this.actors.values(),g.level,g.time);
+    if(active.length){
+     const warden=this.actors.get(this.beast.beastId);
+     for(const hunter of active)this.hurt(hunter,BEAST_ARCHETYPES.warden.fieldDamage,warden);
+     this.event('beastFieldPulse',{player:warden.id,targets:active.map(a=>a.id),text:'WARDEN FIELD PULSE'});
+    }
+   }
    const outcome=advanceBeast(this.beast,this.actors.values(),this.elapsed,dt);
    if(outcome){this.state='results';this.result=outcome;this.event('beastResult',{text:outcome.winner==='beast'?'BEAST DOMINATES':outcome.winner==='hunters'?'HUNTERS SURVIVE':'ROUND ABANDONED',...outcome});}
   }
