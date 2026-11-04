@@ -5,7 +5,7 @@ import {Room} from '../src/net/simulation.js';
 import {NetworkView} from '../src/net/client.js';
 import {neutralInput,validateMessage} from '../src/net/protocol.js';
 import {BEAST_ARCHETYPES,freshBeastMatch,beastWardenTarget,
- deployWardenField,wardenFieldTargets,beastSnapshot} from '../src/net/beast-inversion.js';
+ deployWardenField,wardenFieldTargets,beastSnapshot,advanceBeast} from '../src/net/beast-inversion.js';
 import {canOccupy,lineOfSight} from '../src/collision.js';
 
 function match({archetype='warden',hunters=2}={}){
@@ -136,6 +136,25 @@ test('Warden field vanishes on death/disconnect, and cooldown cannot be bypassed
  again.room.disconnect(again.beast.id);
  assert.deepEqual(wardenFieldTargets(again.room.beast,again.room.actors.values(),again.room.game.level,3.1),[]);
  assert.equal(again.room.beast.field,null);
+});
+
+test('completed and abandoned Warden rounds clear old field visuals from results',()=>{
+ const {room,beast,hunters:[hunter]}=match({hunters:1});
+ room.game.time=2;assert.equal(room.beastLunge(beast,0),true);
+ assert(room.snapshot(beast).beast.field);
+ room.defeat(hunter);room.step();
+ assert.equal(room.state,'results');
+ assert.equal(room.beast.field,null);
+ assert.equal(room.snapshot(beast).beast.field,null);
+ const abandoned=match({hunters:1});
+ abandoned.room.game.time=2;
+ abandoned.room.beastLunge(abandoned.beast,0);
+ abandoned.room.disconnect(abandoned.beast.id);
+ const state=abandoned.room.beast;
+ // A valid 30 Hz advance after 15s disconnect grace voids without awarding a win.
+ const outcome=advanceBeast(state,abandoned.room.actors.values(),abandoned.room.elapsed+16,1/30);
+ assert.deepEqual(outcome,{winner:null,reason:'player-abandoned'});
+ assert.equal(state.field,null);
 });
 
 test('Warden client remains bounded to frame-time movement and host field snapshots',()=>{
