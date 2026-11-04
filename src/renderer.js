@@ -1,4 +1,4 @@
-import {playerSprite,finaleSprite,crawlerBeastSprite,repeaterBeastSprite,pluggedBeastSprite} from './net/presentation.js';
+import {playerSprite,finaleSprite,crawlerBeastSprite,repeaterBeastSprite,pluggedBeastSprite,wardenBeastSprite} from './net/presentation.js';
 import {castRay,distance,angleDiff,findRoute,SECTORS,WEAPONS,clamp} from './core.js';
 import {pitBossSprite,pitFloorState} from './pit-presentation.js';
 import {floorTrapState} from './pit-floor-traps.js';
@@ -61,7 +61,7 @@ export class Renderer {
     for(const relay of l.relays)things.push({...relay,type:relay.active?'relayOn':'relay',height:1});
     if(!l.key.taken)things.push({...l.key,type:'key',height:.48,bob:true});
     if(!game.networkCompetitive&&!game.gallery)things.push({...l.exit,type:'portal',height:1.6});
-    for(const a of game.remotePlayers||[])if(['alive','downed'].includes(a.status))things.push({x:a.renderX??a.x,y:a.renderY??a.y,type:'remote',remote:a,height:a.status==='downed'?.4:a.role==='beast'&&a.archetype==='repeater'?1.45:a.role==='beast'&&a.archetype==='plugged'?1.23:a.role==='beast'?1.08:1.03});
+    for(const a of game.remotePlayers||[])if(['alive','downed'].includes(a.status))things.push({x:a.renderX??a.x,y:a.renderY??a.y,type:'remote',remote:a,height:a.status==='downed'?.4:a.role==='beast'&&a.archetype==='repeater'?1.45:a.role==='beast'&&a.archetype==='warden'?1.8:a.role==='beast'&&a.archetype==='plugged'?1.23:a.role==='beast'?1.08:1.03});
     for(const trap of l.traps||[]){
       const charging=Number.isFinite(trap.fireAt);
       things.push({type:'trapEmitter',height:.30,x:trap.muzzleX,y:trap.muzzleY,charging});
@@ -70,6 +70,10 @@ export class Renderer {
     }
     for(const b of game.projectiles)things.push({...b,type:'projectile',height:.18});
     things.sort((a,b)=>distance(b,p)-distance(a,p));
+    // Warden field is a rendered, host-authoritative warning circle, not a
+    // client-spawned hazard; movement and damage stay entirely on Node.
+    const field=game.netState?.beast?.field;
+    if(field)this.pitFloor({x:field.x,y:field.y,radius:field.radius,wardenField:true},game,horizon,field.phase);
     if(l.hazards){for(const hazard of l.hazards)this.pitFloor(hazard,game,horizon,pitFloorState(hazard,game.time));for(const floor of l.floorTraps||[]){
      const state=floorTrapState(floor,game.time);
      const count=floor.kind==='arc-lane'?5:1;
@@ -109,7 +113,7 @@ export class Renderer {
     if(map)this.drawMap(game,true);
     else if(!demo&&!settings.externalMap)this.drawMap(game,false);
   }
-  pitFloor(o,game,horizon,state){const p=this.project(o,game.player),g=this.g,w=this.canvas.width,h=this.canvas.height;if(!p||p.depth>=this.depth[clamp(Math.floor(p.x),0,w-1)]||p.x<0||p.x>w)return;const r=Math.min(w*.5,o.radius*w/(p.depth*1.4)),y=horizon+h/(2*p.depth),ry=Math.max(2,r*.22);g.strokeStyle=state==='warning'?'#ffce73':game.definition.color;g.fillStyle=state==='active'?game.definition.color:'#10131e';g.globalAlpha=state==='active'?.65:state==='warning'?.8:.3;g.beginPath();g.moveTo(p.x-r,y);g.lineTo(p.x,y-ry);g.lineTo(p.x+r,y);g.lineTo(p.x,y+ry);g.closePath();g.fill();g.stroke();g.globalAlpha=1;}
+  pitFloor(o,game,horizon,state){const p=this.project(o,game.player),g=this.g,w=this.canvas.width,h=this.canvas.height;if(!p||p.depth>=this.depth[clamp(Math.floor(p.x),0,w-1)]||p.x<0||p.x>w)return;const r=Math.min(w*.5,o.radius*w/(p.depth*1.4)),y=horizon+h/(2*p.depth),ry=Math.max(2,r*.22);g.strokeStyle=state==='warning'?'#ffce73':o.wardenField?'#ff745e':game.definition.color;g.fillStyle=state==='active'?(o.wardenField?'#c13c31':game.definition.color):'#10131e';g.globalAlpha=state==='active'?.65:state==='warning'?.8:.3;g.beginPath();g.moveTo(p.x-r,y);g.lineTo(p.x,y-ry);g.lineTo(p.x+r,y);g.lineTo(p.x,y+ry);g.closePath();g.fill();g.stroke();g.globalAlpha=1;}
   project(o,p){const dx=o.x-p.x,dy=o.y-p.y,forward=dx*Math.cos(p.a)+dy*Math.sin(p.a);if(forward<=.12)return null;const side=-dx*Math.sin(p.a)+dy*Math.cos(p.a);return {x:this.canvas.width/2*(1+side/(forward*.70)),depth:forward,y:this.canvas.height*.46};}
   sprite(o,game,horizon){
     const g=this.g,w=this.canvas.width,h=this.canvas.height,p=game.player,s=this.project(o,p);if(!s||s.x< -w||s.x>w*2)return;const height=Math.min(h*5,h/s.depth*o.height),width=o.e?.raidRole==='core'?height*4:o.type==='warden'?height:height*(o.type==='relay'||o.type==='relayOn'?.8:1),x=Math.floor(s.x-width/2),y=Math.floor(horizon+h/(2*s.depth)-height+(o.bob?Math.sin(this.lastTime*3+o.x)*h*.04/s.depth:0));
@@ -127,13 +131,28 @@ export class Renderer {
       return;
     }
     if(o.type==='projectile'){if(s.depth<this.depth[clamp(Math.floor(s.x),0,w-1)]){g.fillStyle=o.color;g.fillRect(s.x-width/2,horizon-height/2,width,height);g.fillStyle='#fff9d5';g.fillRect(s.x-width/6,horizon-height/6,width/3,height/3);}return;}
-    let sprite=o.e?.raidRole?finaleSprite(o.e.raidRole,o.e.exposed>0):o.remote?(o.remote.role==='beast'?(o.remote.archetype==='repeater'?repeaterBeastSprite():o.remote.archetype==='plugged'?pluggedBeastSprite():crawlerBeastSprite()):playerSprite(o.remote.team,o.remote.status==='downed')):o.e?.pitBoss?pitBossSprite(o.e.pitBoss,o.e.exposed>0):o.e?.pain>0?this.assets.pain[o.type]:this.assets.sprites[o.type];if(Array.isArray(sprite))sprite=sprite[o.frame??0];if(!sprite)return;
+    let sprite=o.e?.raidRole?finaleSprite(o.e.raidRole,o.e.exposed>0):o.remote?(o.remote.role==='beast'?(o.remote.archetype==='repeater'?repeaterBeastSprite():o.remote.archetype==='plugged'?pluggedBeastSprite():o.remote.archetype==='warden'?wardenBeastSprite():crawlerBeastSprite()):playerSprite(o.remote.team,o.remote.status==='downed')):o.e?.pitBoss?pitBossSprite(o.e.pitBoss,o.e.exposed>0):o.e?.pain>0?this.assets.pain[o.type]:this.assets.sprites[o.type];if(Array.isArray(sprite))sprite=sprite[o.frame??0];if(!sprite)return;
     const recoil=this.reducedMotion?0:o.e?.recoil||0,lean=recoil*height*.3,tell=!this.reducedMotion&&o.e?.tell>0?Math.sin(this.lastTime*20)*height*.015:0;
     for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++)if(s.depth<this.depth[xx]){const tx=clamp(Math.floor((xx-x)/width*sprite.width),0,sprite.width-1);g.drawImage(sprite,tx,0,1,sprite.height,xx+tell,y+lean,1,height-lean);}
     // Telegraphs and health bars are drawn only when their world position is visible.
     const center=clamp(Math.floor(s.x),0,w-1);if(o.remote&&s.depth<this.depth[center]){g.fillStyle=o.remote.team==='pink'?'#ff718e':'#80e8d4';g.font=`${clamp(height*.12,7,12)}px monospace`;g.textAlign='center';g.fillText(o.remote.nickname.slice(0,20)+' / '+Math.ceil(o.remote.health),s.x,y-8);g.textAlign='left';if(o.remote.shotAnim>0){const size=clamp(height*.1,2,9);g.fillStyle=WEAPONS[o.remote.weapon].color;g.fillRect(s.x+width*.37,y+height*.61,size,size);}}if(o.e&&s.depth<this.depth[center]+.4){if(o.e.tell>0){g.fillStyle='#ffac7b';g.font=`bold ${clamp(height*.18,8,38)}px monospace`;g.textAlign='center';g.fillText('!',s.x,y-4);g.textAlign='left';}if(o.e.stun>0){g.fillStyle='#5df6ec';g.fillRect(s.x-7,y-6,14,2);}if(o.e.hp<o.e.maxHp&&s.depth<10){const bw=Math.min(40,height*.7);g.fillStyle='#17171a';g.fillRect(s.x-bw/2,y-12,bw,3);g.fillStyle=o.type==='warden'?'#ffb86b':'#b9ff53';g.fillRect(s.x-bw/2,y-12,bw*o.e.hp/o.e.maxHp,3);}if(o.e.flash>0){g.globalAlpha=.15;g.fillStyle='#e9ffc7';g.fillRect(s.x-width*.2,y+height*.2,width*.4,height*.5);g.globalAlpha=1;}}
   }
   weapon(game,settings,bob){
+    if(game.beastRole&&game.beastArchetype==='warden'){
+      const g=this.g,w=this.canvas.width,h=this.canvas.height;
+      g.save();
+      const sway=settings.reducedMotion?0:Math.sin(game.time*2)*h*.002;
+      for(const sign of [-1,1]){
+       g.save();g.translate(w*(sign<0?.16:.84),h*.91+sway);g.scale(sign*w/640,h/360);
+       g.fillStyle='#191e27';g.fillRect(-72,-3,121,83);
+       g.fillStyle='#576075';g.fillRect(-55,-49,96,58);
+       g.fillStyle='#30394a';g.fillRect(-40,-63,75,26);
+       g.fillStyle='#f4715b';g.fillRect(-25,-68,47,10);
+       g.fillStyle='#ffd18a';g.fillRect(-11,-73,20,9);
+       g.restore();
+      }
+      g.restore();return;
+    }
     if(game.beastRole&&game.beastArchetype==='plugged'){
       const g=this.g,w=this.canvas.width,h=this.canvas.height,grounded=(game.netState?.beast?.guardRemaining||0)>0;
       g.save();

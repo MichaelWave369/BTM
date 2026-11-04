@@ -20,14 +20,14 @@ test('server accepts only explicit Crawler/Repeater at lobby creation and never 
  const base={type:'create',nickname:'Wave',mode:'beast',arena:'no-carrier',limit:10,capacity:2,bots:0};
  for(const type of ['crawler','repeater'])assert.doesNotThrow(()=>validateMessage(JSON.stringify({...base,beastType:type})));
  assert.doesNotThrow(()=>validateMessage(JSON.stringify(base)),'older clients still default to Crawler');
- for(const wrong of [{...base,beastType:'warden'},{...base,beastType:'REPEATER'},
+ for(const wrong of [{...base,beastType:'unknown-beast'},{...base,beastType:'REPEATER'},
   {...base,beastType:999},{...base,mode:'deathmatch',beastType:'repeater'}])
   assert.throws(()=>validateMessage(JSON.stringify(wrong)),/Invalid Beast archetype/);
  for(const props of [{beastType:'repeater'},{archetype:'repeater'},{role:'beast'},{beastHealth:900},{x:7.5,y:3.5}]){
   assert.throws(()=>validateMessage(JSON.stringify({type:'input',seq:1,...neutralInput(),...props})));
  }
- assert.throws(()=>new Room({code:'INVALID8',mode:'beast',beastType:'warden'}));
- assert.throws(()=>freshBeastMatch('wave',[{id:'wave',bot:false},{id:'hunter',bot:false}],'warden'));
+ assert.throws(()=>new Room({code:'INVALID8',mode:'beast',beastType:'unknown-beast'}));
+ assert.throws(()=>freshBeastMatch('wave',[{id:'wave',bot:false},{id:'hunter',bot:false}],'unknown-beast'));
 });
 
 test('Repeater identity is host-owned and its lower health preserves original Crawler stats',()=>{

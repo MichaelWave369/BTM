@@ -18,12 +18,12 @@ function room({type='plugged',hunters=2}={}){
 test('Plugged is an optional, immutable host-created Beast, not an input-controlled transformation',()=>{
  const base={type:'create',nickname:'Wave',mode:'beast',beastType:'plugged',arena:'no-carrier',limit:10,capacity:3,bots:0};
  assert.doesNotThrow(()=>validateMessage(JSON.stringify(base)));
- for(const bad of [{...base,beastType:'PLUGGED'},{...base,beastType:'warden'},
+ for(const bad of [{...base,beastType:'PLUGGED'},{...base,beastType:'unknown-beast'},
   {...base,mode:'team'},{...base,beastHealth:999}])
   assert.throws(()=>validateMessage(JSON.stringify(bad)));
  for(const prop of [{beastType:'plugged'},{archetype:'plugged'},{guardUntil:9999},{targets:['hunter0']},{role:'beast'},{health:900},{x:2,y:2}])
   assert.throws(()=>validateMessage(JSON.stringify({type:'input',seq:1,...neutralInput(),...prop})));
- assert.throws(()=>new Room({code:'INVALID9',mode:'beast',beastType:'warden'}));
+ assert.throws(()=>new Room({code:'INVALID9',mode:'beast',beastType:'unknown-beast'}));
  assert.throws(()=>freshBeastMatch('owner',[{id:'owner',bot:false},{id:'other',bot:false}],'invalid'));
  const old=room({type:'crawler',hunters:1});
  assert.equal(old.r.beast.archetype,'crawler');
