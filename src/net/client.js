@@ -1,5 +1,6 @@
 import {applyWorld,raidObjectiveTarget} from './codec.js';
 import {BEAST_ARCHETYPES} from './beast-inversion.js';
+import {isVertical,requestVerticalJump,advanceVerticalBody} from './vertical-arena.js';
 import {Game,WEAPONS,moveBody,angleDiff,clamp,distance} from '../core.js';
 import{PROTOCOL,INPUT_RATE,neutralInput,validateMessage,endpoint}from'./protocol.js';
 const now=()=>performance.now();
@@ -21,7 +22,7 @@ export class NetworkClient{
 export class NetworkView extends Game{
  constructor(net){super();this.net=net;this.netDefinition=null;this.mode='paused';this.unlocked=6;this.remotePlayers=[];this.selectedWeapon=1;this.inputEnabled=false;this.networkCompetitive=true;this.beastRole=false;this.beastArchetype=null;this.roomMotion={x:0,y:0};this.useUntil=0;this.previousRemote=[];this.remoteStamp=now();this.lastEvent=0;this.netState=null;this.revision=-1;this.flashUntil=0;}
  get definition(){return this.netDefinition||super.definition;}
- get networkLabel(){return this.netState?.raid?'FINAL / P'+this.netState.raid.phase+' / '+this.netState.raid.state.toUpperCase():this.netState?.mode==='coop'?'CO-OP / '+(this.netState.stage+1)+' OF 24':this.netState?.mode==='extraction'?'EXTRACTION / WITNESS INTEL':this.netState?.mode==='beast'?'THE INVERSION / '+(this.netState.beast?.archetype||'crawler').toUpperCase()+' VS HUNTERS':'BBS / '+this.definition.name;}
+ get networkLabel(){return this.netState?.raid?'FINAL / P'+this.netState.raid.phase+' / '+this.netState.raid.state.toUpperCase():this.netState?.mode==='coop'?'CO-OP / '+(this.netState.stage+1)+' OF 24':this.netState?.mode==='extraction'?'EXTRACTION / WITNESS INTEL':this.netState?.mode==='beast'?'THE INVERSION / '+(this.netState.beast?.archetype||'crawler').toUpperCase()+' VS HUNTERS':isVertical(this.level)?'STACKYARD / FLOOR '+((this.player.height||0)>1.35?2:1)+' OF 2':'BBS / '+this.definition.name;}
  get objective(){return this.netObjective||'ENTER THE NODE';}
  get liberation(){return this.netLiberation||0;}
  get exitReady(){return !!this.netExitReady;}
@@ -49,11 +50,15 @@ export class NetworkView extends Game{
   this.advanceVisual(dt);if(!this.inputEnabled||this.mode!=='playing'||this.status!=='alive'){this.net.intent={...neutralInput(),angle:this.player.a,weapon:this.selectedWeapon};return;}
   if(input.turn)this.player.a+=input.turn*dt*1.9;if(input.look)this.player.a+=input.look;this.player.a=angleDiff(this.player.a,0);
   const f=input.moveForward??((input.forward?1:0)-(input.back?1:0)),r=input.moveStrafe??((input.right?1:0)-(input.left?1:0)),norm=Math.max(1,Math.hypot(f,r)),grounded=this.beastRole&&this.beastArchetype==='plugged'&&(this.netState?.beast?.guardRemaining||0)>0,speed=(grounded?0:this.beastRole?(input.sprint?BEAST_ARCHETYPES[this.beastArchetype]?.sprint??4.7:BEAST_ARCHETYPES[this.beastArchetype]?.walk??3.3):(input.sprint?4.1:2.65))*Math.min(.05,dt),c=Math.cos(this.player.a),s=Math.sin(this.player.a);
-  moveBody(this.level,this.player,(c*f-s*r)/norm*speed,(s*f+c*r)/norm*speed);this.moving=!!(f||r);this.sprinting=!!input.sprint;
+  const oldX=this.player.x,oldY=this.player.y;
+  moveBody(this.level,this.player,(c*f-s*r)/norm*speed,(s*f+c*r)/norm*speed);
+  if(isVertical(this.level))advanceVerticalBody(this.level,this.player,Math.min(.05,Math.max(.001,dt)),{oldX,oldY});
+  this.moving=!!(f||r);this.sprinting=!!input.sprint;
   let aim=null;const pose=this.combatPose;if(pose?.aim){const d=pose.aim.direction,o=pose.aim.origin;aim={x:clamp(o.x-this.player.x,-.53,.53),y:clamp(o.y-this.player.y,-.53,.53),height:clamp(o.height,.08,1.6),eye:clamp(pose.head.height,.35,1.6),dx:d.x,dy:d.y,dz:d.z};}
   this.net.intent={move:clamp(f,-1,1),strafe:clamp(r,-1,1),angle:this.player.a,sprint:!!input.sprint,fire:!!input.fire,charging:!!this.altHeld||this.charge>0,use:!!this.useHeld||now()<this.useUntil,weapon:this.beastRole?0:this.selectedWeapon,actions:[],aim,dashAngle:this.dashAngle??this.player.a,roomX:clamp(this.roomMotion.x/Math.max(.01,dt),-1,1),roomY:clamp(this.roomMotion.y/Math.max(.01,dt),-1,1)};this.roomMotion.x=this.roomMotion.y=0;
  }
  moveTrackedBody(dx,dy){moveBody(this.level,this.player,dx,dy);this.roomMotion.x+=dx;this.roomMotion.y+=dy;}
+ jump(){if(!this.inputEnabled||!isVertical(this.level)||this.status!=='alive')return false;requestVerticalJump(this.level,this.player);this.net.action('jump');return true;}
  selectWeapon(index){if(this.beastRole)return false;if(Number.isInteger(index)&&index>=0&&index<6){this.selectedWeapon=this.weapon=index;this.equipAnim=.24;return true;}return false;}
  requestFire(alternate=false){if(this.inputEnabled&&this.mode==='playing'&&this.status==='alive')this.net.action(alternate?'alternate':'fire');return true;}
  advanceCombat(dt,fire){if(this.net.intent)this.net.intent.fire=!!fire&&this.inputEnabled&&this.status==='alive';}
@@ -64,6 +69,7 @@ export class NetworkView extends Game{
  vision(){this.shift=!this.shift;if(this.inputEnabled)this.net.action('vision');}
  interact(){if(this.inputEnabled)this.useUntil=now()+3000;}
  interactionHint(){
+  if(isVertical(this.level))return 'THE STACKYARD / FLOOR '+((this.player.height||0)>1.35?2:1)+' OF 2 · [ J / R3 ] JUMP · RAMP REACHES UPPER DECK';
   if(this.netState?.beast)return this.beastRole?(this.beastArchetype==='repeater'?'[ FIRE ] PULSE · [ DASH ] EVADE · HUNT SURVIVORS':this.beastArchetype==='plugged'?'[ FIRE ] ARC · [ DASH ] GROUND / HALF DAMAGE · YOU CANNOT MOVE':this.beastArchetype==='warden'?'[ FIRE ] CRUSH · [ DASH ] FIELD / WARNING THEN PULSES · HUNT':'[ FIRE ] CLAW · [ DASH ] LUNGE · HUNT THE SURVIVORS'):'HUNTERS / ELIMINATE OR OUTLAST THE BEAST';
   const down=this.remotePlayers.find(a=>a.status==='downed'&&distance(this.player,a)<1.45);if(down)return '[ E ] REVIVE '+down.nickname;
   if(this.netState?.raid?.phase===2&&distance(this.player,{x:14.5,y:13.5})<1.8)return 'FRACTURE BARRIER / USE END BRIDGES';
