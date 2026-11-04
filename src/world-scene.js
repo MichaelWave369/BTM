@@ -41,9 +41,36 @@ export class WorldScene {
   for(const prop of l.props||[])if(visible(prop.x,prop.y)){const h=prop.height*s;b.billboard(prop.x*s,0,prop.y*s,h*.8,h,'prop:'+prop.type,eye);this.counts.objects++;}
   if(!game.networkCompetitive&&!game.gallery)b.billboard(l.exit.x*s,.05,l.exit.y*s,1.55,2.15,'portal',eye,game.exitReady?WHITE:[.35,.45,.55,1]);
   for(const n of l.raidNodes||[])b.floor(n.x*s,.025,n.y*s,1.3*s,'hazard:arc',n.active?[.5,1.2,.9,1]:[1,.8,.35,1]);
+  const field=game.netState?.beast?.field;
+  if(field){
+   const color=field.phase==='warning'?[1.1,.77,.28,1]:[1.2,.37,.25,1];
+   // Visible to *everyone*, including the local Warden. No XR locomotion or
+   // contact damage is synthesized by this renderer.
+   b.floor(field.x*s,.035,field.y*s,field.radius*2*s,'hazard:arc',color);
+   const markers=6;
+   for(let i=0;i<markers;i++){const a=Math.PI*2*i/markers;
+    b.billboard((field.x+Math.cos(a)*field.radius)*s,.035,(field.y+Math.sin(a)*field.radius)*s,.12,.12,'marker',eye,color);}
+  }
   for(const a of game.remotePlayers||[]){
    const x=a.renderX??a.x,y=a.renderY??a.y;if(!['alive','downed'].includes(a.status)||!visible(x,y))continue;
    if(a.status==='downed'){b.billboard(x*s,0,y*s,.85*s,.4*s,'net:downed',eye);continue;}
+   if(a.role==='beast'&&a.archetype==='warden'){
+    const iron=[.16,.2,.27,1],plate=[.39,.43,.53,1],furnace=[1,.42,.28,1];
+    // Distinct towering multi-plate avatar, never the campaign Warden asset.
+    b.box([x*s,.81*s,y*s],[.96*s,1.04*s,.63*s],'white',iron);
+    b.box([x*s,1.03*s,y*s],[.71*s,.72*s,.66*s],'white',plate);
+    b.box([x*s,1.09*s,y*s],[.37*s,.3*s,.7*s],'white',furnace);
+    b.box([x*s,1.58*s,y*s],[.46*s,.35*s,.45*s],'white',iron);
+    const c=Math.cos(a.a),sn=Math.sin(a.a);
+    b.box([(x+c*.25)*s,1.61*s,(y+sn*.25)*s],[.36*s,.12*s,.11*s],'white',furnace);
+    for(const side of [-1,1]){
+     const ax=(x+side*(-sn*.63))*s,az=(y+side*c*.63)*s;
+     b.box([ax,.91*s,az],[.36*s,.65*s,.34*s],'white',plate);
+     b.box([ax,.55*s,az],[.29*s,.26*s,.29*s],'white',iron);
+     b.box([(x+side*(-sn*.27))*s,.26*s,(y+side*c*.27)*s],[.26*s,.48*s,.27*s],'white',iron);
+    }
+    this.counts.objects++;continue;
+   }
    if(a.role==='beast'&&a.archetype==='plugged'){
     // Heavy original Plugged silhouette with an illuminated power core.
     const shell=[.27,.29,.31,1],copper=[.7,.51,.31,1],arc=[1,.89,.44,1];
@@ -150,7 +177,7 @@ export class WorldScene {
     // Never draw a human rifle on a Beast's tracked hand in native immersive
     // VR. Creature gauntlets are visual-only; melee/pulse authority is on Node.
     const o=rig.aim.origin,kind=game.beastArchetype;
-    const color=kind==='plugged'?[1,.85,.36,1]:kind==='repeater'?[.26,.91,.87,1]:[.72,.42,.88,1];
+    const color=kind==='plugged'?[1,.85,.36,1]:kind==='repeater'?[.26,.91,.87,1]:kind==='warden'?[1,.43,.29,1]:[.72,.42,.88,1];
     b.box([o.x*s,o.height*s,o.y*s],[.21*s,.16*s,.22*s],'white',color);
     if(game.shotAnim>.05)b.billboard(o.x*s,o.height*s,o.y*s,.18*s,.18*s,'marker',eye,color);
    }else{
