@@ -7,6 +7,7 @@ import {Renderer} from './renderer.js';
 import {textureSettings} from './texture-packs.js';
 import {offlineTextureStyle,offlineTextureStatus,requestOfflineTextures} from './texture-offline.js';
 import {ArchiveLedger} from './archive-ledger.js';
+import {exportLedgerMarkdown} from './archive-export.js';
 import {buildTrophyDossier,readGalleryCard} from './trophy-room.js';
 import {enterGallery,galleryResult,storeGalleryResult} from './shooting-gallery.js';
 import {enterHazardVault} from './hazard-vault.js';
@@ -125,6 +126,10 @@ function openHelp(){returnScreen=screen||'pause-screen';if(game.mode==='playing'
 
 function renderArchiveScreen(selectedId=null){
  const entries=archiveLedger.list(),root=$('archive-catalog'),detail=$('archive-detail');
+ $('archive-export').disabled=archiveLedger.count===0;
+ $('archive-export-status').textContent=archiveLedger.count===0?
+  'Collect at least one record to unlock the export.':
+  'Export includes only recovered testimony, unsealed dossiers, completed evidence, and solved investigation conclusions.';
  $('archive-progress').textContent=archiveLedger.count+' / '+archiveLedger.total+
   ' RECOVERED RECORDS   ·   '+archiveLedger.unlocked.length+' / 3 DOSSIERS OPEN   ·   '+
   archiveLedger.solvedIntelCount+' / 4 INTEL VERIFIED';
@@ -167,6 +172,25 @@ function renderArchiveScreen(selectedId=null){
  }else if(!entries.length)detail.textContent='No recovered records yet. In the campaign, find a wall plaque, face it, and press USE to preserve its testimony.';
  else detail.textContent='Select a recovered record to read its testimony. Complete evidence chains unlock optional intelligence challenges.';
 }
+function downloadHumanLedger(){
+ if(archiveLedger.count===0)return;
+ try{
+  // The download must be triggered by a direct button gesture, never on open
+  // or auto-save. A local Blob avoids uploading personal play history.
+  const file=exportLedgerMarkdown(archiveLedger);
+  const url=URL.createObjectURL(new Blob([file.markdown],{type:file.mime}));
+  const link=document.createElement('a');
+  link.href=url;link.download=file.filename;link.hidden=true;
+  document.body.append(link);
+  try{link.click();}
+  finally{link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+  $('archive-export-status').textContent='Export prepared / '+file.counts.records+
+   ' recovered files, '+file.counts.verified+' verified investigations. No undiscovered records included.';
+ }catch(error){
+  $('archive-export-status').textContent='Export unavailable / '+error.message;
+ }
+}
+$('archive-export').addEventListener('click',downloadHumanLedger);
 function openArchive(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();renderArchiveScreen();showScreen('archive-screen');}
 function renderTrophyRoom(){
  let gallery=null;try{gallery=readGalleryCard(localStorage);}catch{}
