@@ -1,6 +1,6 @@
 // Shared wire contract. Clients submit intent; no transform, health, ammo or score writes.
 export const PROTOCOL=1,TICK_RATE=30,SNAPSHOT_RATE=10,INPUT_RATE=20,MAX_MESSAGE=4096;
-export const MODES=['deathmatch','coop','team','clan','control'];
+export const MODES=['deathmatch','coop','team','clan','control','extraction'];
 export const ARENAS=['no-carrier','sysops-revenge','kill-switch'];
 export const ACTIONS=['fire','alternate','reload','dash','ori','bass','vision'];
 const number=(v,min,max)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
@@ -11,7 +11,7 @@ export function roomCode(value){if(typeof value!=='string'||!(/^[A-Z2-9]{8}$/).t
 export function validateMessage(raw){
  if(typeof raw!=='string'||new TextEncoder().encode(raw).length>MAX_MESSAGE)throw Error('Message exceeds 4096 bytes');let m;try{m=JSON.parse(raw);}catch{throw Error('Invalid JSON');}if(!object(m)||typeof m.type!=='string')throw Error('Message type required');
  switch(m.type){
- case 'create':keys(m,['type','nickname','mode','arena','limit','capacity','bots']);nickname(m.nickname);if(!MODES.includes(m.mode)||!ARENAS.includes(m.arena)||!Number.isInteger(m.limit)||!number(m.limit,1,50)||!Number.isInteger(m.capacity)||!number(m.capacity,2,m.mode==='coop'?4:8)||m.bots!==undefined&&(!Number.isInteger(m.bots)||m.bots<0||m.bots>3||m.bots>=m.capacity))throw Error('Invalid room settings');break;
+ case 'create':keys(m,['type','nickname','mode','arena','limit','capacity','bots']);nickname(m.nickname);if(!MODES.includes(m.mode)||!ARENAS.includes(m.arena)||!Number.isInteger(m.limit)||!number(m.limit,1,50)||!Number.isInteger(m.capacity)||!number(m.capacity,2,['coop','extraction'].includes(m.mode)?4:8)||m.bots!==undefined&&(!Number.isInteger(m.bots)||m.bots<0||m.bots>3||m.bots>=m.capacity)||m.mode==='extraction'&&(m.bots!==undefined&&m.bots!==0||m.arena!=='no-carrier'))throw Error('Invalid room settings');break;
  case 'join':keys(m,['type','nickname','code','token']);nickname(m.nickname);roomCode(m.code);if(m.token!==undefined&&!/^[a-f0-9]{48}$/.test(m.token))throw Error('Invalid reconnect token');break;
  case 'resume':keys(m,['type','nickname','code','token']);nickname(m.nickname);roomCode(m.code);if(!/^[a-f0-9]{48}$/.test(m.token))throw Error('Invalid host resume token');break;
  case 'input':{

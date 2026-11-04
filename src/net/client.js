@@ -20,11 +20,11 @@ export class NetworkClient{
 export class NetworkView extends Game{
  constructor(net){super();this.net=net;this.netDefinition=null;this.mode='paused';this.unlocked=6;this.remotePlayers=[];this.selectedWeapon=1;this.inputEnabled=false;this.networkCompetitive=true;this.roomMotion={x:0,y:0};this.useUntil=0;this.previousRemote=[];this.remoteStamp=now();this.lastEvent=0;this.netState=null;this.revision=-1;this.flashUntil=0;}
  get definition(){return this.netDefinition||super.definition;}
- get networkLabel(){return this.netState?.raid?'FINAL / P'+this.netState.raid.phase+' / '+this.netState.raid.state.toUpperCase():this.netState?.mode==='coop'?'CO-OP / '+(this.netState.stage+1)+' OF 24':'BBS / '+this.definition.name;}
+ get networkLabel(){return this.netState?.raid?'FINAL / P'+this.netState.raid.phase+' / '+this.netState.raid.state.toUpperCase():this.netState?.mode==='coop'?'CO-OP / '+(this.netState.stage+1)+' OF 24':this.netState?.mode==='extraction'?'EXTRACTION / WITNESS INTEL':'BBS / '+this.definition.name;}
  get objective(){return this.netObjective||'ENTER THE NODE';}
  get liberation(){return this.netLiberation||0;}
  get exitReady(){return !!this.netExitReady;}
- get objectiveTarget(){if(this.netState?.raid)return raidObjectiveTarget(this.level,this.player,{...this.netState.raid,time:this.time});if(this.netState?.control?.zone)return this.netState.control.zone;return this.networkCompetitive?(this.remotePlayers.find(a=>a.status==='alive')||this.player):super.objectiveTarget;}
+ get objectiveTarget(){if(this.netState?.raid)return raidObjectiveTarget(this.level,this.player,{...this.netState.raid,time:this.time});if(this.netState?.control?.zone)return this.netState.control.zone;if(this.netState?.extraction){const e=this.netState.extraction;return e.carrier?e.pad:e.dropped||e.vault;}return this.networkCompetitive?(this.remotePlayers.find(a=>a.status==='alive')||this.player):super.objectiveTarget;}
  accept(m){
   if(m.type==='world'){
    if(!m.level||m.level.w!==29||m.level.h!==25||m.level.cells?.length!==25||m.level.cells.some(r=>r.length!==29)||!Array.isArray(m.level.enemies)||m.level.enemies.length>128||!m.definition)throw Error('Invalid world dimensions');
@@ -65,7 +65,7 @@ export class NetworkView extends Game{
  interactionHint(){
   const down=this.remotePlayers.find(a=>a.status==='downed'&&distance(this.player,a)<1.45);if(down)return '[ E ] REVIVE '+down.nickname;
   if(this.netState?.raid?.phase===2&&distance(this.player,{x:14.5,y:13.5})<1.8)return 'FRACTURE BARRIER / USE END BRIDGES';
-  const node=this.level.raidNodes?.find(n=>distance(this.player,n)<1.5);if(node)return '[ E ] CHANNEL '+node.id.toUpperCase();return super.interactionHint();
+  const node=this.level.raidNodes?.find(n=>distance(this.player,n)<1.5);if(node)return this.netState?.extraction?node.id==='EXFIL'?'[ E ] HOLD TO EXTRACT INTEL':'[ E ] RECOVER WITNESS INTEL':'[ E ] CHANNEL '+node.id.toUpperCase();return super.interactionHint();
  }
 
  saveCheckpoint(){return false;}
