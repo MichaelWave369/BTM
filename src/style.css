@@ -203,3 +203,11 @@ body[data-input=controller] #game,body[data-input=vr] #game{cursor:none}.reduced
 .archive-export-actions #archive-export:disabled{opacity:.45;cursor:not-allowed}
 .archive-export-actions #archive-export:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .archive-export-actions #archive-export-status{margin:7px 0 3px;color:#aacde0;font:500 11px/1.5 var(--mono)}
+
+
+/* Human Ledger: keyboard/gamepad-friendly offline search, no hidden index. */
+.archive-search-controls{display:grid;gap:7px;margin:14px 0}
+.archive-search-controls label{color:var(--cyan);font:700 12px var(--mono);letter-spacing:.7px}
+.archive-search-controls input{display:block;width:100%;min-height:44px;border:1px solid #5f829e;border-radius:7px;background:#0c1b30;color:var(--paper);padding:10px 13px;font:600 15px var(--mono)}
+.archive-search-controls input::placeholder{color:#aabbd3;opacity:1}
+.archive-search-controls #archive-search-status{margin:0;color:var(--muted);font-size:12px;line-height:1.4}
