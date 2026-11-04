@@ -102,7 +102,7 @@ export function advanceVerticalBody(level,body,dt,{oldX=body.x,oldY=body.y}={}){
  }
  // Deterministic fall damage is an explicit future balance gate; this first
  // safe prototype lands without health loss, and never drops below ground.
- return landed&&initial>body.height+.15;
+ return landed;
 }
 export function verticalSight(level,from,to){
  if(!isVertical(level))return lineOfSight(level,from,to);
