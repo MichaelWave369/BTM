@@ -50,3 +50,27 @@ export function repeaterBeastSprite(){
  box(26,76,16,4,shadow);box(42,76,16,4,shadow);
  cache.set(key,c);return c;
 }
+
+// Original Plugged Inversion silhouette: broad power-cell torso, insulator
+// shoulders and a glowing forked arc. Generated entirely on the device.
+export function pluggedBeastSprite(){
+ const key='inversion:plugged';if(cache.has(key))return cache.get(key);
+ const c=document.createElement('canvas');c.width=80;c.height=80;
+ const g=c.getContext('2d'),box=(x,y,w,h,color)=>{g.fillStyle=color;g.fillRect(x,y,w,h);};
+ const metal='#3f3d3c',shadow='#242d31',copper='#ae885c',arc='#f4df79',glow='#fff7bb';
+ box(17,26,46,40,shadow);box(22,30,36,31,metal);
+ box(26,34,28,23,copper);box(32,37,16,16,arc);box(36,41,8,7,glow);
+ box(29,12,22,17,shadow);box(33,16,14,8,metal);
+ box(34,18,5,4,arc);box(43,18,5,4,arc);
+ for(const x of [9,57]){
+  box(x,27,15,28,metal);box(x+2,30,11,10,copper);
+  box(x+2,46,11,16,shadow);box(x+5,57,6,15,arc);
+  box(x-2,24,19,6,arc);
+ }
+ box(20,63,17,17,metal);box(43,63,17,17,metal);
+ box(18,73,21,7,shadow);box(42,73,21,7,shadow);
+ for(let i=0;i<3;i++){
+  const x=29+i*9;box(x,7-i%2*5,4,10,arc);box(x+2,3-i%2*5,2,7,glow);
+ }
+ cache.set(key,c);return c;
+}
