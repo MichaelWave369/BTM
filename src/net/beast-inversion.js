@@ -1,4 +1,4 @@
-// BBS LAN CLAN / The Inversion, server-owned Crawler and Repeater forms.
+// BBS LAN CLAN / The Inversion, server-owned Crawler, Repeater and Plugged forms.
 // All role, HP, objective and cooldown state stays in the authoritative Room.
 import {lineOfSight} from '../collision.js';
 
@@ -13,7 +13,8 @@ export const BEAST_LUNGE_COOLDOWN=3.5;
 export const BEAST_RECONNECT_GRACE=15;
 export const BEAST_ARCHETYPES=Object.freeze({
  crawler:Object.freeze({name:'CRAWLER',health:BEAST_BASE_HEALTH,perHunter:BEAST_HEALTH_PER_EXTRA_HUNTER,damage:BEAST_MELEE_DAMAGE,range:BEAST_MELEE_RANGE,cone:.8,cooldown:BEAST_MELEE_COOLDOWN,lunge:BEAST_LUNGE_DISTANCE,lungeCooldown:BEAST_LUNGE_COOLDOWN,walk:3.3,sprint:4.7}),
- repeater:Object.freeze({name:'REPEATER',health:260,perHunter:75,damage:18,range:8,cone:.23,cooldown:1.35,lunge:.85,lungeCooldown:4.5,walk:2.7,sprint:3.7})
+ repeater:Object.freeze({name:'REPEATER',health:260,perHunter:75,damage:18,range:8,cone:.23,cooldown:1.35,lunge:.85,lungeCooldown:4.5,walk:2.7,sprint:3.7}),
+ plugged:Object.freeze({name:'PLUGGED',health:410,perHunter:85,damage:28,chainDamage:14,chainRange:2.4,range:3.4,cone:.72,cooldown:1.6,lunge:0,lungeCooldown:8,guardDuration:2.4,guardFactor:.5,walk:2.35,sprint:3.2})
 });
 
 const round=n=>Math.round(Math.max(0,n)*10)/10;
@@ -29,7 +30,7 @@ export function freshBeastMatch(ownerId,actors,archetype='crawler'){
  if(hunterIds.length<1||hunterIds.length>4)throw Error('Invalid hunter roster');
  return {beastId:ownerId,hunterIds,archetype,remaining:BEAST_ROUND_SECONDS,
   health:profile.health+profile.perHunter*(hunterIds.length-1),
-  strikeAt:0,lungeAt:0,complete:false};
+  strikeAt:0,lungeAt:0,groundedUntil:0,complete:false};
 }
 
 // Return the closest physically reachable Hunter in the Beast's frontal claw arc.
@@ -44,10 +45,27 @@ function selectBeastTarget(state,attacker,actors,level,profile){
   .sort((a,b)=>a.dist-b.dist)[0]?.actor||null;
 }
 export function beastClawTarget(state,attacker,actors,level){
- return state?.archetype==='repeater'?null:selectBeastTarget(state,attacker,actors,level,BEAST_ARCHETYPES.crawler);
+ return state?.archetype==='crawler'?selectBeastTarget(state,attacker,actors,level,BEAST_ARCHETYPES.crawler):null;
 }
 export function beastPulseTarget(state,attacker,actors,level){
  return state?.archetype==='repeater'?selectBeastTarget(state,attacker,actors,level,BEAST_ARCHETYPES.repeater):null;
+}
+// Plugged can fork a close frontal electric arc to one nearby second Hunter.
+// Each target must be independently within the forward arc and visible from
+// the Beast. Never trust a client target list, body, coordinates or claimed HP.
+export function beastArcTargets(state,attacker,actors,level){
+ if(state?.archetype!=='plugged'||state.beastId!==attacker?.id||attacker.status!=='alive'||!attacker.connected)return [];
+ const p=attacker.player,profile=BEAST_ARCHETYPES.plugged;
+ const eligible=[...actors].filter(a=>state.hunterIds.includes(a.id)&&a.connected&&a.status==='alive')
+  .map(actor=>({actor,distance:Math.hypot(actor.player.x-p.x,actor.player.y-p.y)}))
+  .filter(({actor,distance})=>distance<=profile.range&&
+   Math.abs(turnDiff(Math.atan2(actor.player.y-p.y,actor.player.x-p.x),p.a))<=profile.cone&&
+   lineOfSight(level,p,actor.player))
+  .sort((a,b)=>a.distance-b.distance||a.actor.id.localeCompare(b.actor.id));
+ if(!eligible.length)return [];
+ const first=eligible[0].actor,other=eligible.slice(1).find(({actor})=>
+  Math.hypot(actor.player.x-first.player.x,actor.player.y-first.player.y)<=profile.chainRange)?.actor;
+ return other?[first,other]:[first];
 }
 
 // A round ends only from host-known deaths and fixed host time.
@@ -78,5 +96,6 @@ export function beastSnapshot(state,now,actors){
  return {archetype:state.archetype,beastId:state.beastId,remaining:round(state.remaining),
   hunters:state.hunterIds.length,beastHealth:Math.max(0,Math.ceil(beast?.player?.health||0)),
   beastMaxHealth:state.health,strikeIn:round(state.strikeAt-now),
-  lungeIn:round(state.lungeAt-now),completed:state.complete};
+  lungeIn:round(state.lungeAt-now),guardRemaining:state.archetype==='plugged'?round(state.groundedUntil-now):0,
+  completed:state.complete};
 }

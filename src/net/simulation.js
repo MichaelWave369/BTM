@@ -9,7 +9,7 @@ import {createArena} from './arenas.js';
 import {botIntent} from './bot-pilot.js';
 import {freshControlState,controlZone,controlSnapshot,advanceControl} from './control-zones.js';
 import {freshExtraction,extractionPickup,extractionDrop,advanceExtraction,extractionSnapshot,EXTRACTION_MAX_RETRIES} from './extraction.js';
-import {freshBeastMatch,beastClawTarget,advanceBeast,beastSnapshot,BEAST_ARCHETYPES,beastPulseTarget} from './beast-inversion.js';
+import {freshBeastMatch,beastClawTarget,advanceBeast,beastSnapshot,BEAST_ARCHETYPES,beastPulseTarget,beastArcTargets} from './beast-inversion.js';
 import {neutralInput,TICK_RATE} from './protocol.js';
 export const AVATAR_FIELDS=['damageDirection','weapon','cooldown','recharge','vent','shotAnim','hurt','shake','dodgeCooldown','dodgeFlash','shieldTime','shieldCharge','oriCooldown','objectiveTime','hitPulse','assistTime','scanTime','equipAnim','portraitTime','speechCooldown','muzzle','shift','charge','stats','playerMotion','combatPose','lessonDistance','footDistance','moving','sprinting','bufferedFire','nav','navTime'];
 const round=n=>Math.round(n*1000)/1000;
@@ -187,11 +187,18 @@ export class Room{
   const s=this.beast,g=this.game;if(!s||s.beastId!==a.id||a.status!=='alive'||!a.connected||g.time+1e-7<s.strikeAt)return false;
   const profile=BEAST_ARCHETYPES[s.archetype];
   s.strikeAt=g.time+profile.cooldown;a.invulnerable=0;
+  if(s.archetype==='plugged'){
+   const victims=beastArcTargets(s,a,this.actors.values(),g.level);
+   g.shotAnim=.4;
+   victims.forEach((target,index)=>this.hurt(target,index===0?profile.damage:profile.chainDamage,a));
+   if(victims.length)this.event('beastArc',{player:a.id,targets:victims.map(p=>p.id),text:'PLUGGED ARC / '+victims.length+' HUNTER'+(victims.length===1?'':'S')});
+   else this.event('beastMiss',{player:a.id});
+   return victims.length>0;
+  }
   const ranged=s.archetype==='repeater',victim=ranged?
    beastPulseTarget(s,a,this.actors.values(),g.level):
    beastClawTarget(s,a,this.actors.values(),g.level);
-  // A visible short pulse is aesthetic only. Damage remains host-checked and
-  // never trusts a requested target id, network position or client score.
+  // All damage is host-checked, not client-targeted.
   g.shotAnim=ranged?.4:.2;
   if(victim){
    this.hurt(victim,profile.damage,a);
@@ -204,6 +211,11 @@ export class Room{
   const s=this.beast,g=this.game;if(!s||s.beastId!==a.id||a.status!=='alive'||!a.connected||g.time+1e-7<s.lungeAt)return false;
   const profile=BEAST_ARCHETYPES[s.archetype];
   s.lungeAt=g.time+profile.lungeCooldown;a.invulnerable=0;
+  if(s.archetype==='plugged'){
+   s.groundedUntil=g.time+profile.guardDuration;
+   this.event('beastGuard',{player:a.id,text:'PLUGGED GROUNDED / INCOMING HUNTER DAMAGE HALVED'});
+   return true;
+  }
   const start={x:a.player.x,y:a.player.y};
   moveBody(g.level,a.player,Math.cos(heading)*profile.lunge,Math.sin(heading)*profile.lunge);
   this.event('beastLunge',{player:a.id,text:s.archetype==='repeater'?'REPEATER EVADE':'CRAWLER LUNGE'});
@@ -246,6 +258,9 @@ export class Room{
  targets(shooter){return this.live().filter(a=>a!==shooter&&(this.mode==='deathmatch'||a.team!==shooter.team)).map(a=>({...a.player,networkId:a.id,type:'plugged',human:false,dead:false,hp:a.player.health,maxHp:100,stun:0,phase:1}));}
  hurt(a,amount,killer){
   if(!a||a.status!=='alive'||a.invulnerable>this.game.time||!killer||a.id===killer.id||this.mode!=='deathmatch'&&a.team===killer.team)return;
+  // Only the grounded Plugged takes half of Hunter-origin damage.
+  if(this.beast?.archetype==='plugged'&&this.beast.beastId===a.id&&
+   this.game.time<(this.beast.groundedUntil||0))amount*=BEAST_ARCHETYPES.plugged.guardFactor;
   this.withActor(a,()=>{const g=this.game;g.damagePlayer(amount,killer.player);});
   if(a.status!=='alive'&&killer.id!==a.id){killer.frags++;if(this.mode==='team')this.teamScore[killer.team]++;this.event('frag',{killer:killer.id,victim:a.id});if(['deathmatch','team'].includes(this.mode)&&(this.mode==='team'?this.teamScore[killer.team]:killer.frags)>=this.limit){this.state='results';this.result={winner:this.mode==='team'?killer.team:killer.id,reason:'frag-limit'};}}
  }
@@ -299,8 +314,11 @@ export class Room{
    const m=this.elapsed-a.lastInput>.3?{...neutralInput(),angle:a.player.a,weapon:a.feel.weapon}:a.input;
    this.withActor(a,()=>{
     const isBeast=this.beast?.beastId===a.id;
+    const grounded=!!(isBeast&&this.beast.archetype==='plugged'&&g.time<this.beast.groundedUntil);
     g.player.a=angleDiff(m.angle,0);g.weapon=isBeast?0:m.weapon;
-    const speed=isBeast?(m.sprint?BEAST_ARCHETYPES[this.beast.archetype].sprint:BEAST_ARCHETYPES[this.beast.archetype].walk):(m.sprint?4.1:2.65),c=Math.cos(g.player.a),s=Math.sin(g.player.a),wx=(m.roomX||0),wy=(m.roomY||0),f=m.move*speed+c*wx+s*wy,r=m.strafe*speed-s*wx+c*wy;
+    const speed=grounded?0:isBeast?(m.sprint?BEAST_ARCHETYPES[this.beast.archetype].sprint:BEAST_ARCHETYPES[this.beast.archetype].walk):(m.sprint?4.1:2.65),
+     c=Math.cos(g.player.a),s=Math.sin(g.player.a),wx=grounded?0:(m.roomX||0),wy=grounded?0:(m.roomY||0),
+     f=m.move*speed+c*wx+s*wy,r=m.strafe*speed-s*wx+c*wy;
     g.updatePlayer(dt,{moveForward:f/4.1,moveStrafe:r/4.1,sprint:true,deferFire:true});g.sprinting=m.sprint;
     if(m.aim)this.trackedPose(a,m.aim);else g.clearCombatPose();
     if(!isBeast)g.collectPlayerItems();
