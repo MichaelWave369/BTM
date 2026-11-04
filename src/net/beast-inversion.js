@@ -101,23 +101,28 @@ export function beastArcTargets(state,attacker,actors,level){
 // A round ends only from host-known deaths and fixed host time.
 // A disconnected role receives a short reconnection grace; abandoning a
 // match voids the result rather than minting free verified online wins.
+function endBeastRound(state,winner,reason){
+ state.complete=true;
+ state.field=null; // remove warned hazards from frozen result snapshots
+ return {winner,reason};
+}
 export function advanceBeast(state,actors,now,dt){
  if(!state||state.complete)return null;
  if(!Number.isFinite(dt)||dt<=0||dt>.1)throw Error('Invalid beast tick');
  const members=[...actors],beast=members.find(a=>a.id===state.beastId);
  const hunters=members.filter(a=>state.hunterIds.includes(a.id));
  if(!beast||hunters.length!==state.hunterIds.length){
-  state.complete=true;return {winner:null,reason:'roster-abandoned'};
+  return endBeastRound(state,null,'roster-abandoned');
  }
  const departed=[beast,...hunters].filter(a=>!a.connected&&!a.bot&&
   now-(a.disconnectedAt??now)>=BEAST_RECONNECT_GRACE);
- if(departed.length){state.complete=true;return {winner:null,reason:'player-abandoned'};}
+ if(departed.length)return endBeastRound(state,null,'player-abandoned');
  // Death is decisive regardless of the connected field. Disconnect alone is not.
- if(beast.status==='dead'){state.complete=true;return {winner:'hunters',reason:'beast-defeated'};}
- if(hunters.every(a=>a.status==='dead')){state.complete=true;return {winner:'beast',reason:'hunters-eliminated'};}
+ if(beast.status==='dead')return endBeastRound(state,'hunters','beast-defeated');
+ if(hunters.every(a=>a.status==='dead'))return endBeastRound(state,'beast','hunters-eliminated');
  state.remaining=Math.max(0,state.remaining-dt);
  if(state.remaining<1e-7)state.remaining=0;
- if(state.remaining===0){state.complete=true;return {winner:'hunters',reason:'hunters-survived'};}
+ if(state.remaining===0)return endBeastRound(state,'hunters','hunters-survived');
  return null;
 }
 
