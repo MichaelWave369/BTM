@@ -3,7 +3,7 @@ import {Room} from './simulation.js';
 import {MODES,ARENAS,nickname} from './protocol.js';
 
 export const MAX_SOLO_PARTICIPANTS=12;
-export const OFFLINE_ARENA_MODES=Object.freeze(MODES.filter(mode=>mode!=='coop'));
+export const OFFLINE_ARENA_MODES=Object.freeze(MODES.filter(mode=>!['coop','extraction'].includes(mode)));
 
 export function validateOfflineArena(config){
  if(!config||typeof config!=='object'||Array.isArray(config))throw Error('Offline arena settings required');
