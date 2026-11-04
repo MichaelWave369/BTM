@@ -2,6 +2,7 @@
 // client-supplied scores, world writes, damage authority or hidden hit bonuses.
 import {neutralInput} from './protocol.js';
 import {distance,lineOfSight,findRoute,canOccupy,clamp} from '../core.js';
+import {isVertical,verticalSight,stackyardBotWaypoint} from './vertical-arena.js';
 
 const vec=(a,b)=>({x:b.x-a.x,y:b.y-a.y});
 const nearest=(p,arr)=>arr.sort((a,b)=>distance(p,a)-distance(p,b))[0];
@@ -48,9 +49,13 @@ export function botIntent(room,actor){
   room.mode==='control'&&room.control
    ?{point:room.control.zones[room.control.index],kind:'hill',range:.75}
    :{point:opponent||{x:level.exit.x,y:level.exit.y},kind:'fight',range:3.5};
- const target=goal.point||{x:p.x,y:p.y};
+ const destination=goal.point||{x:p.x,y:p.y};
+ // An upper/lower opponent requires the authored ramp. Flat-grid BFS alone
+ // cannot represent two traversable surfaces at the same x/y coordinates.
+ const waypoint=!cooperative?stackyardBotWaypoint(level,p,destination):null;
+ const target=waypoint||destination;
  const d=distance(p,target),contact=opponent&&distance(p,opponent),
-  sees=opponent&&contact<12&&lineOfSight(level,p,opponent);
+  sees=opponent&&contact<12&&(isVertical(level)?verticalSight(level,p,opponent):lineOfSight(level,p,opponent));
  // Respect real cover: never fire through walls or at an unobserved actor.
  const tick=room.tick,aim=sees?Math.atan2(opponent.y-p.y,opponent.x-p.x):
   Math.atan2(target.y-p.y,target.x-p.x);
@@ -64,7 +69,7 @@ export function botIntent(room,actor){
   const route=nextPoint(level,p,target),delta=vec(p,route);
   dx=delta.x;dy=delta.y;
  }
- if(sees&&goal.kind==='fight'&&contact<1.4){
+ if(!waypoint&&sees&&goal.kind==='fight'&&contact<1.4){
   dx=-Math.cos(aim);dy=-Math.sin(aim);
  }
  const mag=Math.hypot(dx,dy);if(mag>.05){
