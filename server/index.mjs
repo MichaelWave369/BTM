@@ -56,15 +56,15 @@ export async function createServer({host='127.0.0.1',port=8787,origins=[],saveDi
     if(m.type==='join'){if(c.room)throw Error('Leave the current room first');const room=rooms.get(roomCode(m.code));if(!room)throw Error('Room not found');const a=m.token?[...room.actors.values()].find(a=>!a.bot&&equal(a.token,m.token)):null;if(m.token&&!a)throw Error('Reconnect token not recognized');attach(c,room,a?room.reconnect(a):room.add({id:secret().slice(0,12),nickname:nickname(m.nickname),token:secret()}),!!a);return;}
     if(m.type==='resume'){if(c.room)throw Error('Leave the current room first');c.busy=true;try{await resume(c,m);}finally{c.busy=false;}return;}
     if(!c.room||!c.actor)throw Error('Join a room first');if(m.type==='input'){if(!c.room.input(c.actor,m)){c.lastReject={seq:m.seq,last:c.actor.lastSeq,queue:c.actor.actions.length,status:c.actor.status};c.bad++;if(c.bad>12)ws.close(1008,'Stale/overflow input');}else c.bad=Math.max(0,c.bad-.25);return;}
-    if(m.type==='lobby'&&!c.room.competitive)await saveRoom(c.room);
-    if(m.type==='save'){if(c.room.competitive)throw Error('Only co-op campaigns have host saves');if(!await saveRoom(c.room))throw Error('No living campaign checkpoint can be saved in this state');send(c,{type:'saved'});return;}
+    if(m.type==='lobby'&&c.room.mode==='coop')await saveRoom(c.room);
+    if(m.type==='save'){if(c.room.mode!=='coop')throw Error('Only co-op campaigns have host saves');if(!await saveRoom(c.room))throw Error('No living campaign checkpoint can be saved in this state');send(c,{type:'saved'});return;}
     c.room.command(c.actor,m);
    }catch(e){send(c,{type:'error',message:e.code==='ENOENT'?'Saved campaign not found':String(e.message).slice(0,160)});if(++c.bad>16)ws.close(1008,'Protocol errors');}
   });
   ws.on('close',()=>{clients.delete(c);detach(c);});ws.on('error',()=>{});
  });
  async function saveRoom(room){
-  if(room.competitive||room.state==='lobby'||room.state==='wipe')return false;
+  if(room.mode!=='coop'||room.state==='lobby'||room.state==='wipe')return false;
   if(pendingSaves.has(room.code)){await pendingSaves.get(room.code);return saveRoom(room);}
   const checkpoint=room.checkpoint();if(!checkpoint)return false;
   const bytes=JSON.stringify(checkpoint),file=path.join(saveDir,room.code+'.json'),temp=file+'.tmp';
