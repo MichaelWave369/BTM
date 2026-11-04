@@ -36,7 +36,7 @@ export function createArena(id='no-carrier',spawnCount=8){
   // Explicitly mixed-floor spawn slots; same x/y can hold two walkable planes.
   const upper=[[13.5,7.5,Math.PI,STACK_HEIGHT],[23.5,18.5,-Math.PI/2,STACK_HEIGHT],
    [17.5,14.5,0,STACK_HEIGHT],[24.5,6.5,Math.PI,STACK_HEIGHT]];
-  for(let i=0;i<Math.min(upper.length,spawns.length);i++)spawns[spawns.length-1-i]=upper[i];
+  for(let i=0;i<upper.length&&i*2+1<spawns.length;i++)spawns[i*2+1]=upper[i];
   for(const item of items)item.floorHeight=0;
   for(const [type,x,y] of [['energy',18.5,8.5],['health',21.5,15.5],['armor',13.5,19.5]])
    items.push({id:items.length,type,x,y,taken:false,floorHeight:STACK_HEIGHT});
