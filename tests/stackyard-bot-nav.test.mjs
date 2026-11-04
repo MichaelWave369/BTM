@@ -76,6 +76,27 @@ test('real fixed-step Bot Pilot descends the ramp in a live deathmatch without t
  assert.equal(room.receipts.length,0,'competitive movement never awards story credits');
  assert.equal(room.checkpoint(),null);
 });
+test('real Bot Pilot climbs from lower ground to the upper deck using the connector',()=>{
+ const {room,host,bot}=match();
+ room.spawn(host,1);room.spawn(bot,0);
+ Object.assign(host.player,upper(22.5,16.5),{a:0,health:100});
+ assert.equal(bot.player.height,0);
+ let climbedRamp=false,reachedUpper=false,maxRise=0,prior=bot.player.height;
+ for(let i=0;i<690&&room.state==='playing';i++){
+  room.step();
+  climbedRamp ||= bot.player.supportSurface==='ramp';
+  maxRise=Math.max(maxRise,bot.player.height-prior);
+  prior=bot.player.height;
+  if(climbedRamp&&bot.player.supportSurface==='upper'&&bot.player.grounded){
+   reachedUpper=true;break;
+  }
+ }
+ assert(climbedRamp,'ground-floor opponent causes bot to seek lower ramp entrance');
+ assert(reachedUpper,'bot traverses entire ramp and reaches an actual upper-floor surface');
+ assert(maxRise<.3,'bot never changes floor in one frame');
+ assert.equal(bot.bot,true);
+ assert.equal(room.checkpoint(),null);
+});
 test('bots on both decks remain ordinary BBS actors with no jumping or injected height packet',()=>{
  const {room,host,bot}=match();
  Object.assign(host.player,upper(22.5,16.5),{health:100});
