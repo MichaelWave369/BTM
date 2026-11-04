@@ -6,7 +6,7 @@ import {Game,SECTORS,WEAPONS,CAMPAIGN_HOSTS,clamp,angleDiff} from './core.js';
 import {Renderer} from './renderer.js';
 import {textureSettings} from './texture-packs.js';
 import {offlineTextureStyle,offlineTextureStatus,requestOfflineTextures} from './texture-offline.js';
-import {ArchiveLedger} from './archive-ledger.js';
+import {ArchiveLedger,searchRecoveredArchive} from './archive-ledger.js';
 import {exportLedgerMarkdown} from './archive-export.js';
 import {buildTrophyDossier,readGalleryCard} from './trophy-room.js';
 import {enterGallery,galleryResult,storeGalleryResult} from './shooting-gallery.js';
@@ -125,7 +125,9 @@ function openSettings(){returnScreen=screen||'pause-screen';if(game.mode==='play
 function openHelp(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('help-screen');}
 
 function renderArchiveScreen(selectedId=null){
- const entries=archiveLedger.list(),root=$('archive-catalog'),detail=$('archive-detail');
+ const query=$('archive-search').value;
+ const entries=searchRecoveredArchive(archiveLedger,query),root=$('archive-catalog'),detail=$('archive-detail');
+ $('archive-search-status').textContent=entries.length+' / '+archiveLedger.list().length+' discovered archive entries visible.';
  $('archive-export').disabled=archiveLedger.count===0;
  $('archive-export-status').textContent=archiveLedger.count===0?
   'Collect at least one record to unlock the export.':
@@ -169,7 +171,8 @@ function renderArchiveScreen(selectedId=null){
     detail.append(options,feedback);
    }
   }else detail.append(document.createTextNode(selected.text));
- }else if(!entries.length)detail.textContent='No recovered records yet. In the campaign, find a wall plaque, face it, and press USE to preserve its testimony.';
+ }else if(!entries.length&&archiveLedger.count===0)detail.textContent='No recovered records yet. In the campaign, find a wall plaque, face it, and press USE to preserve its testimony.';
+ else if(!entries.length)detail.textContent='No matching recovered files. Try another search term.';
  else detail.textContent='Select a recovered record to read its testimony. Complete evidence chains unlock optional intelligence challenges.';
 }
 function downloadHumanLedger(){
@@ -191,7 +194,8 @@ function downloadHumanLedger(){
  }
 }
 $('archive-export').addEventListener('click',downloadHumanLedger);
-function openArchive(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();renderArchiveScreen();showScreen('archive-screen');}
+$('archive-search').addEventListener('input',()=>renderArchiveScreen());
+function openArchive(){$('archive-search').value='';returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();renderArchiveScreen();showScreen('archive-screen');}
 function renderTrophyRoom(){
  let gallery=null;try{gallery=readGalleryCard(localStorage);}catch{}
  const dossier=buildTrophyDossier({original:saved,pit:pitSaved,archive:archiveLedger,gallery});
