@@ -15,7 +15,7 @@ export async function uiChecks(frame,onProgress=()=>{}){
   await run(`${w}×${h}: local typefaces load and title navigation is usable`,()=>{
    expect(doc.fonts.check('600 16px Oxanium')&&doc.fonts.check('16px "Racing Sans One"'),'Bundled fonts not loaded');
    for(const id of ['start-btn','nightmare-btn','pit-btn','vr-btn','immersive-btn','title-settings','howto-btn','controller-setup']){const el=$(id),r=el.getBoundingClientRect();expect(r.width>40&&r.height>=30,id+' target missing or too small');expect(r.left>=0&&r.right<=w+1,id+' outside screen');}
-   const actions=doc.querySelector('.title-actions').getBoundingClientRect(),lower=doc.querySelector('.title-lower').getBoundingClientRect();expect(actions.bottom<lower.top,'Launch choices overlap title footer');expect(doc.documentElement.scrollWidth<=w+1,'Horizontal overflow');
+   const actions=doc.querySelector('.title-actions').getBoundingClientRect(),lower=doc.querySelector('.title-lower').getBoundingClientRect(),title=doc.querySelector('#title-screen').getBoundingClientRect();expect(actions.bottom<lower.top,'Launch choices overlap title footer');expect(actions.top-title.top<=80,'Title menu pushed down by unused branding');expect(doc.documentElement.scrollWidth<=w+1,'Horizontal overflow');
   });
   await run(`${w}×${h}: settings preserve all controls and return to title`,async()=>{
    $('title-settings').click();await tick();expect(!$('settings-screen').hidden,'Settings not open');
