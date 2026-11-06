@@ -201,7 +201,7 @@ export class Game {
     if(this.weapon===3){this.projectiles.push({x:o.x,y:o.y,height:o.height,a:Math.atan2(d.y,d.x),speed:9*Math.hypot(d.x,d.y),vh:9*d.z,life:3,damage,enemy:false,color:w.color,r:.12});return true;}
     const trace=traceTrackedShot(this.level,aim,w),many=[2,4,5].includes(this.weapon)||alternate&&this.weapon===0,targets=many?trace.targets:trace.targets.slice(0,1);if(targets.length)this.hits++;
     for(const {entity:e}of targets){this.damageEnemy(e,damage,this.weapon===2?1.1:this.weapon===4?2.2:0);if(this.weapon===2){const distance=Math.max(.01,Math.hypot(e.x-o.x,e.y-o.y));moveBody(this.level,e,(e.x-o.x)/distance*.65,(e.y-o.y)/distance*.65,.2);}}
-    const first=targets[0],end=first?{x:first.entity.x,y:first.entity.y,height:first.height}:trace.impact;
+    const end=trace.rayEnd;
     if(end){this.emit('beam',{from:{...o},to:{x:end.x,y:end.y,height:end.height},color:w.color,tracked:true});if(!targets.length&&this.weapon>0){this.emit('impact',{x:end.x,y:end.y,height:end.height,color:w.color});this.emit('sound',{name:'ricochet',position:{...end}});}}
     return true;
   }

@@ -53,6 +53,7 @@ export class NetworkView extends Game{
   const oldX=this.player.x,oldY=this.player.y;
   moveBody(this.level,this.player,(c*f-s*r)/norm*speed,(s*f+c*r)/norm*speed);
   if(isVertical(this.level))advanceVerticalBody(this.level,this.player,Math.min(.05,Math.max(.001,dt)),{oldX,oldY});
+  input.afterMovement?.();
   this.moving=!!(f||r);this.sprinting=!!input.sprint;
   let aim=null;const pose=this.combatPose;if(pose?.aim){const d=pose.aim.direction,o=pose.aim.origin;aim={x:clamp(o.x-this.player.x,-.53,.53),y:clamp(o.y-this.player.y,-.53,.53),height:clamp(o.height-(isVertical(this.level)?this.player.height||0:0),.08,1.6),eye:clamp(pose.head.height-(isVertical(this.level)?this.player.height||0:0),.35,1.6),dx:d.x,dy:d.y,dz:d.z};}
   this.net.intent={move:clamp(f,-1,1),strafe:clamp(r,-1,1),angle:this.player.a,sprint:!!input.sprint,fire:!!input.fire,charging:!!this.altHeld||this.charge>0,use:!!this.useHeld||now()<this.useUntil,weapon:this.beastRole?0:this.selectedWeapon,actions:[],aim,dashAngle:this.dashAngle??this.player.a,roomX:clamp(this.roomMotion.x/Math.max(.01,dt),-1,1),roomY:clamp(this.roomMotion.y/Math.max(.01,dt),-1,1)};this.roomMotion.x=this.roomMotion.y=0;

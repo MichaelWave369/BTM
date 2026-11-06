@@ -1,8 +1,9 @@
-import {EQUIPMENT_DEFAULTS,equipmentSettings,attachWeapon} from './equipment-math.js';
+import {EQUIPMENT_DEFAULTS,SLAP_EMITTER,equipmentSettings,attachWeapon} from './equipment-math.js';
 import {visualLeftPose} from './left-hand-pose.js';
 import {moveBody} from './collision.js';
 import {WORLD_SCALE,WALL_HEIGHT,clamp,safeTrackedAim} from './spatial.js';
 import {matIdentity,matMultiply,rigidY,inverseRigidY,transformPoint,directionAngle} from './immersive-math.js';
+const BARREL_EMITTER=[0,0,-.34];
 export const IMMERSIVE_DEFAULTS={...EQUIPMENT_DEFAULTS,vrTurnMode:'smooth',vrSnapAngle:30,vrMoveReference:'head',vrMoveSpeed:.6,vrTurnSpeed:1,vrVignetteStrength:.7,vrEyeHeight:1.65,vrPosture:'seated',vrVignette:true,vrQuality:'balanced',vrAimLine:true,vrDiagnostics:false};
 export function immersiveSettings(s={}){
  const v={...IMMERSIVE_DEFAULTS};for(const [key,options]of Object.entries({vrTurnMode:['snap','smooth'],vrMoveReference:['head','controller'],vrPosture:['seated','standing'],vrQuality:['performance','balanced','high']}))if(options.includes(s[key]))v[key]=s[key];
@@ -13,6 +14,7 @@ export class ImmersiveRig {
  constructor(){
   this.root=matIdentity();this.inverse=matIdentity();this.rightWorld=matIdentity();this.weaponWorld=matIdentity();this.equipmentEpoch=0;this.rightGripWorld=matIdentity();this.leftWorld=matIdentity();this.leftVisualWorld=matIdentity();this.hasVisualLeft=false;this.headWorld=matIdentity();this.level=null;this.calibrated=false;this.snapReady=true;this.fade=0;this.blocked=false;this.eye=[0,0,0];this.menuPosition={x:0,y:0};
   this.input={moveForward:0,moveStrafe:0,sprint:false,fire:false,deferFire:true,afterMovement:()=>this.finish(this.game,this.pose,this.game.mode==='playing')};
+  this.muzzleWorld=[0,0,0];
  }
  recenter(){this.equipmentEpoch++;this.uiCaptured=false;this.uiWristOpen=false;this.wristRearm=false;this.calibrated=false;this.snapReady=false;this.fade=.18;}
  calibrate(game,pose){this.equipmentEpoch++;this.yaw=directionAngle(pose.head)-game.player.a;this.headBase=pose.head[13];this.lastX=pose.head[12];this.lastZ=pose.head[14];this.calibrated=true;this.level=game.level;this.menuActive=false;this.menuPosition={x:game.player.x,y:game.player.y,height:game.player.height||0};this.fade=.18;}
@@ -61,7 +63,9 @@ export class ImmersiveRig {
   if(pose.rightRay){
    matMultiply(this.rightWorld,this.root,pose.rightRay);
    // The handle follows the tracked grip; aim retains the preferred pointing ray.
-   const m=attachWeapon(this.weaponWorld,this.rightWorld,pose.rightGrip?this.rightGripWorld:null,settings),direction={x:-m[8],y:-m[10],z:-m[9]},origin={x:(m[12]-m[8]*.34)/WORLD_SCALE,y:(m[14]-m[10]*.34)/WORLD_SCALE,height:(m[13]-m[9]*.34)/WORLD_SCALE};
+   const m=attachWeapon(this.weaponWorld,this.rightWorld,pose.rightGrip?this.rightGripWorld:null,settings);
+   const [mx,my,mz]=transformPoint(this.muzzleWorld,m,...(game.weapon===0?SLAP_EMITTER:BARREL_EMITTER));
+   const direction={x:-m[8],y:-m[10],z:-m[9]},origin={x:mx/WORLD_SCALE,y:mz/WORLD_SCALE,height:my/WORLD_SCALE};
    this.aim=safeTrackedAim(game.level,this.head,{origin,direction});if(this.aim){m[12]+=(this.aim.origin.x-origin.x)*WORLD_SCALE;m[13]+=(this.aim.origin.height-origin.height)*WORLD_SCALE;m[14]+=(this.aim.origin.y-origin.y)*WORLD_SCALE;}
   }
   if(playing&&this.aim)game.setCombatPose({head:this.head,aim:this.aim});else game.clearCombatPose();

@@ -1,5 +1,6 @@
 import {materialUV} from './level-geometry.js';
 import {WEAPONS} from './core.js';
+import {SLAP_EMITTER} from './equipment-math.js';
 // Original low-poly industrial design. Dimensions are meters; models share the atlas.
 export const EQUIPMENT_COLORS=Object.freeze({composite:'#111d2b',rubber:'#070c13',metal:'#566b80',edge:'#9db6c8',cyan:'#48e9ff',magenta:'#ff59c4',amber:'#ffca76',text:'#edf8ff'});
 const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255),C=Object.fromEntries(Object.entries(EQUIPMENT_COLORS).map(([k,v])=>[k,rgb(v)])),whiteUV=materialUV('white'),cache=new Map();
@@ -42,7 +43,7 @@ export function handMesh(side='left',style='combat',pose='relaxed',detail=8){
 export const WEAPON_PRESENTATION=Object.freeze([{name:'WAKE-UP SLAP',role:'Palm impulse gauntlet',width:.10,length:.14},{name:'RESONANCE BLASTER',role:'Compact resonance sidearm',width:.074,length:.34},{name:'BASS CANNON',role:'Wide acoustic emitter',width:.15,length:.34},{name:'Φ PULSE RIFLE',role:'Linear pulse accelerator',width:.084,length:.34},{name:'ALTERMATH DISRUPTOR',role:'Forked field disruptor',width:.14,length:.34},{name:'THE UNPLUGGER',role:'Heavy liberation lance',width:.138,length:.34}]);
 export function weaponMesh(id,detail=8){
  const key='weapon:'+id+':'+detail;if(cache.has(key))return cache.get(key);const b=new MeshBuilder(),accent=rgb(WEAPONS[id].color),metal=C.metal;
- if(id===0){b.box([0,.03,-.043],[.091,.018,.045],metal);for(let i=0;i<4;i++)b.box([-.031+i*.021,.043,-.053],[.015,.009,.024],accent,true);b.box([0,.025,.035],[.055,.018,.027],C.composite);b.tube([0,.032,-.035],[0,.048,-.035],.019,.012,accent,true,detail);}
+ if(id===0){b.box([0,.03,-.043],[.091,.018,.045],metal);for(let i=0;i<4;i++)b.box([-.031+i*.021,.043,-.053],[.015,.009,.024],accent,true);b.box([0,.025,.035],[.055,.018,.027],C.composite);b.tube([0,.032,-.035],SLAP_EMITTER,.019,.012,accent,true,detail);}
  else{
   b.box([0,-.026,.014],[.044,.081,.052],C.rubber);b.box([0,-.022,.012],[.047,.062,.04],metal);b.box([0,-.055,-.014],[.058,.012,.057],C.composite);b.box([0,-.043,-.042],[.063,.007,.036],metal);
   if(id===1){b.box([0,.018,-.112],[.069,.064,.19],C.composite);b.box([0,.054,-.102],[.051,.012,.17],metal);b.tube([0,.006,-.18],[0,0,-.329],.019,.010,metal,false,detail);b.tube([0,0,-.326],[0,0,-.34],.023,.013,accent,true,detail);for(const x of [-.036,.036])b.box([x,.022,-.11],[.004,.01,.102],accent,true);b.box([0,.065,-.063],[.009,.012,.025],C.edge);}

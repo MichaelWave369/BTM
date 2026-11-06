@@ -42,9 +42,15 @@ export function rayEntityDistance(o,d,e,spread=0,range=25){
  const base=e.floorHeight||0;return horizontal<=radius&&z>=base-padding&&z<=base+entityHeight(e.type)+padding?t:null;
 }
 export function traceTrackedShot(level,aim,weapon){
- if(!validAim(aim))return {targets:[],impact:null};const d=normalizeDirection(aim.direction),impact=traceEnvironment(level,aim.origin,d,weapon.range),targets=[];
+ if(!validAim(aim))return {targets:[],impact:null,rayEnd:null};const d=normalizeDirection(aim.direction),impact=traceEnvironment(level,aim.origin,d,weapon.range),targets=[];
  for(const e of level.enemies){if(e.dead)continue;const t=rayEntityDistance(aim.origin,d,e,weapon.spread,Math.min(weapon.range,impact.distance));if(t===null)continue;
   const center={x:e.x,y:e.y,height:clamp(aim.origin.height+d.z*t,(e.floorHeight||0)+.05,(e.floorHeight||0)+entityHeight(e.type))},delta={x:center.x-aim.origin.x,y:center.y-aim.origin.y,z:center.height-aim.origin.height},distance=Math.hypot(delta.x,delta.y,delta.z),wall=traceEnvironment(level,aim.origin,delta,distance+.02);
   if(wall.distance>=distance-.08)targets.push({entity:e,distance:t,height:center.height});
- }targets.sort((a,b)=>a.distance-b.distance);return {targets,impact};
+ }
+ targets.sort((a,b)=>a.distance-b.distance);
+ const first=targets[0],o=aim.origin;
+ // Spread can accept an off-axis target. Draw along the tracked axis at
+ // that distance so hit feedback never appears to redirect the weapon.
+ const rayEnd=first?{x:o.x+d.x*first.distance,y:o.y+d.y*first.distance,height:o.height+d.z*first.distance}:impact;
+ return {targets,impact,rayEnd};
 }
