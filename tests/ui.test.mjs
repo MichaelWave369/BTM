@@ -25,3 +25,13 @@ test('Cover title scene is opt-in and preserves a fully local fallback',async()=
 });
 test('The redesigned minimap does not reveal unseen geometry or objectives',()=>{const game=new Game();game.start();game.level.seen.fill(0);game.objectiveTime=0;const {g,calls}=mapContext();Renderer.prototype.drawMap.call({},game,false,g,256,220);assert.equal(calls.length,1,'Only the map background may be painted when nothing is discovered');});
 test('Minimap rendering is presentation-only and preserves game snapshots',()=>{const game=new Game();game.start();game.objectiveTime=4;const before=JSON.stringify(game.snapshot()),{g}=mapContext();Renderer.prototype.drawMap.call({},game,false,g,256,220);assert.equal(JSON.stringify(game.snapshot()),before);});
+
+test('Title screen launches directly into choices without a duplicate giant wordmark',async()=>{
+  const css=await readFile(new URL('../src/style.css',import.meta.url),'utf8');
+  const intro=html.split('<div class="title-copy">')[1]?.split('<nav class="title-actions"')[0];
+  assert.ok(intro,'Title launcher markup missing');
+  assert.match(intro,/<h1 class="title-accessible-name">Break the Matrix<\/h1>/);
+  assert.doesNotMatch(intro,/title-eyebrow|game-wordmark|title-edition/);
+  assert.match(css,/\.title-screen\.album-cover-ready \.arcade-choice\{min-height:40px/);
+  assert.match(css,/\.title-screen\.album-cover-ready \.title-album\{order:1\}/);
+});
