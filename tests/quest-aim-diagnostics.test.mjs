@@ -4,6 +4,11 @@ import {readFileSync} from 'node:fs';
 import {Game,WEAPONS} from '../src/core.js';
 import {enterGallery} from '../src/shooting-gallery.js';
 import {previewTrackedShot} from '../src/aim-diagnostics.js';
+import {stepImmersive} from '../src/immersive-play.js';
+import {transformPoint} from '../src/immersive-math.js';
+import {WORLD_SCALE} from '../src/spatial.js';
+import {NetworkClient,NetworkView} from '../src/net/client.js';
+import {fixture} from './immersive-checks.js';
 
 function vault(){
  const g=new Game();enterGallery(g);
@@ -41,6 +46,70 @@ test('preview honors aim clipping metadata and does not move the tracked origin'
  assert.equal(previewTrackedShot(g.level,clipped,WEAPONS[1]).clipped,true);
  assert.equal(JSON.stringify(clipped),copy);
 });
+
+test('the actual tracked beam stays on the guide when weapon spread accepts an off-axis target',()=>{
+ const {g,aim}=vault();
+ g.level.enemies=[{...g.level.enemies[0],x:aim.origin.x+.45,y:aim.origin.y-8}];
+ const preview=previewTrackedShot(g.level,aim,WEAPONS[1]);
+ assert(preview?.target);
+ assert(g.setCombatPose({head:{x:14.5,y:21.5,height:1.1},aim}));
+ assert(g.shoot());
+ assert.equal(g.gallery.hits,1);
+ const {to}=g.events.find(e=>e.type==='beam');
+ assert.deepEqual([to.x,to.height,to.y].map(n=>n*WORLD_SCALE),preview.rayEnd);
+ assert.notDeepEqual(preview.rayEnd,preview.targetMarker);
+ assert(Math.abs(preview.targetOffsetMeters-.72)<1e-6);
+});
+
+test('Wake-Up Slap fires from the modeled palm emitter',()=>{
+ const {g,rig,pose,pad}=fixture();
+ g.selectWeapon(0);
+ rig.prepare(g,pose,pad,{},.025);
+ const {origin}=rig.aim;
+ const emitter=transformPoint([],rig.weaponWorld,0,.048,-.035);
+ assert(Math.hypot(emitter[0]-origin.x*WORLD_SCALE,emitter[1]-origin.height*WORLD_SCALE,
+  emitter[2]-origin.y*WORLD_SCALE)<1e-5);
+});
+
+test('BBS sends the same tracked muzzle offset that it presents after moving',()=>{
+ const {rig,pose,pad}=fixture();
+ const net=new NetworkClient(),game=new NetworkView(net);
+ game.start();game.resume();game.status='alive';pad.moveForward=1;
+ const oldY=game.player.y;
+ stepImmersive(game,{rig,pose},pad,{},.05);
+ assert(game.player.y<oldY);
+ const {origin}=rig.aim;
+ assert(Math.abs(net.intent.aim.x-(origin.x-game.player.x))<1e-5);
+ assert(Math.abs(net.intent.aim.y-(origin.y-game.player.y))<1e-5);
+ assert(Math.abs(net.intent.aim.height-origin.height)<1e-5);
+});
+
+for(const [band,tiles] of [['near',1],['mid',5],['far',12]]){
+ test(`tracked ${band} calibration at ${(tiles*WORLD_SCALE).toFixed(1)} m checks all six weapons`,()=>{
+  for(const [weapon,definition] of WEAPONS.entries()){
+   // Use the open Vault floor with ordinary weapon and damage rules.
+   const {g,rig,pose,pad}=fixture();enterGallery(g);g.gallery=null;g.unlocked=6;
+   assert(g.selectWeapon(weapon),definition.name);
+   rig.prepare(g,pose,pad,{},.025);
+   const {origin,direction}=rig.aim;
+   const target={...g.level.enemies[0],hp:500,maxHp:500,x:origin.x+direction.x*tiles,y:origin.y+direction.y*tiles};
+   g.level.enemies=[target];
+   const preview=weapon===3?null:previewTrackedShot(g.level,rig.aim,definition);
+   assert(g.shoot(),definition.name);
+   if(weapon===3){
+    const projectile=g.projectiles[0];
+    assert.deepEqual([projectile.x,projectile.y,projectile.height],[origin.x,origin.y,origin.height]);
+    assert.equal(g.hits,0,'pulse rifle takes time to reach the target');
+    for(let elapsed=0;elapsed<2;elapsed+=.025)g.updateProjectiles(.025);
+   }else{
+    assert.equal(preview.target,tiles<=definition.range,definition.name);
+   }
+   assert.equal(g.hits,Number(tiles<=definition.range),definition.name);
+   assert.equal(target.hp<500,tiles<=definition.range,definition.name);
+  }
+ });
+}
+
 test('visual hit preview is gated by VR Diagnostics and does not predict projectile weapon hits',()=>{
  const renderer=readFileSync(new URL('../src/world-scene.js',import.meta.url),'utf8');
  assert(renderer.includes("settings.vrDiagnostics&&game.mode==='playing'&&game.weapon!==3&&!rig.uiCaptured"));
