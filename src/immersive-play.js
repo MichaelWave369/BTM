@@ -8,7 +8,7 @@ function wristInputsNeutral(pad) {
 }
 
 // One authoritative update. Rendering never advances gameplay.
-export function stepImmersive(game, spatial, pad, settings, dt, {map = () => {}} = {}) {
+export function stepImmersive(game, spatial, pad, settings, dt, {map = () => {}, reset = () => {}} = {}) {
  const {rig, pose} = spatial, playing = game.mode === 'playing';
  let target = null, captured = false;
  const input = rig.prepare(game, pose, pad, settings, dt, playing, () => {
@@ -24,7 +24,11 @@ export function stepImmersive(game, spatial, pad, settings, dt, {map = () => {}}
   if (target && pad?.pointerPressed) target.action();
   pad = null;
  }
- if (game.mode !== 'playing') { rig.finish(game, pose, false); return {updated: false}; }
+ if (game.mode !== 'playing') {
+  reset();
+  rig.finish(game, pose, false);
+  return {updated: false};
+ }
  game.charge = pad?.charge || 0;
  input.fire = !!pad?.fire;
  game.update(dt, input); rig.finish(game, pose, game.mode === 'playing');

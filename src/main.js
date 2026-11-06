@@ -479,7 +479,7 @@ function tick(now,externalPad,spatial){
   if(alertTimer>0)alertTimer-=Math.min(.05,(now-lastFrame)/1000);
   const realDt=Math.max(.001,(now-lastFrame)/1000),dt=Math.min(.05,realDt);lastFrame=now;communications.tick(realDt);
   const pad=pollController(dt,externalPad,!!spatial);
-  if(spatial){const r=stepImmersive(game,spatial,pad,settings,dt,{map:()=>{mapOpen=!mapOpen;}});if(r.trackingLost)pause();audio.listener(spatial.rig);processEvents();}
+  if(spatial){const r=stepImmersive(game,spatial,pad,settings,dt,{map:()=>{mapOpen=!mapOpen;},reset:()=>vr.input.reset()});if(r.trackingLost)pause();audio.listener(spatial.rig);processEvents();}
   else if(game.mode==='playing'){
     game.charge=altStart?clamp((now-altStart)/1500,0,1):pad?.charge||0;
     game.update(dt,gameplayInput(keys,pad||undefined,fire,settings.controllerSensitivity));processEvents();

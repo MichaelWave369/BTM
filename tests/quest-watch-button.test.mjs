@@ -154,6 +154,17 @@ test('leaving the watch consumes an in-progress charge through its release',()=>
  assert.equal(stepImmersive(f.g,spatial,f.pad,{},.025).uiCaptured,false);
 });
 
+test('explicit wrist Pause still resets controller input and stops simulation',()=>{
+ const f=fixture();let resets=0;
+ f.pad.moveForward=1;f.pad.fire=f.pad.pointerPressed=true;
+ const result=stepImmersive(f.g,{rig:f.rig,pose:f.pose,pointerTarget:()=>({action:()=>{f.g.mode='paused';}})},
+  f.pad,{},.025,{reset:()=>{resets++;}});
+ assert.equal(resets,1);
+ assert.equal(result.updated,false);
+ assert.equal(f.g.time,0);
+ assert.equal(f.g.shots,0);
+});
+
 test('closing watch resumes held walking after right trigger release',()=>{
  const f=fixture();f.pad.moveForward=1;f.pad.fire=true;f.pad.pointerPressed=true;
  stepImmersive(f.g,{rig:f.rig,pose:f.pose,pointerTarget:()=>{
