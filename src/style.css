@@ -211,3 +211,17 @@ body[data-input=controller] #game,body[data-input=vr] #game{cursor:none}.reduced
 .archive-search-controls input{display:block;width:100%;min-height:44px;border:1px solid #5f829e;border-radius:7px;background:#0c1b30;color:var(--paper);padding:10px 13px;font:600 15px var(--mono)}
 .archive-search-controls input::placeholder{color:#aabbd3;opacity:1}
 .archive-search-controls #archive-search-status{margin:0;color:var(--muted);font-size:12px;line-height:1.4}
+
+/* Keep title actions above the fold; the compact header and cover retain branding. */
+.title-accessible-name{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.title-screen.album-cover-ready{padding-top:clamp(14px,2vh,22px);padding-bottom:32px}
+.title-screen.album-cover-ready .title-actions{gap:4px}
+.title-screen.album-cover-ready .arcade-choice{min-height:40px;padding:6px 12px;gap:12px}
+.title-screen.album-cover-ready .arcade-choice b{font-size:13px}
+.title-screen.album-cover-ready .arcade-choice.primary-button b{font-size:14px}
+.title-screen.album-cover-ready .arcade-choice small{font-size:9px}
+@media(max-width:820px){
+ .title-screen.album-cover-ready{padding-top:14px}
+ .title-screen.album-cover-ready .title-album{order:1}
+ .title-screen.album-cover-ready .title-lower{order:2}
+}
