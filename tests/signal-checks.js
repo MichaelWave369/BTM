@@ -72,8 +72,8 @@ export function signalCases() { return [
    expect(JSON.stringify(f.g.projectiles) === before);
   }
  }],
- ['Wrist capture blocks sticks, turning, fire, charge and every gameplay action', () => {
-  const f = fixture(), {x, y, a, energy, ori} = f.g.player, weapon = f.g.weapon;
+ ['Wrist capture preserves left-stick movement and blocks turning, fire, charge and combat shortcuts', () => {
+  const f = fixture(), walking = fixture(), {a, energy, ori} = f.g.player, weapon = f.g.weapon;
   f.pad.moveForward = f.pad.moveStrafe = f.pad.turn = 1;
   f.pad.fire = f.pad.firePressed = f.pad.pointerPressed = true;
   f.pad.charge = .8; f.pad.alternate = .8; f.pad.actions = ['dodge', 'ori', 'vision', 'reload', 'next', 'interact'];
@@ -81,7 +81,9 @@ export function signalCases() { return [
   let actions = 0;
   const result = stepImmersive(f.g, {rig: f.rig, pose: f.pose, pointerTarget: () => ({action: () => actions++})}, f.pad, {}, .02);
   expect(result.uiCaptured && actions === 1 && f.g.shots === 0 && !f.g.bufferedFire && f.g.charge === 0);
-  expect(near(x, f.g.player.x) && near(y, f.g.player.y) && near(a, f.g.player.a));
+  walking.pad.moveForward = walking.pad.moveStrafe = 1;
+  stepImmersive(walking.g, {rig: walking.rig, pose: walking.pose}, walking.pad, {}, .02);
+  expect(near(walking.g.player.x, f.g.player.x) && near(walking.g.player.y, f.g.player.y) && near(a, f.g.player.a));
   expect(!f.g.shift && f.g.vent === 0 && f.g.weapon === weapon && f.g.player.ori >= ori && f.g.player.energy >= energy);
  }],
  ['Leaving a panel while holding controls cannot leak a shot or snap turn', () => {
