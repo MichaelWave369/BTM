@@ -144,7 +144,7 @@ function tick(t,pad,spatial){
  const rawPad=pad||controller.poll(dt,settings,document.hasFocus()&&!document.hidden),control=rawPad?.ready?rawPad:undefined;if(rawPad?.active&&!game.inputEnabled)menu.handle(rawPad.menu);
  if(control?.ready&&control.actions?.includes('pause'))game.inputEnabled?pause():resume();
  if(game.inputEnabled&&driven){game.advanceVisual(dt);net.intent={...driven,actions:[]};}
- else if(game.inputEnabled){game.useHeld=keys.has('KeyE');if(spatial){const result=stepImmersive(game,spatial,rawPad,settings,dt,{map:()=>mapOpen=!mapOpen,reset:()=>vr.input.reset()});if(result.uiCaptured){game.cancelCombat();game.useHeld=false;game.useUntil=0;net.intent.use=false;}if(result.trackingLost)pause();audio.listener(spatial.rig);}
+ else if(game.inputEnabled){game.useHeld=keys.has('KeyE');if(spatial){const result=stepImmersive(game,spatial,rawPad,settings,dt,{map:()=>mapOpen=!mapOpen});if(result.uiCaptured){game.cancelCombat();game.useHeld=false;game.useUntil=0;net.intent.use=false;}if(result.trackingLost)pause();audio.listener(spatial.rig);}
  else{if(control?.ready)controllerActions(game,control,{map:()=>mapOpen=!mapOpen});game.charge=control?.charge||0;game.update(dt,gameplayInput(keys,control,fire,settings.controllerSensitivity));}}
  else{game.advanceVisual(dt);if(spatial)spatial.rig.prepare(game,spatial.pose,null,settings,dt,false);}
  if(!spatial)renderer.draw(game,dt,{...settings,externalMap:true},{map:mapOpen,demo:!game.netState});

@@ -14,7 +14,7 @@ export class ImmersiveRig {
   this.root=matIdentity();this.inverse=matIdentity();this.rightWorld=matIdentity();this.weaponWorld=matIdentity();this.equipmentEpoch=0;this.rightGripWorld=matIdentity();this.leftWorld=matIdentity();this.leftVisualWorld=matIdentity();this.hasVisualLeft=false;this.headWorld=matIdentity();this.level=null;this.calibrated=false;this.snapReady=true;this.fade=0;this.blocked=false;this.eye=[0,0,0];this.menuPosition={x:0,y:0};
   this.input={moveForward:0,moveStrafe:0,sprint:false,fire:false,deferFire:true,afterMovement:()=>this.finish(this.game,this.pose,this.game.mode==='playing')};
  }
- recenter(){this.equipmentEpoch++;this.uiCaptured=false;this.uiWristOpen=false;this.wristRearm=false;this.calibrated=false;this.snapReady=false;this.fade=.18;}
+ recenter(){this.equipmentEpoch++;this.uiCaptured=false;this.uiWristOpen=false;this.calibrated=false;this.snapReady=false;this.fade=.18;}
  calibrate(game,pose){this.equipmentEpoch++;this.yaw=directionAngle(pose.head)-game.player.a;this.headBase=pose.head[13];this.lastX=pose.head[12];this.lastZ=pose.head[14];this.calibrated=true;this.level=game.level;this.menuActive=false;this.menuPosition={x:game.player.x,y:game.player.y,height:game.player.height||0};this.fade=.18;}
  prepare(game,pose,pad,settings={},dt=.014,playing=true,beforeInput=null){
   this.game=game;this.pose=pose;this.settings=immersiveSettings(settings);settings=this.settings;this.fade=Math.max(0,this.fade-dt);this.trackingJump=false;
@@ -28,8 +28,9 @@ export class ImmersiveRig {
   else{const max=.6/WORLD_SCALE,px=body.x+wx-game.player.x,py=body.y+wy-game.player.y,n=Math.hypot(px,py),ratio=n>max?max/n:1;moveBody(game.level,body,game.player.x+px*ratio-body.x,game.player.y+py*ratio-body.y);}
   this.blocked=Math.hypot(body.x-oldX-wx,body.y-oldY-wy)*WORLD_SCALE>.015;
   if(playing){const travel=Math.hypot(body.x-oldX,body.y-oldY);game.stats.distance+=travel;game.lessonDistance+=travel;game.footDistance+=travel;}
-  if(beforeInput){this.finish(game,pose,playing);if(beforeInput())pad=null;}
-  const turn=pad?.ready?pad.turn||0:0;if(Math.abs(turn)<.25)this.snapReady=true;
+  let captured=false;
+  if(beforeInput){this.finish(game,pose,playing);captured=beforeInput();}
+  const turn=pad?.ready&&!captured?pad.turn||0:0;if(Math.abs(turn)<.25)this.snapReady=true;
   if(playing&&settings.vrTurnMode==='snap'&&Math.abs(turn)>.65&&this.snapReady){const delta=Math.sign(turn)*settings.vrSnapAngle*Math.PI/180;game.player.a+=delta;this.yaw-=delta;this.snapReady=false;this.fade=.045;}
   if(playing&&settings.vrTurnMode==='smooth'){const delta=turn*dt*1.9*settings.vrTurnSpeed;game.player.a+=delta;this.yaw-=delta;}
   const reference=settings.vrMoveReference==='controller'&&pose.leftRay?pose.leftRay:pose.head,a=directionAngle(reference,this.yaw)-game.player.a,f=playing&&pad?.ready?pad.moveForward||0:0,r=playing&&pad?.ready?pad.moveStrafe||0:0;
