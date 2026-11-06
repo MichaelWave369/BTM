@@ -20,6 +20,42 @@ async function captureRealChromiumFrame(page,filename){
  }finally{await cdp.detach();}
 }
 async function pump(n=3){for(let i=0;i<n;i++){await io();server.step();}await io();}
+async function verifyController(page){
+ const snapshots=setInterval(()=>server.broadcast(),100);
+ try{
+  await page.bringToFront();
+  await page.evaluate(()=>{
+   const pad={id:'BTM QA CONTROLLER',index:0,connected:true,mapping:'standard',axes:[0,0,0,0],buttons:Array.from({length:17},()=>({pressed:false,value:0}))};
+   window.btmControllerQA={pad,polls:0};
+   Object.defineProperty(navigator,'getGamepads',{configurable:true,value:()=>{
+    window.btmControllerQA.polls++;return [pad];
+   }});
+  });
+  await page.waitForFunction(()=>window.btmControllerQA.polls>=3);
+  async function buttons(indexes,pressed){
+   const next=await page.evaluate(({indexes,pressed})=>{
+    const qa=window.btmControllerQA;
+    for(const index of indexes)qa.pad.buttons[index]={pressed,value:Number(pressed)};
+    return qa.polls+3;
+   },{indexes,pressed});
+   await page.waitForFunction(n=>window.btmControllerQA.polls>=n,next);
+   await page.evaluate(()=>window.bbs.net.flush());await pump();
+   return page.evaluate(()=>window.bbs.game.inputEnabled);
+  }
+  const actor=room.actors.get(page.pid);
+  await buttons([0],true);const heldUse=actor.input.use;
+  await buttons([0],false);const releasedUse=actor.input.use;
+  const paused=!(await buttons([9],true));
+  await buttons([9],false);
+  const beforeResumeShots=actor.feel.stats.shots;
+  const resumed=await buttons([9,7],true);
+  const resumeFired=actor.input.fire||actor.feel.stats.shots>beforeResumeShots;
+  await buttons([9,7],false);
+  const result={heldUse,releasedUse,paused,resumed,resumeFired};
+  assert.deepEqual(result,{heldUse:true,releasedUse:false,paused:true,resumed:true,resumeFired:false});
+  return result;
+ }finally{clearInterval(snapshots);await page.evaluate(()=>{delete navigator.getGamepads;delete window.btmControllerQA;});}
+}
 async function drive(index,input={}){await pages[index].evaluate(m=>window.bbs.drive(m),{...neutralInput(),...input});}
 async function states(){return Promise.all(pages.map(p=>p.evaluate(()=>{const s=window.bbs.game.netState;return{snapshot:s,id:window.bbs.net.id,connected:window.bbs.net.connected};})));}
 async function update(intents){await Promise.all(intents.map((m,i)=>drive(i,m)));await pump(3);}
@@ -30,6 +66,7 @@ try{
  for(const name of ['BROWSER-WAVE-A','BROWSER-WAVE-B']){const context=await browser.newContext({viewport:{width:1440,height:1000},serviceWorkers:'allow'}),p=await context.newPage();p.on('pageerror',e=>errors.push(e.message));await p.addInitScript(()=>{const raf=window.requestAnimationFrame.bind(window),cancel=window.cancelAnimationFrame.bind(window),pending=new Map();let serial=0;window.requestAnimationFrame=callback=>{const id=++serial,timer=setTimeout(()=>{const frame=raf(t=>{pending.delete(id);callback(t);});pending.set(id,{frame});},50);pending.set(id,{timer});return id;};window.cancelAnimationFrame=id=>{const p=pending.get(id);if(p){clearTimeout(p.timer);if(p.frame)cancel(p.frame);pending.delete(id);}};});await p.goto('http://127.0.0.1:'+server.address.port+'/bbs.html');await p.locator('#nickname').fill(name);await p.locator('#connect-btn').click();await p.waitForFunction(()=>window.bbs?.net.connected);pages.push(p);}
  await pages[0].selectOption('#limit','3');await pages[0].selectOption('#mode',mode);await pages[0].selectOption('#arena',arena);await pages[0].locator('#create-btn').click();await pages[0].waitForFunction(()=>!!window.bbs.net.id);const code=await pages[0].locator('#room-code').inputValue();await pages[1].locator('#room-code').fill(code);await pages[1].locator('#join-btn').click();await pages[1].waitForFunction(()=>!!window.bbs.net.id);await pump();
  for(const p of pages){p.pid=await p.evaluate(()=>window.bbs.net.id);await p.locator('#ready-btn').click();}assert.notEqual(pages[0].pid,pages[1].pid);await pump();await pages[0].locator('#start-btn').click();await io();await pump();room=server.rooms.get(code);for(const p of pages)await p.evaluate(()=>window.bbs.resume());
+ if(mode==='deathmatch'&&arena==='no-carrier')events.push({event:'controller',...await verifyController(pages[0])});
  const initial=[...room.actors.values()].map(a=>({id:a.id,x:a.player.x,y:a.player.y}));for(let i=0;i<12;i++)await update([{angle:0,move:1},{angle:Math.PI,move:1}]);const moved=[...room.actors.values()].map(a=>({id:a.id,x:a.player.x,y:a.player.y}));assert(moved.every((p,i)=>distance(p,initial[i])>.4));
  await duelKill();const victim=room.actors.get(pages[1].pid),killer=room.actors.get(pages[0].pid);assert.equal(killer.frags,1);assert.equal(victim.status,'dead');assert.equal(victim.deaths,1);events.push({event:'first-frag',frags:killer.frags,deaths:victim.deaths});
  for(let i=0;i<35;i++)await update([{},{}]);assert.equal(victim.status,'alive');events.push({event:'respawn',health:victim.player.health});

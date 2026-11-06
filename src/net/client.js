@@ -67,9 +67,11 @@ export class NetworkView extends Game{
  oriAbility(){if(this.networkCompetitive||this.oriCorrupted){this.emit('toast',{text:this.oriCorrupted?'ORI LINK CORRUPTED / REPAIR THE DISHES':'ORI SUPPORT / CO-OP ONLY'});return;}if(this.inputEnabled)this.net.action('ori');}
  bassDrop(){if(this.networkCompetitive){this.emit('toast',{text:'SQUAD BASS DROP / CO-OP ONLY'});return;}if(this.inputEnabled)this.net.action('bass');}
  vision(){this.shift=!this.shift;if(this.inputEnabled)this.net.action('vision');}
- interact(){if(this.inputEnabled)this.useUntil=now()+3000;}
+ // Physical controls send their held state. The on-screen Use button also
+ // supports a deliberate tap for players who need that fallback.
+ interact({held=false}={}){if(this.inputEnabled&&!held)this.useUntil=now()+3000;}
  interactionHint(){
-  if(isVertical(this.level))return 'THE STACKYARD / FLOOR '+((this.player.height||0)>1.35?2:1)+' OF 2 · [ J / R3 ] JUMP · RAMP REACHES UPPER DECK';
+  if(isVertical(this.level))return 'STACKYARD / FLOOR '+((this.player.height||0)>1.35?2:1)+'/2 · J / XBOX R3 / WRIST JUMP · WEST RAMP';
   if(this.netState?.beast)return this.beastRole?(this.beastArchetype==='repeater'?'[ FIRE ] PULSE · [ DASH ] EVADE · HUNT SURVIVORS':this.beastArchetype==='plugged'?'[ FIRE ] ARC · [ DASH ] GROUND / HALF DAMAGE · YOU CANNOT MOVE':this.beastArchetype==='warden'?'[ FIRE ] CRUSH · [ DASH ] FIELD / WARNING THEN PULSES · HUNT':'[ FIRE ] CLAW · [ DASH ] LUNGE · HUNT THE SURVIVORS'):'HUNTERS / ELIMINATE OR OUTLAST THE BEAST';
   const down=this.remotePlayers.find(a=>a.status==='downed'&&distance(this.player,a)<1.45);if(down)return '[ E ] REVIVE '+down.nickname;
   if(this.netState?.raid?.phase===2&&distance(this.player,{x:14.5,y:13.5})<1.8)return 'FRACTURE BARRIER / USE END BRIDGES';

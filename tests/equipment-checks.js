@@ -46,6 +46,15 @@ export async function browserEquipmentChecks(){
  const cases=equipmentCases().concat([
   ['Simply raising a wrist while walking cannot open or capture the menu',()=>{const f=fixture(),ui=new WorldUI(),renderer={ui,rayWorld:matIdentity()};f.pose.leftGrip[13]=1.4;f.pose.leftGrip[14]=-.52;f.pad.moveForward=1;const t=f.g.time;const result=stepImmersive(f.g,{rig:f.rig,pose:f.pose,pointerTarget:pad=>VRWorldRenderer.prototype.interfaceTarget.call(renderer,f.pose,f.rig,f.g,730,pad)},f.pad,{},.025);expect(!result.uiCaptured&&!ui.wrist.requested&&f.g.time>t);}],
   ['Combat-height left grip remains reserved for Ori, never the wrist summon',()=>{const f=fixture(),ui=new WorldUI(),renderer={ui,rayWorld:matIdentity()};f.pad.actions=['ori'];const result=stepImmersive(f.g,{rig:f.rig,pose:f.pose,pointerTarget:pad=>VRWorldRenderer.prototype.interfaceTarget.call(renderer,f.pose,f.rig,f.g,730,pad)},f.pad,{},.025);expect(!ui.wrist.pinned&&!result.uiCaptured);}],
+  ['Stackyard Fieldlink exposes Jump through the ordinary right-pointer action',()=>{
+   const f=fixture(),ui=new WorldUI(),actions=[];
+   f.g.networkCompetitive=true;f.g.level.vertical={};
+   primeWrist(ui,{game:f.g,activate:action=>actions.push(action)},f.rig);
+   const target=ui.targets.find(t=>t.label==='JUMP');expect(target);
+   const selected=ui.targetAt({u:(target.x+target.w/2)/768,v:(target.y+target.h/2)/512});
+   expect(selected===target);selected.action();expect(actions.join(',')==='jump');
+   expect(ui.targets.some(t=>t.label==='PAUSE'));
+  }],
   ['Small right ray pointing imprecision still selects the right wrist action',()=>{const f=fixture(),ui=new WorldUI();primeWrist(ui,{game:f.g,activate:()=>{}},f.rig);const target=ui.targets.find(t=>t.label==='GEN.E');expect(target);const nearHit={u:(target.x-6)/768,v:(target.y+target.h/2)/512};expect(ui.targetAt(nearHit)===target);expect(ui.targetAt({u:.999,v:.999})===null);}],
   ['Canvas shows compact inactive status and an intentional active panel',()=>{const f=fixture(),ui=new WorldUI(),d={game:f.g,activate:()=>{},settings:{}};f.rig.leftWorld[13]=f.rig.eye[1]-.70;if(f.rig.hasVisualLeft)visualLeftPose(f.rig.leftVisualWorld,f.rig.leftWorld,f.rig.settings||{});for(let t=100;t<=600;t+=25)ui.paint(d,f.rig,t);expect(!ui.wristPanel&&ui.statusPanel);f.rig.leftWorld[13]=f.rig.eye[1]-.25;f.rig.leftWorld[14]=f.rig.eye[2]-.45;primeWrist(ui,d,f.rig,700);expect(ui.wristPanel&&ui.wristPanel.width<=.38&&ui.targets.length===15&&ui.targets.some(t=>t.label==='GEN.E')&&ui.targets.some(t=>t.label==='HUMAN LEDGER'));}],
   ['Pin is a point target without another Touch button mapping',()=>{const f=fixture(),ui=new WorldUI();primeWrist(ui,{game:f.g,activate:()=>{}},f.rig);const close=ui.targets.find(t=>t.label==='CLOSE MENU');expect(close);close.action();expect(!ui.wrist.pinned);}],

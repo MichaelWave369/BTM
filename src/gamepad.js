@@ -13,7 +13,7 @@ export function stick(x=0,y=0,deadzone=.18){
   const strength=(Math.min(1,magnitude)-deadzone)/(1-deadzone);
   return {x:x/magnitude*strength,y:y/magnitude*strength};
 }
-const idle=()=>({connected:false,ready:false,active:false,moveForward:0,moveStrafe:0,turn:0,fire:false,charge:0,alternate:null,sprint:false,actions:[],menu:{vertical:0,horizontal:0,confirm:false,back:false,start:false}});
+const idle=()=>({connected:false,ready:false,active:false,moveForward:0,moveStrafe:0,turn:0,fire:false,charge:0,alternate:null,sprint:false,interactHeld:false,actions:[],menu:{vertical:0,horizontal:0,confirm:false,back:false,start:false}});
 export class GamepadInput {
   constructor({read=()=>{if(typeof globalThis.navigator?.getGamepads!=='function')throw Object.assign(Error('Gamepad API unavailable'),{name:'NotSupportedError'});return globalThis.navigator.getGamepads();}}={}){this.read=read;this.pad=null;this.identity=null;this.status='waiting';this.reset();}
   reset(){this.awaitingNeutral=true;this.previous=[];this.chargeTime=0;this.menuDirection='';this.repeatTime=0;}
@@ -36,6 +36,7 @@ export class GamepadInput {
     result.ready=true;result.active=buttons.some(Boolean)||!!(move.x||move.y||look.x||look.y);
     result.moveForward=-move.y;result.moveStrafe=move.x;result.turn=Math.sign(look.x)*Math.pow(Math.abs(look.x),1.5)*1.45;
     result.fire=buttons[7];result.firePressed=down(7);result.sprint=buttons[10];
+    result.interactHeld=buttons[0];
     if(buttons[6])this.chargeTime=Math.min(1.5,this.chargeTime+dt);
     if(up(6)){result.alternate=this.chargeTime/1.5;this.chargeTime=0;}
     result.charge=buttons[6]?this.chargeTime/1.5:0;
@@ -58,7 +59,7 @@ export function gameplayInput(keys,pad=idle(),fire=false,sensitivity=1){return {
 };}
 export function controllerActions(game,pad,{map=()=>{},help=()=>{},fire=true,dodgeAngle}={}){
   for(const action of pad.actions){
-    if(action==='interact')game.interact();if(action==='reload')game.reload();if(action==='ori')game.oriAbility();
+    if(action==='interact')game.interact({held:pad.interactHeld});if(action==='reload')game.reload();if(action==='ori')game.oriAbility();
     if(action==='vision')game.vision();if(action==='bass')game.bassDrop();
     if(action==='dodge')game.dodge({left:pad.moveStrafe<-.25,right:pad.moveStrafe>.25,back:pad.moveForward<-.25,...(Number.isFinite(dodgeAngle)?{angle:dodgeAngle}:{})});
     if(action==='previous'||action==='next')game.selectWeapon((game.weapon+(action==='next'?1:game.unlocked-1))%game.unlocked);
