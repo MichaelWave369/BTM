@@ -13,7 +13,7 @@ The Stackyard is a **separate selectable BBS arena** that begins the height-awar
 
 ### Jump rules
 
-- **J** (desktop) or **R3 / right-stick click** (controller and Quest when not interacting with wrist UI) requests a jump. **Space / B** remains the original Dash Bash. No synthetic key events or server-trusted position packets.
+- Press **J** on keyboard, **R3** on Xbox, or select **JUMP** in Quest Fieldlink. Quest right-stick click opens Pause. **Space / B** activates Dash Bash. All jump controls send the same intent to the host.
 - Host-owned `player.height`, `vz`, `grounded`, `supportSurface`, bounded jump buffer and coyote time. A deterministic 120 Hz substep integrates jumps at the game's 30 Hz server tick; the client predicts and reconciles to snapshots. Gravity = 13.4, impulse = 7.2 game units/s; the arena ceiling is 3.9 units to safely fit a real upper storey.
 - You cannot jump up through the deck underside or enter a platform edge halfway through it. Falling off a platform produces a real descending arc, not a floor-number teleport. The west ramp permits grounded ascent. The first beta deliberately lands safely without fall damage pending physical VR comfort validation.
 
