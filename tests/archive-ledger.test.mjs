@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {Game,createLevel} from '../src/core.js';
-import {ARCHIVE_RECORDS,ARCHIVE_DOSSIERS,ARCHIVE_SCHEMA,ARCHIVE_STORAGE_KEY,ArchiveLedger,recordForSign,recordById,ARCHIVE_EVIDENCE_CASES} from '../src/archive-ledger.js';
+import {ARCHIVE_RECORDS,ARCHIVE_DOSSIERS,ARCHIVE_SCHEMA,ARCHIVE_STORAGE_KEY,ArchiveLedger,recordForSign,recordById,ARCHIVE_EVIDENCE_CASES,ARCHIVE_INTEL_CHALLENGES} from '../src/archive-ledger.js';
 
 function storage(){
  const values=new Map();
@@ -67,6 +67,34 @@ test('discovered archive persists independently across new runs, retries and rel
  assert.equal(g2.snapshot().version,1);
  assert.equal(new ArchiveLedger(store).count,1);
  assert.ok(!('archiveReads' in g2.snapshot()),'no save format mutation');
+});
+test('two open ledgers retain separate discoveries and deduplicate a shared plaque',()=>{
+ const store=storage(),first=new ArchiveLedger(store),second=new ArchiveLedger(store);
+ first.collect('intake-mara');
+ assert.equal(second.collect('intake-mara').new,false);
+ second.collect('engineer-ivo');
+ const reloaded=new ArchiveLedger(store);
+ assert.equal(reloaded.count,2);
+ assert(reloaded.find('intake-mara')&&reloaded.find('engineer-ivo'));
+});
+test('a discovery and an investigation survive overlapping writes to the shared archive',()=>{
+ const store=storage(),{setItem}=store;
+ let whileWriting=null;
+ store.setItem=(key,value)=>{
+  if(key===ARCHIVE_STORAGE_KEY&&whileWriting){
+   const next=whileWriting;whileWriting=null;next();
+  }
+  setItem(key,value);
+ };
+ const challenge=ARCHIVE_INTEL_CHALLENGES[0];
+ const witness=ARCHIVE_EVIDENCE_CASES.find(entry=>entry.id===challenge.caseId);
+ setItem(ARCHIVE_STORAGE_KEY,JSON.stringify({schema:ARCHIVE_SCHEMA,ids:witness.requires}));
+ const first=new ArchiveLedger(store),second=new ArchiveLedger(store);
+ whileWriting=()=>assert.equal(second.submitIntel(challenge.id,challenge.answer).new,true);
+ first.collect('engineer-ivo');
+ const reloaded=new ArchiveLedger(store);
+ assert(reloaded.find('engineer-ivo'));
+ assert.equal(reloaded.find(challenge.id)?.solved,true);
 });
 test('bad storage and invalid ids are ignored safely, and unavailable storage does not prevent play',()=>{
  const store=storage();
