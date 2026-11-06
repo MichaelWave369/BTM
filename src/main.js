@@ -6,7 +6,7 @@ import {Game,SECTORS,WEAPONS,CAMPAIGN_HOSTS,clamp,angleDiff} from './core.js';
 import {Renderer} from './renderer.js';
 import {textureSettings} from './texture-packs.js';
 import {offlineTextureStyle,offlineTextureStatus,requestOfflineTextures} from './texture-offline.js';
-import {ArchiveLedger,searchRecoveredArchive} from './archive-ledger.js';
+import {ARCHIVE_DISCOVERY_PREFIX,ARCHIVE_STORAGE_KEY,ArchiveLedger,searchRecoveredArchive} from './archive-ledger.js';
 import {exportLedgerMarkdown} from './archive-export.js';
 import {buildTrophyDossier,readGalleryCard} from './trophy-room.js';
 import {enterGallery,galleryResult,storeGalleryResult} from './shooting-gallery.js';
@@ -124,6 +124,7 @@ function home(){if(game.phiwadCustom)leavePhiWadMission(game);else if(!game.gall
 function openSettings(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('settings-screen');void refreshOfflineTextures();}
 function openHelp(){returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();showScreen('help-screen');}
 
+let archiveSelectedId=null;
 function renderArchiveScreen(selectedId=null){
  const query=$('archive-search').value;
  const entries=searchRecoveredArchive(archiveLedger,query),root=$('archive-catalog'),detail=$('archive-detail');
@@ -144,6 +145,7 @@ function renderArchiveScreen(selectedId=null){
   return button;
  }));
  const selected=selectedId?archiveLedger.find(selectedId):null;
+ archiveSelectedId=selected?.id??null;
  if(selected){
   detail.replaceChildren();
   const heading=document.createElement('strong');heading.textContent=selected.title;
@@ -195,6 +197,12 @@ function downloadHumanLedger(){
 }
 $('archive-export').addEventListener('click',downloadHumanLedger);
 $('archive-search').addEventListener('input',()=>renderArchiveScreen());
+window.addEventListener('storage',({key,newValue})=>{
+ if(!newValue||(key!==ARCHIVE_STORAGE_KEY&&!key?.startsWith(ARCHIVE_DISCOVERY_PREFIX)))return;
+ if(!archiveLedger.restoreFromStorage())return;
+ if(screen==='archive-screen')renderArchiveScreen(archiveSelectedId);
+ if(screen==='trophy-screen')renderTrophyRoom();
+});
 function openArchive(){$('archive-search').value='';returnScreen=screen||'pause-screen';if(game.mode==='playing')pause();renderArchiveScreen();showScreen('archive-screen');}
 function renderTrophyRoom(){
  let gallery=null;try{gallery=readGalleryCard(localStorage);}catch{}

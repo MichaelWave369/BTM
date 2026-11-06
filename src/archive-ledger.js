@@ -3,6 +3,7 @@ import {ARCHIVE_ACT_II} from './archive-act2.js';
 // Collectible fictional testimonies, kept separate from authoritative game state.
 // No network, combat, save-version, map or enemy behavior changes.
 export const ARCHIVE_STORAGE_KEY='mwave-btm-human-ledger-v1';
+export const ARCHIVE_DISCOVERY_PREFIX=ARCHIVE_STORAGE_KEY+':earned:';
 export const ARCHIVE_SCHEMA='btm.human-ledger/1';
 
 const RECORDS=[
@@ -107,33 +108,50 @@ export class ArchiveLedger{
  get intelChallenges(){return ARCHIVE_INTEL_CHALLENGES.filter(c=>intelVisible(this,c)).map(c=>({...c,solved:this.intelSolved.has(c.id)}));}
  get solvedIntelCount(){return this.intelChallenges.filter(c=>c.solved).length;}
  restoreFromStorage(){
+  if(!this.storage)return false;
+  const before=this.count+this.intelSolved.size;
+  let payload;
   try{
-   const payload=JSON.parse(this.storage.getItem(ARCHIVE_STORAGE_KEY)||'null');
-   if(payload?.schema===ARCHIVE_SCHEMA&&Array.isArray(payload.ids)){
-    this.reads=new Set(payload.ids.filter(id=>typeof id==='string'&&byId.has(id)));
-    this.intelSolved=new Set((Array.isArray(payload.intelSolved)?payload.intelSolved:[])
-     .filter(id=>typeof id==='string'&&byChallengeId.has(id)&&intelVisible(this,byChallengeId.get(id))));
-   }
-  }catch{/* Corrupt or unavailable storage never blocks the game. */}
+   payload=JSON.parse(this.storage.getItem(ARCHIVE_STORAGE_KEY)||'null');
+  }catch{/* Individual discoveries are still readable after a bad snapshot. */}
+  if(payload?.schema!==ARCHIVE_SCHEMA||!Array.isArray(payload.ids))payload=null;
+  for(const id of payload?.ids||[])if(byId.has(id))this.reads.add(id);
+  const solved=new Set(Array.isArray(payload?.intelSolved)?payload.intelSolved:[]);
+  try{
+   for(const id of byId.keys())if(this.storage.getItem(ARCHIVE_DISCOVERY_PREFIX+id)==='1')this.reads.add(id);
+   for(const id of byChallengeId.keys())if(this.storage.getItem(ARCHIVE_DISCOVERY_PREFIX+id)==='1')solved.add(id);
+  }catch{/* Unavailable storage never blocks the game. */}
+  for(const id of solved){
+   const challenge=byChallengeId.get(id);
+   if(challenge&&intelVisible(this,challenge))this.intelSolved.add(id);
+  }
+  if(this.count+this.intelSolved.size===before)return false;
+  this.revision++;return true;
  }
- persist(){
-  try{this.storage?.setItem(ARCHIVE_STORAGE_KEY,JSON.stringify({schema:ARCHIVE_SCHEMA,ids:[...this.reads].sort(),intelSolved:[...this.intelSolved].sort()}));}
+ persist(id){
+  if(!this.storage)return;
+  // Each earned ID has its own key, so simultaneous tabs cannot overwrite
+  // one another. Keep the v1 snapshot readable by older builds as well.
+  try{this.storage.setItem(ARCHIVE_DISCOVERY_PREFIX+id,'1');}catch{/* Try the legacy snapshot below. */}
+  try{this.storage.setItem(ARCHIVE_STORAGE_KEY,JSON.stringify({schema:ARCHIVE_SCHEMA,ids:[...this.reads].sort(),intelSolved:[...this.intelSolved].sort()}));}
   catch{/* The current session still retains discoveries. */}
  }
  collect(id){
   const entry=recordById(id);
+  this.restoreFromStorage();
   if(!entry||this.reads.has(id))return {new:false,entry:entry||null,milestones:[]};
   const before=this.count;
-  this.reads.add(id);this.revision++;this.persist();
+  this.reads.add(id);this.revision++;this.persist(id);
   return {new:true,entry,milestones:ARCHIVE_DOSSIERS.filter(d=>before<d.threshold&&this.count>=d.threshold)};
  }
  submitIntel(id,answer){
   const challenge=byChallengeId.get(id);
+  this.restoreFromStorage();
   if(!challenge||!intelVisible(this,challenge)||!Number.isInteger(answer)||answer<0||answer>=challenge.options.length)
    return {accepted:false,correct:false,new:false};
   if(answer!==challenge.answer)return {accepted:true,correct:false,new:false};
   if(this.intelSolved.has(id))return {accepted:true,correct:true,new:false};
-  this.intelSolved.add(id);this.revision++;this.persist();
+  this.intelSolved.add(id);this.revision++;this.persist(id);
   return {accepted:true,correct:true,new:true};
  }
  list(){
