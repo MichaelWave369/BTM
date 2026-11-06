@@ -7,6 +7,8 @@ import {wristPose} from './equipment-checks.js';
 import {readFileSync} from 'node:fs';
 import {matIdentity} from '../src/immersive-math.js';
 import {hitPanel} from '../src/vr-math.js';
+import {TouchInput} from '../src/vr-input.js';
+import {xrSource} from './vr-checks.js';
 
 const advance=(w,r,start=0,end=650)=>{for(let time=start;time<=end;time+=25)w.update(r,{},time);return w;};
 
@@ -97,18 +99,70 @@ test('right-controller ray reaches wrist-mounted panel with valid UV coordinates
  }
 });
 
-test('an intentionally open watch freezes game clock and held locomotion',()=>{
- const f=fixture(),initialTime=f.g.time,initialPosition=[f.g.player.x,f.g.player.y];
- f.pad.moveForward=1;f.pad.turn=.8;f.pad.fire=true;f.pad.pointerPressed=true;
- let pressed=0;
- const shown=stepImmersive(f.g,{rig:f.rig,pose:f.pose,pointerTarget:()=>{
-   f.rig.uiWristOpen=true;return {action:()=>pressed++};
+test('Touch keeps walking through watch hover, open, selection and close',()=>{
+ const {g,rig,pose}=fixture(),input=new TouchInput(),left=xrSource('left'),right=xrSource('right');
+ const sources=[left,right],trigger=right.gamepad.buttons[0];
+ const aim=g.player.a;
+ let open=false,selected=0,target={action:()=>{open=true;}};
+ const spatial={rig,pose,pointerTarget:()=>{rig.uiWristOpen=open;return target;}};
+ input.poll(sources,.025);
+ left.gamepad.axes[3]=-1;
+ const walk=()=>{
+  const y=g.player.y,time=g.time;
+  const result=stepImmersive(g,spatial,input.poll(sources,.025),{},.025);
+  assert(g.player.y<y,'held left stick keeps moving');
+  assert(g.time>time,'the world advances while using Fieldlink');
+  return result;
+ };
+ assert(walk().uiCaptured,'hover reserves the trigger for the watch');
+ trigger.pressed=true;walk();assert(open);
+ target={action:()=>{selected++;}};
+ walk();assert.equal(selected,0,'holding the opening press cannot select again');
+ trigger.pressed=false;walk();
+ right.gamepad.axes[2]=1;
+ trigger.pressed=true;walk();assert.equal(selected,1);
+ assert.equal(g.player.a,aim,'the right stick is blocked during capture');
+ trigger.pressed=false;right.gamepad.axes[2]=0;walk();
+ target={action:()=>{open=false;}};
+ trigger.pressed=true;walk();assert.equal(open,false);
+ target=null;assert(walk().uiCaptured,'the closing press still owns the trigger');
+ assert.equal(g.shots,0);
+ trigger.pressed=false;assert.equal(walk().uiCaptured,false);
+ trigger.pressed=true;walk();assert.equal(g.shots,1,'a fresh press fires with the left stick held');
+});
+
+test('an open watch captures combat even without a pointer target',()=>{
+ const f=fixture(),aim=f.g.player.a,ori=f.g.player.ori;
+ f.pad.fire=f.pad.firePressed=true;f.pad.alternate=.8;f.pad.actions=['ori'];f.pad.turn=1;
+ const result=stepImmersive(f.g,{rig:f.rig,pose:f.pose,pointerTarget:()=>{
+  f.rig.uiWristOpen=true;return null;
  }},f.pad,{},.025);
- assert.equal(pressed,1);
- assert.equal(shown.wristPaused,true);
- assert.equal(f.g.time,initialTime);
+ assert(result.uiCaptured);
+ assert.equal(f.g.player.a,aim);
+ assert.equal(f.g.player.ori,ori);
  assert.equal(f.g.shots,0);
- assert.deepEqual([f.g.player.x,f.g.player.y],initialPosition);
+});
+
+test('leaving the watch consumes an in-progress charge through its release',()=>{
+ const f=fixture();let target={action:()=>{}};
+ const spatial={rig:f.rig,pose:f.pose,pointerTarget:()=>target};
+ f.pad.charge=.4;stepImmersive(f.g,spatial,f.pad,{},.025);
+ target=null;f.pad.charge=0;f.pad.alternate=.4;
+ assert(stepImmersive(f.g,spatial,f.pad,{},.025).uiCaptured);
+ assert.equal(f.g.shots,0);
+ f.pad.alternate=null;
+ assert.equal(stepImmersive(f.g,spatial,f.pad,{},.025).uiCaptured,false);
+});
+
+test('explicit wrist Pause still resets controller input and stops simulation',()=>{
+ const f=fixture();let resets=0;
+ f.pad.moveForward=1;f.pad.fire=f.pad.pointerPressed=true;
+ const result=stepImmersive(f.g,{rig:f.rig,pose:f.pose,pointerTarget:()=>({action:()=>{f.g.mode='paused';}})},
+  f.pad,{},.025,{reset:()=>{resets++;}});
+ assert.equal(resets,1);
+ assert.equal(result.updated,false);
+ assert.equal(f.g.time,0);
+ assert.equal(f.g.shots,0);
 });
 
 test('closing watch resumes held walking after right trigger release',()=>{
