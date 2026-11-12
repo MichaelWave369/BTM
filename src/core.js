@@ -57,7 +57,7 @@ export const SECTORS = [
   ...EXPANSION,...GAUNTLET
 ];
 export const CAMPAIGN_HOSTS = SECTORS.reduce((n,l)=>n+l.captives.length+l.enemies.filter(e=>ENEMY[e[0]].human).length,0);
-export function createLevel(index,campaign='original'){
+export function createLevel(index,campaign='original',{coloredAccess=true}={}){
   const def=(campaign==='pit'?PIT_STAGES:SECTORS)[index],w=29,h=25;if(!def)throw Error('Unknown campaign stage');
   const cells=Array.from({length:h},()=>Array(w).fill(def.wall));
   const carve=(x0,y0,x1,y1)=>{for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)cells[y][x]=0;};
@@ -68,7 +68,7 @@ export function createLevel(index,campaign='original'){
   pillars.forEach(([x,y])=>cells[y][x]=def.wall);
   const enemies=def.enemies.map(([type,x,y,pitBoss],id)=>({id,type,pitBoss,x,y,homeX:x,homeY:y,...ENEMY[type],hp:Math.round((pitBoss?PIT_BOSSES[pitBoss].hp:ENEMY[type].hp*(def.difficulty||1))),speed:ENEMY[type].speed*(def.speedScale||1),damage:ENEMY[type].damage*(1+(campaign==='pit'?0:Math.max(0,index-2)*.055))*(def.damageScale||1),maxHp:Math.round((pitBoss?PIT_BOSSES[pitBoss].hp:ENEMY[type].hp*(def.difficulty||1))),state:'patrol',cooldown:pitBoss?.4:1+id*.13,tell:0,stun:0,flash:0,dead:false,phase:1,walk:0,pathTimer:0}));
   const level={index,w,h,...(campaign==='pit'?{campaign:'pit',palette:def.palette,hazards:structuredClone(def.hazards),traps:structuredClone(def.traps||[]),floorTraps:structuredClone(def.floorTraps||[]),blasts:[]}:{}),cells,doors,enemies,items:def.items.map(([type,x,y],id)=>({id,type,x,y,taken:false})),captives:def.captives.map(([x,y],id)=>({id,x,y,freed:false})),relays:def.relays.map(([x,y],id)=>({id,x,y,active:false})),key:{x:def.key[0],y:def.key[1],taken:false},exit:{x:def.exit[0],y:def.exit[1]},seen:Array(w*h).fill(false),secretFound:false};
-  decorateLevel(level,def,index);if(campaign!=='pit')addColoredAccess(level,def.spawn,index);return level;
+  decorateLevel(level,def,index);if(campaign!=='pit'&&coloredAccess)addColoredAccess(level,def.spawn,index);return level;
 }
 export class Game {
   constructor(){this.gallery=null;this.campaign='original';this.energyMode='survival';this.mode='title';this.events=[];this.time=0;this.levelIndex=0;this.totalFreed=0;this.totalArtifacts=0;this.totalSecrets=0;this.campaignTime=0;this.unlocked=3;this.weapon=1;this.effects=[];this.projectiles=[];this.rng=369;this.loadLevel(0,false);this.mode='title';}
@@ -97,10 +97,10 @@ export class Game {
   get tactics(){return this.definition.tactics||0;}
   start({energyMode='survival',campaign='original'}={}){this.gallery=null;this.campaign=campaign==='pit'?'pit':'original';this.pitRecord=[];this.pitDeaths=0;this.energyMode=this.campaign==='pit'?'survival':energyMode==='legacy'?'legacy':'survival';this.totalFreed=0;this.totalArtifacts=0;this.totalSecrets=0;this.campaignTime=0;this.unlocked=3;this.weapon=1;this.rng=369;this.loadLevel(0,false);this.mode='playing';if(this.campaign==='original')this.banter('hello',[['ORI','Rise and shine, Michael. The Matrix has terrible customer service.'],['WAVE','Good. I brought a cancellation policy. And a bass cannon.']]);}
   startPit(){this.start({campaign:'pit'});this.say('The Twelve Trials. Finite cells. Read the floor, punish recovery, and keep Ori close.','ORI',2);}
-  loadLevel(index,carry=true){
+  loadLevel(index,carry=true,{coloredAccess=true}={}){
     const health=carry?Math.max(this.campaign==='pit'?40:65,this.player?.health??100):100,armor=carry?Math.max(this.campaign==='pit'?0:20,this.player?.armor??0):25;this.nav=null;this.navTime=0;
     const energy=this.survival?(carry?this.player?.energy??100:100):100,reserve=this.survival?(carry?this.player?.reserve??45:45):0;
-    this.levelIndex=index;this.level=createLevel(index,this.campaign);this.pitAmbient=2;if(this.survival)for(const e of this.level.enemies){e.speed*=1.08;e.damage*=1.1;}this.player={...this.definition.spawn,health,armor,energy,reserve,ori:100,vision:100,key:false,keys:{}};
+    this.levelIndex=index;this.level=createLevel(index,this.campaign,{coloredAccess});this.pitAmbient=2;if(this.survival)for(const e of this.level.enemies){e.speed*=1.08;e.damage*=1.1;}this.player={...this.definition.spawn,health,armor,energy,reserve,ori:100,vision:100,key:false,keys:{}};
     this.ori={x:this.player.x+.35,y:this.player.y+.3,a:0};this.effects=[];this.projectiles=[];this.time=0;this.levelFreed=0;this.shots=0;this.hits=0;this.cooldown=0;this.recharge=0;this.vent=0;this.shotAnim=0;this.hurt=0;this.shake=0;this.shift=false;this.bassCharge=0;this.dodgeCooldown=0;this.dodgeFlash=0;this.shieldTime=0;this.shieldCharge=0;this.oriCooldown=0;this.oriAuto=3;this.warning=4;this.objectiveTime=0;this.levelKills=0;this.unlocked=this.campaign==='pit'?6:Math.max(this.unlocked,index===0?3:index===1?4:6);this.mode='playing';this.resetFeel();this.checkpoint=this.snapshot();this.emit('checkpoint');this.emit('sector',{index,name:this.definition.name,campaign:this.campaign});
   }
   get liberation(){return Math.round(this.totalFreed/(this.campaign==='pit'?PIT_HOSTS:CAMPAIGN_HOSTS)*100);}

@@ -7,3 +7,5 @@ The placement solver flood-fills the *original* sector. It carves small blind-en
 Checkpoints retain original `version:1`; newly saved key inventory lives at `player.keys`. Older snapshots without that field or without color-locked doors remain playable. Pit, competitive BBS and network simulation are unchanged.
 
 Acceptance: run Node tests, build/offline, original and immersive playthroughs; verify color-coded door art in classic and Quest 3, right-grip USE, wrist map/hints, checkpoint retry, and gold extraction. **No physical headset sign-off has been performed for this patch.**
+
+Co-op isolation: `Room` explicitly requests `coloredAccess:false` in both level initialization and world validation. This keeps the strict co-op item whitelist and authoritative network checkpoint schema untouched. A solo `Game` keeps colored access enabled.

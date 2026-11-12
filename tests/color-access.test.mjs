@@ -34,6 +34,14 @@ test('colored lock only opens after its matching card; gold gate stays separate'
  game.player.keys[door.lockColor]=true;game.interact();assert.equal(door.target,1);
  assert.equal(game.player.key,false);
 });
+test('BBS co-op opts out of solo bonus alcoves and keeps original world schema',()=>{
+ for(let i=0;i<12;i++){
+  const original=createLevel(i,'original',{coloredAccess:false});
+  const baseline=SECTORS[i];
+  assert.equal(original.items.length,baseline.items.length);
+  assert.equal(Object.values(original.doors).filter(d=>d.lockColor).length,0);
+ }
+});
 test('color cards persist in v1 saves and old saves without a keyring still restore',()=>{
  const game=new Game();game.start();const item=game.level.items.find(i=>i.type.startsWith('key:'));assert(item);
  game.player.x=item.x;game.player.y=item.y;game.update(.016);
