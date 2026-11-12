@@ -33,8 +33,8 @@ export function reachable(level,start,{doorsOpen=false,secretsOpen=false}={}){
   for(let i=0;i<q.length;i++){const [x,y]=q[i];for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,t=tileAt(level,nx,ny),k=key(nx,ny);if(visited.has(k)||!(t===0||doorsOpen&&(t===4||t===5)||secretsOpen&&t===6))continue;visited.add(k);q.push([nx,ny]);}}
   return visited;
 }
-export function findRoute(level,start,end,{allowLocked=false,secrets=false}={}){
+export function findRoute(level,start,end,{allowLocked=false,secrets=false,keys={}}={}){
   const origin=`${Math.floor(start.x)},${Math.floor(start.y)}`,goal=`${Math.floor(end.x)},${Math.floor(end.y)}`,parents=new Map([[origin,null]]),queue=[origin];
-  for(let i=0;i<queue.length&&!parents.has(goal);i++){const [x,y]=queue[i].split(',').map(Number);for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,yy=y+dy,key=`${xx},${yy}`,t=tileAt(level,xx,yy),d=level.doors[key];if(d?.networkLocked&&d.open<.84||parents.has(key)||!(t===0||t===4||t===5&&(allowLocked||d?.open>=.84)||t===6&&(secrets||d?.open>=.84)))continue;parents.set(key,queue[i]);queue.push(key);}}
+  for(let i=0;i<queue.length&&!parents.has(goal);i++){const [x,y]=queue[i].split(',').map(Number);for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,yy=y+dy,key=`${xx},${yy}`,t=tileAt(level,xx,yy),d=level.doors[key];if(d?.networkLocked&&d.open<.84||d?.lockColor&&!keys?.[d.lockColor]&&d.open<.84||parents.has(key)||!(t===0||t===4||t===5&&(allowLocked||d?.open>=.84)||t===6&&(secrets||d?.open>=.84)))continue;parents.set(key,queue[i]);queue.push(key);}}
   if(!parents.has(goal))return [];const route=[];for(let key=goal;key;key=parents.get(key)){const [x,y]=key.split(',').map(Number);route.push({x:x+.5,y:y+.5});}return route.reverse();
 }

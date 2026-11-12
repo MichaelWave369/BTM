@@ -6,10 +6,13 @@ export const DOOR_MATERIALS=Object.freeze(['door:standard','door:locked','door:s
 export const DOOR_COLORS=Object.freeze({
  standard:Object.freeze([.12,.93,1,1]),
  locked:Object.freeze([1,.74,.25,1]),
- secret:Object.freeze([.72,.38,1,1])
+ secret:Object.freeze([.72,.38,1,1]),
+ 'locked-red':Object.freeze([1,.36,.42,1]),
+ 'locked-blue':Object.freeze([.34,.72,1,1]),
+ 'locked-green':Object.freeze([.42,1,.62,1])
 });
-export function doorKind(type,vision=false){
- return type===4?'standard':type===5?'locked':type===6&&vision?'secret':null;
+export function doorKind(type,vision=false,lockColor=null){
+ return type===4&&['red','blue','green'].includes(lockColor)?'locked-'+lockColor:type===4?'standard':type===5?'locked':type===6&&vision?'secret':null;
 }
 export function doorSurfaceMaterial(type,vision=false){
  const kind=doorKind(type,vision);
@@ -31,10 +34,10 @@ export function doorFrameParts(shape,type,vision=false){
  return [post(-width*.46),post(width*.46),lintel,status];
 }
 export function paintDoorSurface(g,kind,level,settings={}){
- if(!['standard','locked','secret'].includes(kind))return false;
+ if(!['standard','locked','secret','locked-red','locked-blue','locked-green'].includes(kind))return false;
  const style=textureStyleFor(level,settings),theme=TEXTURE_PACKS[style],
-  accent=kind==='standard'?'#5df6ec':kind==='locked'?'#ffcb60':'#bc84ff',
-  secondary=kind==='standard'?'#b9fff7':kind==='locked'?'#fff0b9':'#e7caff';
+  accent=({standard:'#5df6ec',locked:'#ffcb60',secret:'#bc84ff','locked-red':'#ff6878','locked-blue':'#65b8ff','locked-green':'#81e6a0'})[kind],
+  secondary=kind==='standard'?'#b9fff7':kind==='locked'?'#fff0b9':kind.startsWith('locked')?'#fff0d9':'#e7caff';
  // Strong silhouette and thick luminous border remain readable in dark,
  // light, industrial and neon packs. Texture art never affects collision.
  g.fillStyle=style==='corporate'?'#2a424f':'#081620';g.fillRect(0,0,64,64);
@@ -52,7 +55,7 @@ export function paintDoorSurface(g,kind,level,settings={}){
   g.fillStyle=accent;g.fillRect(29,16,6,31);
   g.fillStyle=secondary;g.fillRect(31,20,2,23);
   for(let y=12;y<51;y+=11){g.fillStyle=accent;g.fillRect(3,y,4,4);g.fillRect(57,y,4,4);}
- }else if(kind==='locked'){
+ }else if(kind.startsWith('locked')){
   // Broad gold header stripes + unmistakable locked key-card emblem.
   for(let x=10;x<=49;x+=10){g.fillStyle=accent;g.fillRect(x,11,6,3);}
   g.fillStyle='#111821';g.fillRect(22,23,20,20);

@@ -170,7 +170,7 @@ export class Room{
    // Reuse the original authored Wake-Up Call facility and its PvE enemies;
    // do NOT advance or mutate the saved 24-stage co-op campaign.
    this._definition={...SECTORS[0],name:'THE SIGNAL VAULT',tag:'BBS / WITNESS RECOVERY'};
-   g.campaign='original';g.loadLevel(0,false);g.unlocked=6;g.time=0;
+   g.campaign='original';g.loadLevel(0,false,{coloredAccess:false});g.unlocked=6;g.time=0;
    g.level.relays=[];g.level.captives=[];g.level.signs=[];g.level.key.taken=true;
    g.level.items=g.level.items.filter(i=>i.type!=='artifact');
    this.extraction=freshExtraction(g.level,this.extractionRetries);
@@ -178,7 +178,7 @@ export class Room{
    this.updateExtractionNodes();
   }
   else if(this.competitive){const a=createArena(this.arena,this.localBots?12:8);this._definition=a.definition;g.campaign='original';g.levelIndex=0;g.level=a.level;g.time=0;this.spawns=a.spawns;this.control=this.mode==='control'?freshControlState(this.arena,g.level):null;if(this.control){const z=controlZone(this.control);g.level.raidNodes=[{x:z.x,y:z.y,active:false}];}}
-  else{const d=STAGES[this.stage];this._definition=null;g.campaign=d.campaign;g.loadLevel(d.index,false);g.unlocked=6;g.level.items.forEach(i=>{if(i.type==='energy'){i.remaining=45*this.partySize;i.claims={};}});for(const e of g.level.enemies){e.hp=e.maxHp=Math.round(e.maxHp*(1+.45*(this.partySize-1))/Math.sqrt(d.campaign==='original'&&d.index>=6?g.definition.difficulty||1:1));e.damage*=1+.12*(this.partySize-1);}if(d.campaign==='original'&&d.index>=6)this.addSquadCaches();this.spawns=this.coopSpawns(g.definition.spawn);}
+  else{const d=STAGES[this.stage];this._definition=null;g.campaign=d.campaign;g.loadLevel(d.index,false,{coloredAccess:false});g.unlocked=6;g.level.items.forEach(i=>{if(i.type==='energy'){i.remaining=45*this.partySize;i.claims={};}});for(const e of g.level.enemies){e.hp=e.maxHp=Math.round(e.maxHp*(1+.45*(this.partySize-1))/Math.sqrt(d.campaign==='original'&&d.index>=6?g.definition.difficulty||1:1));e.damage*=1+.12*(this.partySize-1);}if(d.campaign==='original'&&d.index>=6)this.addSquadCaches();this.spawns=this.coopSpawns(g.definition.spawn);}
   let i=0;for(const a of this.actors.values())this.spawn(a,i++,carry&&!this.competitive);
   g.player=this.actors.values().next().value.player;g.resetFeel();g.mode='playing';g.events=[];this.stageStart=this.checkpoint(false);this.dirty=true;
  }
@@ -442,7 +442,7 @@ export class Room{
   if(!s||s.schema!=='btm.coop/1'||!Number.isInteger(s.stage)||s.stage<0||s.stage>23||!Array.isArray(s.receipts)||s.receipts.length!==(s.finale?24:s.stage+(['cleared','campaign-complete'].includes(s.state)?1:0))||s.receipts.some((r,i)=>r.stage!==i+1)||!Array.isArray(s.actors)||s.actors.length<2||s.actors.length>4||s.actors.every(a=>a.bot))throw Error('Invalid cooperative checkpoint');
   const descriptor=STAGES[s.stage],states=['playing','cleared','ending'];
   if(s.code!==this.code||!states.includes(s.state)||s.state==='ending'&&!s.finale||!Number.isInteger(s.partySize)||s.partySize<2||s.partySize>4||s.partySize!==s.actors.length||!s.actors.some(a=>a.id===s.owner)||!Number.isFinite(s.world?.time)||s.world.time<0||s.world.time>86400||s.entry?.entry)throw Error('Invalid cooperative session metadata');
-  const template=s.finale?createRaidLevel(s.partySize):createLevel(descriptor.index,descriptor.campaign),l=s.world.level;
+  const template=s.finale?createRaidLevel(s.partySize):createLevel(descriptor.index,descriptor.campaign,{coloredAccess:false}),l=s.world.level;
   if(!l||JSON.stringify(l.cells)!==JSON.stringify(template.cells)||!Array.isArray(l.items)||l.items.length>128||!Array.isArray(l.enemies)||l.enemies.length>128||!Array.isArray(l.relays)||l.relays.length!==template.relays.length||!Array.isArray(l.captives)||l.captives.length!==template.captives.length)throw Error('Invalid cooperative world');
   const bounded=(v,max)=>Number.isFinite(v)&&v>=0&&v<=max;
   for(const e of l.enemies)if(!['plugged','repeater','enforcer','crawler','warden'].includes(e.type)||![e.x,e.y,e.hp,e.maxHp].every(Number.isFinite)||e.x<0||e.x>=29||e.y<0||e.y>=25||e.maxHp<=0||e.maxHp>50000||e.hp>e.maxHp||typeof e.dead!=='boolean')throw Error('Invalid cooperative enemy');
