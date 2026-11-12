@@ -52,6 +52,7 @@ export function addColoredAccess(level,spawn,index=0){
    door={x:site.x,y:site.y,type:4,open:0,target:0,lockColor:color,bonus:true};
   // Add an entirely optional dead-end room; never color-lock a preexisting
   // door, a main path, or an essential relay/rescue/extraction route.
+  const originalDoorWall=level.cells[site.y][site.x],originalPocketWall=level.cells[site.by][site.bx];
   level.cells[site.y][site.x]=4;level.cells[site.by][site.bx]=0;level.doors[id]=door;
   used.add(id);used.add(name(site.bx,site.by));
   const candidate=[...original.seen].map(k=>{
@@ -60,7 +61,7 @@ export function addColoredAccess(level,spawn,index=0){
    reserved.every(r=>Math.hypot(r.x-o.x,r.y-o.y)>.82));
   candidate.sort((a,b)=>Math.abs(a.d-site.dist)-Math.abs(b.d-site.dist)||b.d-a.d||a.y-b.y||a.x-b.x);
   if(!candidate.length){
-   delete level.doors[id];level.cells[site.y][site.x]=level.cells[site.by][site.bx]=level.cells[site.y][site.x]||1;
+   delete level.doors[id];level.cells[site.y][site.x]=originalDoorWall;level.cells[site.by][site.bx]=originalPocketWall;used.delete(id);used.delete(name(site.bx,site.by));
    continue;
   }
   const location=candidate[0],item={id:level.items.length,type:'key:'+color,
