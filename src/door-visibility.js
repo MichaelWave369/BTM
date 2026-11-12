@@ -37,7 +37,7 @@ export function paintDoorSurface(g,kind,level,settings={}){
  if(!['standard','locked','secret','locked-red','locked-blue','locked-green'].includes(kind))return false;
  const style=textureStyleFor(level,settings),theme=TEXTURE_PACKS[style],
   accent=({standard:'#5df6ec',locked:'#ffcb60',secret:'#bc84ff','locked-red':'#ff6878','locked-blue':'#65b8ff','locked-green':'#81e6a0'})[kind],
-  secondary=kind==='standard'?'#b9fff7':kind.startsWith('locked')?'#fff0d9':'#e7caff';
+  secondary=kind==='standard'?'#b9fff7':kind==='locked'?'#fff0b9':kind.startsWith('locked')?'#fff0d9':'#e7caff';
  // Strong silhouette and thick luminous border remain readable in dark,
  // light, industrial and neon packs. Texture art never affects collision.
  g.fillStyle=style==='corporate'?'#2a424f':'#081620';g.fillRect(0,0,64,64);

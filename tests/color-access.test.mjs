@@ -11,6 +11,10 @@ test('all twelve solo sectors have color keys reachable before their matching lo
    doors=Object.values(level.doors).filter(o=>o.lockColor);
   assert.equal(items.length,Math.min(3,1+Math.floor(i/3)),SECTORS[i].name);
   assert.equal(doors.length,items.length);
+  for(const door of doors){assert.equal(door.bonus,true);assert(level.cells[door.y][door.x]===4);}
+  // None of the regular campaign's original door coordinates gain a lock.
+  const base=SECTORS[i].doors.map(([x,y])=>x+','+y);
+  assert(base.every(k=>!level.doors[k].lockColor));
   const held=[];
   for(const item of [...items].sort((a,b)=>a.accessOrder-b.accessOrder)){
    const color=item.type.slice(4);
