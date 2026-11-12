@@ -5,6 +5,7 @@ export const saveKeyFor=game=>game.campaign==='pit'?PIT_SAVE_KEY:ORIGINAL_SAVE_K
 export function writeCampaignCheckpoint(storage,game){
  if(game.gallery||game.phiwadCustom||game.player.health<=0)return null;
  const snapshot=game.checkpoint||game.snapshot(),pit=game.campaign==='pit';
+  if(game.level?.vertical?.soloPreview||snapshot.level?.vertical?.soloPreview)throw Error('Preview checkpoint must not overwrite the canonical save');
  if(pit? snapshot.version!==2||snapshot.campaign!=='pit'||snapshot.schema!=='btm.pit/1':snapshot.version!==1||snapshot.campaign)throw Error('Campaign checkpoint namespace mismatch');
  storage.setItem(saveKeyFor(game),JSON.stringify(snapshot));return snapshot;
 }
