@@ -25,7 +25,7 @@ test('Sector 01 mezzanine is opt-in; other eleven stages, Pit and canonical leve
 });
 test('physical ramp and upper deck support real movement, underside blocks below-deck bullets',()=>{
  const level=createLevel(0,'original',{verticalPreview:true});
- const p=initVerticalBody({x:9.1,y:21.5},0);
+ const p=initVerticalBody({x:9.5,y:21.5},0);
  for(let i=0;i<120;i++){
   const oldX=p.x,oldY=p.y;moveBody(level,p,.05,0);
   advanceVerticalBody(level,p,1/60,{oldX,oldY});
