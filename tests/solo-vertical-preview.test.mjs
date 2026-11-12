@@ -30,7 +30,7 @@ test('physical ramp and upper deck support real movement, underside blocks below
   const oldX=p.x,oldY=p.y;moveBody(level,p,.05,0);
   advanceVerticalBody(level,p,1/60,{oldX,oldY});
  }
- assert(p.x>14.5&&p.x<17.5);
+ assert(p.x>14.5&&p.x<17.5,`ramp traverse x=${p.x.toFixed(3)} feet=${p.height.toFixed(3)} grounded=${p.grounded} surface=${p.supportSurface}`);
  assert(Math.abs(p.height-STACK_HEIGHT)<.05, 'a real continuous ramp reaches the upper floor');
  assert.equal(p.supportSurface,'upper');
  const above=traceEnvironment(level,{x:16.5,y:20.5,height:3.0},{x:0,y:0,z:-1},3);
