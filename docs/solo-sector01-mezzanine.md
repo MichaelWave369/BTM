@@ -8,7 +8,7 @@ This is the first playable vertical research slice for issue #75. The original S
 
 Serve this branch's web build using HTTPS (WebXR requires a secure context). Add `?solo2f=1` to the game URL, choose **New Campaign**, then move into Sector 01. The ramp runs from **x=9..14, y=21..23**, climbing east; the upstairs deck covers **x=14..18, y=19..23**. Use **J** on desktop, or the **JUMP** command on Gen.E.Wrist in immersive mode. Right grip still interacts; left grip still summons Ori. Standard campaign without the query parameter remains flat.
 
-This slice uses the same `btm.vertical-prototype/1` geometry/physics as BBS Stackyard, with solo-only opt-in. Collision, lower/upper pickup separation, enemy sightlines and stereo geometry share the existing runtime. The two-floor map is not yet populated with upstairs enemies or mandatory objectives.
+This slice uses the same `btm.vertical-prototype/1` geometry/physics as BBS Stackyard, with solo-only opt-in. Collision, lower/upper pickup separation, enemy sightlines, projectile/deck collision and stereo geometry share the existing runtime. The two-floor map is not yet populated with upstairs enemies or mandatory objectives.
 
 ## Save and verification boundaries
 

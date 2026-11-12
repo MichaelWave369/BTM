@@ -52,6 +52,17 @@ test('solo Game can jump in the preview and collect only floor-matching pickups'
  g.player.height=STACK_HEIGHT;g.player.supportSurface='upper';
  g.update(1/60,{});assert.equal(upstairs.taken,true);assert(g.player.reserve>0);
 });
+test('solo vertical shots cannot phase through the platform from either story',()=>{
+ const g=new Game();g.start({verticalPreview:true});
+ const make=(x,height,vh)=>({x,y:20.5,height,vh,a:0,speed:0,life:2,
+  damage:12,enemy:false,color:'#5df6ec',r:.12});
+ g.level.enemies=[];g.projectiles=[make(16.5,2.4,-9)];
+ g.updateProjectiles(.2);assert.equal(g.projectiles.length,0,'downward shot strikes upper deck');
+ g.projectiles=[make(16.5,.8,9)];
+ g.updateProjectiles(.2);assert.equal(g.projectiles.length,0,'upward shot strikes deck underside');
+ g.projectiles=[make(10.5,2.4,-9)];
+ g.updateProjectiles(.2);assert.equal(g.projectiles.length,1,'clear uncovered lane remains free');
+});
 test('normal saves are untouched by preview; in-memory retry supports validated vertical state',()=>{
  const g=new Game();g.start({verticalPreview:true});
  const saved=[];const storage={setItem:(k,v)=>saved.push([k,v])};
