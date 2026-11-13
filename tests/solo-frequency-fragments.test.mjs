@@ -103,5 +103,5 @@ test('Quest billboard, both automaps, and the HUD show only optional preview fra
  assert(classic.includes('i.upperFragment&&!i.taken'));
  assert(wrist.includes('FRAGMENTS '));
  assert(wrist.includes('fragment&&l.seen'));
- assert(main.includes("if(game.verticalPreview)summary.push(['FRAGMENTS '"));
+ assert.match(main,/if\(game\.verticalPreview\)\s*\{?\s*summary\.push\(\['FRAGMENTS '/);
 });

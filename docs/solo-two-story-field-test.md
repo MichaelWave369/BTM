@@ -42,3 +42,9 @@ Each experimental mezzanine also carries **one violet Frequency Fragment** oppos
 
 The wrist status and minimaps show a violet fragment marker after the relevant tile has been explored; the objective panel shows the 0/12 count. Compare the same pickup on both headsets, including whether the object appears above the deck, disappears only once and retains its collected state after retry. The normal campaign, Pit and BBS have no Frequency Fragments.
 
+
+## Upper Sentry Hunt (new candidate)
+
+Every optional mezzanine already has one elevated sentry with genuine ramp navigation and floor-aware combat. The new **SENTRIES 0/12** challenge records each sector's upstairs guard defeat. An actual kill grants a capped **+20 health and +15 armor** recovery. The guard can only award a clear once; retry checkpoints preserve both the dead enemy and that clear. The desktop objective HUD and Gen.E.Wrist show the count. After discovering the corresponding tile, maps display the living upper guard in red; the marker disappears on defeat.
+
+Field-test by shooting from the ground beneath the slab (should be blocked), then walking up the ramp and fighting on an exposed line of sight. Confirm health/armor recovery after the defeat and that reload/retry does not duplicate rewards. This challenge never locks extraction or changes the normal flat campaign, Pit, BBS co-op, or their disk saves. Each of the two Quest headsets should run independently.
