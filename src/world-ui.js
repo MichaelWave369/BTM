@@ -1,6 +1,7 @@
 import {WEAPONS} from './core.js';
 import {soloWayfinder,SOLO_WAYFINDER_COLORS} from './solo-wayfinder.js';
 import {soloAccessMarkers,accessCacheStatus,CACHE_COLORS} from './solo-access-hunt.js';
+import {soloSweepMarkers,SOLO_SWEEP_COLORS} from './solo-resonance-sweep.js';
 import {searchRecoveredArchive,ARCHIVE_SEARCH_FILTERS} from './archive-ledger.js';
 import {FieldNavigator} from './genewrist-bridge.js';
 import {paintGenEWristView} from './genewrist-ui.js';
@@ -64,6 +65,11 @@ export class WorldUI{
      const d=mark.kind==='trail'?2:6;
      g.fillStyle=CACHE_COLORS[mark.color];
      g.fillRect(origin+mark.x*cell-d/2,y0+mark.y*cell-d/2,d,d);
+    }
+    for(const node of soloSweepMarkers(l,game.time)){
+     if(!l.seen[Math.floor(node.y)*l.w+Math.floor(node.x)])continue;
+     g.fillStyle=SOLO_SWEEP_COLORS[node.phase];
+     g.fillRect(origin+node.x*cell-3,y0+node.y*cell-3,6,6);
     }
     for(const [objects,color]of [[l.relays.filter(r=>!r.active),UI.pink],[l.captives.filter(c=>!c.freed),UI.cyan],[[l.exit],UI.violet]])for(const o of objects)if(l.seen[Math.floor(o.y)*l.w+Math.floor(o.x)]){g.fillStyle=color;g.fillRect(origin+o.x*cell-2,y0+o.y*cell-2,4,4);}
    if(l.upperUplink){const u=l.upperUplink,c=u.active?UI.cyan:UI.violet;g.fillStyle=c;g.fillRect(origin+u.x*cell-cell*.5,y0+u.y*cell-cell*.5,Math.max(3,cell),Math.max(3,cell));g.strokeStyle=UI.text;g.lineWidth=1.5;g.strokeRect(origin+u.x*cell-cell*.5,y0+u.y*cell-cell*.5,Math.max(3,cell),Math.max(3,cell));}const guard=l.enemies.find(e=>e.upperGuard&&!e.dead);if(guard&&l.seen[Math.floor(guard.y)*l.w+Math.floor(guard.x)]){g.fillStyle=UI.red;g.fillRect(origin+guard.x*cell-2,y0+guard.y*cell-2,4,4);}const fragment=l.items.find(i=>i.upperFragment&&!i.taken);if(fragment&&l.seen[Math.floor(fragment.y)*l.w+Math.floor(fragment.x)]){g.fillStyle=UI.violet;g.fillRect(origin+fragment.x*cell-3,y0+fragment.y*cell-3,6,6);g.strokeStyle=UI.text;g.strokeRect(origin+fragment.x*cell-3,y0+fragment.y*cell-3,6,6);}g.save();g.translate(origin+p.x*cell,y0+p.y*cell);g.rotate(p.a);g.fillStyle=UI.text;g.beginPath();g.moveTo(6,0);g.lineTo(-4,-4);g.lineTo(-2,0);g.lineTo(-4,4);g.closePath();g.fill();g.restore();this.button(20,444,192,46,'CLOSE MAP',()=>activate('map'),{icon:'M'});

@@ -7,6 +7,7 @@ import {DOOR_COLORS,doorFrameParts,doorSurfaceMaterial} from './door-visibility.
 import {WEAPONS,findRoute} from './core.js';import {materialUV,doorGeometry} from './level-geometry.js';import {WORLD_SCALE,entityHeight,traceEnvironment} from './spatial.js';import {transformPoint} from './immersive-math.js';
 import {previewTrackedShot} from './aim-diagnostics.js';
 import {soloAccessMarkers,CACHE_COLORS} from './solo-access-hunt.js';
+import {soloSweepMarkers,SOLO_SWEEP_COLORS} from './solo-resonance-sweep.js';
 import {soloWayfinder,SOLO_WAYFINDER_COLORS} from './solo-wayfinder.js';
 const ORDER=[0,1,2,0,2,3],FACES=[[4,5,6,7],[1,0,3,2],[0,4,7,3],[5,1,2,6],[3,7,6,2],[0,1,5,4]],WHITE=[1,1,1,1],STUN=[.65,1.1,1.35,1],TELL=[1.5,.45,.18,1],CYAN=[.5,1.5,1.4,1],PURPLE=[1.3,.45,1.8,1];
 const rgbCache=new Map();export function colorRGB(hex='#b9ff53'){if(!rgbCache.has(hex)){const v=hex.replace('#','');rgbCache.set(hex,[parseInt(v.slice(0,2),16)/255,parseInt(v.slice(2,4),16)/255,parseInt(v.slice(4,6),16)/255,1]);}return rgbCache.get(hex);}
@@ -59,6 +60,14 @@ export class WorldScene {
    if(mark.kind==='card'||mark.kind==='cache')
     b.billboard(mark.x*s,(mark.floorHeight+.65)*s,mark.y*s,.22*s,.3*s,'marker',eye,color);
    else b.floor(mark.x*s,(mark.floorHeight+.04)*s,mark.y*s,(mark.kind==='trail'?.11:.23)*s,'marker',color);
+   this.counts.objects++;
+  }
+  // Two upper-deck scanner pads glow amber before pulsing red. Their
+  // world height matches the actual collision platform, not ground zero.
+  for(const node of soloSweepMarkers(l,game.time)){
+   if(!visible(node.x,node.y))continue;
+   b.floor(node.x*s,(node.floorHeight+.055)*s,node.y*s,.72*s,
+    'hazard:arc',colorRGB(SOLO_SWEEP_COLORS[node.phase]));
    this.counts.objects++;
   }
   for(const n of l.raidNodes||[])b.floor(n.x*s,.025,n.y*s,1.3*s,'hazard:arc',n.active?[.5,1.2,.9,1]:[1,.8,.35,1]);

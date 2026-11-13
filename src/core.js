@@ -4,6 +4,7 @@ import {validAim,traceEnvironment,traceTrackedShot,rayEntityDistance,entityHeigh
 import {EXPANSION,decorateLevel} from './expansion.js';
 import {ACCESS_COLORS,addColoredAccess} from './key-access.js';
 import {claimAccessCache,accessCacheStatus} from './solo-access-hunt.js';
+import {applySoloSweep} from './solo-resonance-sweep.js';
 import {enableSoloMezzanine,isSoloPreview,validSoloPreviewCheckpoint} from './solo-vertical.js';
 import {addSoloUpperSentry,moveSoloUpperSentry} from './solo-vertical-combat.js';
 import {initVerticalBody,advanceVerticalBody,requestVerticalJump,verticalSight} from './net/vertical-arena.js';
@@ -318,6 +319,7 @@ export class Game {
     if(this.gallery){this.updateProjectiles(dt);return;}
     for(const e of l.enemies){const oldX=e.x,oldY=e.y;this.updateEnemy(e,dt);if(this.verticalPreview&&e.upperGuard&&!e.dead){advanceVerticalBody(l,e,dt,{oldX,oldY});e.floorHeight=e.height;}if(this.mode!=='playing')return;}
     this.updateProjectiles(dt);
+    applySoloSweep(this);
     this.oriAuto-=dt;this.warning-=dt;
     const nearby=l.enemies.find(e=>!e.dead&&distance(p,e)<4&&(this.verticalPreview?verticalSight(l,p,e):lineOfSight(l,p,e)));
     if(nearby&&this.oriAuto<=0&&p.ori>=16){p.ori-=16;this.oriAuto=6;this.assistTime=.7;this.stats.oriAssists++;this.ori.target={x:nearby.x,y:nearby.y};nearby.stun=Math.max(nearby.stun,nearby.pitBoss?.2:1);this.damageEnemy(nearby,10,0,'ori');this.emit('oriAssist',{x:nearby.x,y:nearby.y});this.emit('sound',{name:'oriBolt',position:{x:this.ori.x,y:this.ori.y,height:.75}});this.emit('beam',{from:{...this.ori},to:{x:nearby.x,y:nearby.y},color:'#5df6ec',ori:true});}
