@@ -330,6 +330,11 @@ export class Game {
     if(e.upperGuardRole==='bulwark'&&!e.coverReady){e.coverRecharge=Math.max(0,(e.coverRecharge||0)-dt);if(e.coverRecharge<=.00001){e.coverRecharge=0;e.coverReady=true;}}
     if(e.pitBoss){updatePitBoss(this,e,dt);return;}
     const d=distance(e,p),visible=d<12&&(this.verticalPreview?verticalSight(l,e,p):lineOfSight(l,e,p));if(visible)e.state='pursue';
+    // Footsteps behind a nearby upper barricade prompt investigation,
+    // but never authorize an attack without an actual 3D line of sight.
+    if(!visible&&this.verticalPreview&&e.upperGuard&&
+       e.supportSurface==='upper'&&p.supportSurface==='upper'&&d<2.65)
+      e.state='pursue';
     if(e.type==='warden'){const phase=e.hp<e.maxHp*.34?3:e.hp<e.maxHp*.67?2:1;if(phase!==e.phase){e.phase=phase;this.say(`Warden phase ${phase}. Its argument is getting louder.`);this.emit('sound',{name:'alarm'});}}
     if(e.stun>0)return;
     if(e.type==='crawler'&&!visible&&e.state==='pursue'&&this.time-(e.lastPhase??-6)>5){
