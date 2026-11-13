@@ -188,7 +188,13 @@ export class Game {
   freeHost(entity){this.totalFreed++;this.levelFreed++;this.lesson=3;this.bassCharge=clamp(this.bassCharge+20,0,100);this.portraitMood='GRIN';this.portraitTime=1.1;this.emit('liberation',{x:entity.x,y:entity.y});this.emit('sound',{name:'free'});}
   damageEnemy(e,damage,stun=0,source='weapon'){
     if(this.gallery&&e.galleryTarget){galleryHit(this,e,source);return;}
-    if(e.dead)return;let actual=damage*(1+Math.floor(this.totalArtifacts/2)*.15)*pitDamageMultiplier(this,e,source);if(e.pitBoss){const floor=e.phase===1?e.maxHp*.66:e.phase===2?e.maxHp*.33:0;actual=Math.min(actual,Math.max(0,e.hp-floor));}e.hp-=actual;e.flash=.15;e.pain=.18;e.stun=Math.max(e.stun,stun*(source==='weapon'?1-this.tactics*.65:1),source==='weapon'&&e.type!=='warden'?.08:0);if(e.pitBoss)e.stun=Math.min(e.stun,.55);e.state='pursue';e.recoil=source==='ori'?0:.16;
+    if(e.dead)return;let actual=damage*(1+Math.floor(this.totalArtifacts/2)*.15)*pitDamageMultiplier(this,e,source);
+    if(this.verticalPreview&&e.upperGuardRole==='bulwark'&&e.coverReady&&source==='weapon'&&e.stun<.5){
+      actual=Math.max(0,actual-22);e.coverReady=false;e.coverRecharge=6;
+      this.emit('burst',{x:e.x,y:e.y,height:(e.floorHeight||0)+.7,color:'#79f0ff',count:12});
+      this.emit('toast',{text:'BULWARK COVER ABSORBED 22 / ORI EXPOSES'});
+    }
+    if(e.pitBoss){const floor=e.phase===1?e.maxHp*.66:e.phase===2?e.maxHp*.33:0;actual=Math.min(actual,Math.max(0,e.hp-floor));}e.hp-=actual;e.flash=.15;e.pain=.18;e.stun=Math.max(e.stun,stun*(source==='weapon'?1-this.tactics*.65:1),source==='weapon'&&e.type!=='warden'?.08:0);if(e.pitBoss)e.stun=Math.min(e.stun,.55);e.state='pursue';e.recoil=source==='ori'?0:.16;
     this.stats.damageDealt+=Math.min(actual,Math.max(0,e.hp+actual));if(source==='weapon')this.hitPulse=.16;
     this.emit('hit',{x:e.x,y:e.y,color:source==='ori'?'#5df6ec':WEAPONS[this.weapon].color,source,damage:Math.round(actual),finisher:e.hp<=0});
     if(e.hp<=0){e.dead=true;e.state='freed';this.levelKills++;this.bassCharge=clamp(this.bassCharge+12,0,100);if(e.human)this.freeHost(e);else{this.emit('burst',{x:e.x,y:e.y,color:e.type==='warden'?'#ffd870':'#5df6ec',count:20});this.emit('sound',{name:'destroy'});}
@@ -321,6 +327,7 @@ export class Game {
   }
   updateEnemy(e,dt){
     if(e.dead)return;const p=this.player,l=this.level;e.walk+=dt*(e.state==='pursue'?7:3);e.flash=Math.max(0,e.flash-dt);e.pain=Math.max(0,(e.pain||0)-dt);e.recoil=Math.max(0,(e.recoil||0)-dt);e.stun=Math.max(0,e.stun-dt);e.cooldown-=dt;
+    if(e.upperGuardRole==='bulwark'&&!e.coverReady){e.coverRecharge=Math.max(0,(e.coverRecharge||0)-dt);if(e.coverRecharge<=.00001){e.coverRecharge=0;e.coverReady=true;}}
     if(e.pitBoss){updatePitBoss(this,e,dt);return;}
     const d=distance(e,p),visible=d<12&&(this.verticalPreview?verticalSight(l,e,p):lineOfSight(l,e,p));if(visible)e.state='pursue';
     if(e.type==='warden'){const phase=e.hp<e.maxHp*.34?3:e.hp<e.maxHp*.67?2:1;if(phase!==e.phase){e.phase=phase;this.say(`Warden phase ${phase}. Its argument is getting louder.`);this.emit('sound',{name:'alarm'});}}
@@ -330,7 +337,7 @@ export class Game {
       for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const x=Math.floor(e.x)+.5,y=Math.floor(e.y)+.5,landing={x:x+dx*2,y:y+dy*2};if(solidAt(l,x+dx,y+dy)&&canOccupy(l,landing.x,landing.y,.24)&&distance(landing,p)<d-1){this.emit('burst',{x:e.x,y:e.y,color:'#bd8bff',count:8});e.x=landing.x;e.y=landing.y;e.lastPhase=this.time;e.stun=.35;this.emit('burst',{x:e.x,y:e.y,color:'#5df6ec',count:8});return;}}
     }
     if(e.tell>0){e.tell-=dt;if(e.tell<=0&&visible){if(e.range<2){if(d<1.45&&(!this.verticalPreview||Math.abs((e.floorHeight||0)-(p.height||0))<.75))this.damagePlayer(e.damage,e);}else{const def=this.definition,pressure=this.tactics,speed=def.shotSpeed||(e.type==='warden'?3.6:3),lead=Math.min(.7,d/speed)*pressure,aim={x:p.x+(this.playerMotion?.x||0)*lead,y:p.y+(this.playerMotion?.y||0)*lead},a=Math.atan2(aim.y-e.y,aim.x-e.x),count=e.type==='warden'?e.phase+(pressure>.6?2:pressure>0?1:0):pressure>.6&&e.type==='enforcer'?3:1;for(let i=0;i<count;i++)this.projectiles.push({x:e.x,y:e.y,a:a+(i-(count-1)/2)*.16,speed,life:5,damage:e.damage,enemy:true,color:e.type==='warden'?'#ffbd62':'#ff667d',r:.13,...(this.combatPose||this.verticalPreview?{height:(this.verticalPreview?(e.floorHeight||0):0)+Math.min(1,entityHeight(e.type)*.8),vh:((this.verticalPreview?(p.height||0)+.75:Math.min(.8,(this.combatPose?.head.height??1.2)*.65))-((this.verticalPreview?(e.floorHeight||0):0)+Math.min(1,entityHeight(e.type)*.8)))/Math.max(.1,d/speed)}:{})});this.emit('sound',{name:'enemy',position:{x:e.x,y:e.y,height:.8}});}e.cooldown=e.delay/(e.type==='warden'?1+e.phase*.13:1)/(1+this.tactics*.55);}return;}
-    if(e.state==='pursue'&&visible&&d<e.range&&e.cooldown<=0){e.tell=(e.type==='warden'?.95:.65)*(1-this.tactics*.22);this.emit('telegraph',{x:e.x,y:e.y});if(e.type==='warden')this.banter('warden-tell-'+e.phase,[['ORI','Warden charge! Strafe now. I will keep its signal busy.']],2);if(e.type==='repeater'&&this.time-(this.broadcastTime??-10)>9){this.broadcastTime=this.time;this.emit('toast',{text:['REPEATER: YOUR COMPLIANCE IS OUR PRIORITY.','REPEATER: PLEASE ACCEPT ALL REALITY COOKIES.','REPEATER: NOTHING TO THINK ABOUT HERE.'][e.id%3]});}return;}
+    if(e.state==='pursue'&&visible&&d<e.range&&e.cooldown<=0){e.tell=(e.upperGuardRole==='marksman'?1.05:e.type==='warden'?.95:.65)*(1-this.tactics*.22);this.emit('telegraph',{x:e.x,y:e.y});if(e.type==='warden')this.banter('warden-tell-'+e.phase,[['ORI','Warden charge! Strafe now. I will keep its signal busy.']],2);if(e.type==='repeater'&&this.time-(this.broadcastTime??-10)>9){this.broadcastTime=this.time;this.emit('toast',{text:['REPEATER: YOUR COMPLIANCE IS OUR PRIORITY.','REPEATER: PLEASE ACCEPT ALL REALITY COOKIES.','REPEATER: NOTHING TO THINK ABOUT HERE.'][e.id%3]});}return;}
     if(this.verticalPreview&&e.upperGuard){if(e.state==='pursue')moveSoloUpperSentry(l,e,p,dt);return;}
     const pressure=this.tactics;if(pressure&&e.state==='pursue'&&visible&&d>2&&d<e.range){const side=e.id%2?1:-1,a=Math.atan2(p.y-e.y,p.x-e.x)+Math.PI/2*side;moveBody(l,e,Math.cos(a)*e.speed*pressure*dt,Math.sin(a)*e.speed*pressure*dt,.23);}
     if(e.state==='pursue'&&d>.8&&(d>e.range*.6||!visible)){

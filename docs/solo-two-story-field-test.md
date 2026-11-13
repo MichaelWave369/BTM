@@ -48,3 +48,17 @@ The wrist status and minimaps show a violet fragment marker after the relevant t
 Every optional mezzanine already has one elevated sentry with genuine ramp navigation and floor-aware combat. The new **SENTRIES 0/12** challenge records each sector's upstairs guard defeat. An actual kill grants a capped **+20 health and +15 armor** recovery. The guard can only award a clear once; retry checkpoints preserve both the dead enemy and that clear. The desktop objective HUD and Gen.E.Wrist show the count. After discovering the corresponding tile, maps display the living upper guard in red; the marker disappears on defeat.
 
 Field-test by shooting from the ground beneath the slab (should be blocked), then walking up the ramp and fighting on an exposed line of sight. Confirm health/armor recovery after the defeat and that reload/retry does not duplicate rewards. This challenge never locks extraction or changes the normal flat campaign, Pit, BBS co-op, or their disk saves. Each of the two Quest headsets should run independently.
+
+## Three-role upper guard combat (review candidate)
+
+Each of the twelve authored upper sentries now rotates through three deterministic combat roles (four of each):
+
+| Sectors | Guard | Behavior |
+| --- | --- | --- |
+| 01, 04, 07, 10 | **BREACHER** (coral) | Faster melee charge. Stay mobile; it can chase through the actual ramp. |
+| 02, 05, 08, 11 | **MARKSMAN** (cyan) | Slower long-range shots with a longer warning. Sidesteps on the upper deck without falling off; cover the exposed sightline. |
+| 03, 06, 09, 12 | **BULWARK** (violet) | More health and a rechargeable shield absorbing the first 22 damage every six seconds. **Ori's stun bypasses the shield** while it holds. |
+
+The same upper-sentry reward and 0/12 optional ledger apply; no extra required enemy kills, new weapon, model dependency, or save format. Native stereo uses distinct tints and a small active bulwark cover marker; Classic shows guard roles as readable labels. Roles are part of the preview checkpoint's validation so a forged role cannot replace another sector's sentry. The original campaign and Pit/BBS remain unchanged.
+
+Field check: approach the first three sectors as separate encounters, fire a single shot into the BULWARK and note the 22-damage cover absorption, then let the shield recharge or use Ori to expose it. Confirm the MARKSMAN stays on the deck while strafing and its projectiles still collide with the platform. This remains software-tested, not Quest hardware accepted.
