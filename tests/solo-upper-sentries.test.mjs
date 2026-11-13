@@ -79,10 +79,10 @@ test('projectile hit volumes are genuinely floor aware in both directions',()=>{
 });
 test('tracked VR gun respects the elevated sentry and its solid deck',()=>{
  const l=createLevel(0,'original',{verticalPreview:true}),e=l.enemies.find(e=>e.upperGuard);
- const aim=(height,dz)=>({origin:{x:e.x,y:e.y,height},direction:{x:0,y:0,z:dz}});
+ const aim=(height)=>({origin:{x:e.x-.8,y:e.y,height},direction:{x:.8,y:0,z:STACK_HEIGHT+.5-height}});
  const weapon={range:20,spread:0};
- assert.equal(traceTrackedShot(l,aim(.8,1),weapon).targets.filter(t=>t.entity===e).length,0);
- assert.equal(traceTrackedShot(l,aim(STACK_HEIGHT+1.5,-1),weapon).targets.filter(t=>t.entity===e).length,1);
+ assert.equal(traceTrackedShot(l,aim(.8),weapon).targets.filter(t=>t.entity===e).length,0);
+ assert.equal(traceTrackedShot(l,aim(STACK_HEIGHT+1.5),weapon).targets.filter(t=>t.entity===e).length,1);
 });
 test('preview sentry survives memory snapshot without touching original v1 save',()=>{
  const g=preview(6),snap=g.snapshot(),saved={setItem(){throw Error('unexpected disk write')}};
