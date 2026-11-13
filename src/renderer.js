@@ -57,6 +57,7 @@ export class Renderer {
     if(l.vertical)this.paintVerticalDeck(game,horizon);
     const things=[];
     for(const prop of l.props||[])things.push(prop);
+    for(const cover of l.upperCover||[])things.push({...cover,type:'upperCover'});
     for(const e of l.enemies)if(!e.dead&&(!l.vertical?.soloPreview||verticalSight(l,p,e)))things.push({x:e.x,y:e.y,type:e.type,height:e.type==='warden'?1.65:1,floorHeight:e.floorHeight||0,frame:Math.floor(e.walk)%4,e});
     for(const item of l.items)if(!item.taken&&(!l.vertical?.soloPreview||verticalSight(l,p,{x:item.x,y:item.y,height:item.floorHeight||0})))things.push({...item,height:.5,bob:true});
     for(const captive of l.captives)if(!captive.freed)things.push({...captive,type:'captive',height:1});
@@ -163,6 +164,17 @@ export class Renderer {
     const g=this.g,w=this.canvas.width,h=this.canvas.height,p=game.player,s=this.project(o,p);if(!s||s.x< -w||s.x>w*2)return;const height=Math.min(h*5,h/s.depth*o.height),width=o.e?.raidRole==='core'?height*4:o.type==='warden'?height:height*(o.type==='relay'||o.type==='relayOn'?.8:1),x=Math.floor(s.x-width/2),y=Math.floor(horizon+h/(2*s.depth)-height+(((p.height||0)-(o.remote?.height||0)-(o.floorHeight||0))*h/(s.depth*1.75))+(o.bob?Math.sin(this.lastTime*3+o.x)*h*.04/s.depth:0));
     if(o.type==='portal'){
       for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++){if(s.depth>=this.depth[xx])continue;const f=(xx-x)/width-.5,curve=Math.sqrt(Math.max(0,1-4*f*f)),yy=height/2*curve;g.fillStyle=game.exitReady?'#64e8cd':'#614279';g.globalAlpha=.75;g.fillRect(xx,y+height/2-yy,1,yy*2);g.fillStyle='#091d25';g.globalAlpha=.8;g.fillRect(xx,y+height/2-yy*.82,1,yy*1.64);g.fillStyle=game.exitReady?'#b9ff53':'#bc89e8';g.globalAlpha=.4;for(let k=0;k<6;k++){const py=y+height/2-yy+((this.lastTime*.2+k/6)%1)*yy*2;g.fillRect(xx,py,1,1);}}g.globalAlpha=1;return;
+    }
+    if(o.type==='upperCover'){
+      // Classic uses the identical authored block footprint as native WebXR.
+      for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++){
+       if(s.depth>=this.depth[xx])continue;
+       const edge=(xx-x)/Math.max(1,width);
+       g.fillStyle=edge<.1||edge>.9?'#18314c':'#36556a';
+       g.fillRect(xx,y,1,height);
+       g.fillStyle='#7ce5f7';g.fillRect(xx,y+height*.09,1,Math.max(1,height*.055));
+      }
+      return;
     }
     if(o.type==='trapEmitter'){
       if(s.depth<this.depth[clamp(Math.floor(s.x),0,w-1)]){

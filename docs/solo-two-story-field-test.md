@@ -62,3 +62,10 @@ Each of the twelve authored upper sentries now rotates through three determinist
 The same upper-sentry reward and 0/12 optional ledger apply; no extra required enemy kills, new weapon, model dependency, or save format. Native stereo uses distinct tints and a small active bulwark cover marker; Classic shows guard roles as readable labels. Roles are part of the preview checkpoint's validation so a forged role cannot replace another sector's sentry. The original campaign and Pit/BBS remain unchanged.
 
 Field check: approach the first three sectors as separate encounters, fire a single shot into the BULWARK and note the 22-damage cover absorption, then let the shield recharge or use Ori to expose it. Confirm the MARKSMAN stays on the deck while strafing and its projectiles still collide with the platform. This remains software-tested, not Quest hardware accepted.
+
+## Real tactical upper cover (new candidate)
+
+Two **solid barricades per experimental upper deck**, located on the north and south rows without occupying the ramp, middle walking lane, optional color key, supply, uplink, fragment or sentry's initial position. The same dimensions drive native WebXR static geometry, Classic rendering, 3D line-of-sight/VR tracked gun rays, enemy targeting, projectile collision, and **upper-body walking collision**. The ground-floor room directly beneath remains traversable, and the deck/ramp vertical physics are unchanged.
+
+Suggested pair test: Sector 01, find both cyan-trimmed blocks, approach from above and confirm you cannot walk through them; move *around* them using the central lane; from the upper level put a block between you and a Breacher then test whether its projectile/shot is stopped. Peek beside or jump to clear the obstruction. Repeat on Sector 02 with Marksman shots from range and Sector 03 with the Bulwark. Walk and jump underneath the upper deck to confirm the downstairs airspace remains unchanged, and verify Ori uplink/right-grip, fragments, original gold extraction and guard descent/ascent through the ramp still work. Check both native stereo and Classic; any actual Quest 3 comfort or aim handling remains manually unverified.
+

@@ -1,4 +1,5 @@
 import {castRay,solidAt} from './collision.js';
+import {traceUpperCover} from './solo-cover.js';
 export const WORLD_SCALE=1.6,WALL_HEIGHT=1.7;
 export const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 export const entityHeight=type=>type==='warden'?1.45:type==='crawler'?.43:1.03;
@@ -24,6 +25,8 @@ export function traceEnvironment(level,origin,direction,max=25){
    }
   }
  }
+ const barricade=traceUpperCover(level,origin,d,t);
+ if(barricade&&barricade.distance<t){t=barricade.distance;type='cover';cell=null;}
  if(vertical>=0&&vertical<t){t=vertical;type=d.z>0?'ceiling':'floor';cell=null;}
  if(solidAt(level,origin.x,origin.y)||origin.height<0||origin.height>ceiling){t=0;type='blocked';cell=null;}
  return {distance:Math.max(0,t),type,cell,x:origin.x+d.x*t,y:origin.y+d.y*t,height:origin.height+d.z*t};
