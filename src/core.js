@@ -4,6 +4,7 @@ import {validAim,traceEnvironment,traceTrackedShot,rayEntityDistance,entityHeigh
 import {EXPANSION,decorateLevel} from './expansion.js';
 import {ACCESS_COLORS,addColoredAccess} from './key-access.js';
 import {enableSoloMezzanine,isSoloPreview,validSoloPreviewCheckpoint} from './solo-vertical.js';
+import {addSoloUpperSentry,moveSoloUpperSentry} from './solo-vertical-combat.js';
 import {initVerticalBody,advanceVerticalBody,requestVerticalJump,verticalSight} from './net/vertical-arena.js';
 import {recordForSign} from './archive-ledger.js';
 import {galleryShot,galleryHit,advanceGallery} from './shooting-gallery.js';
@@ -70,7 +71,7 @@ export function createLevel(index,campaign='original',{coloredAccess=true,vertic
   pillars.forEach(([x,y])=>cells[y][x]=def.wall);
   const enemies=def.enemies.map(([type,x,y,pitBoss],id)=>({id,type,pitBoss,x,y,homeX:x,homeY:y,...ENEMY[type],hp:Math.round((pitBoss?PIT_BOSSES[pitBoss].hp:ENEMY[type].hp*(def.difficulty||1))),speed:ENEMY[type].speed*(def.speedScale||1),damage:ENEMY[type].damage*(1+(campaign==='pit'?0:Math.max(0,index-2)*.055))*(def.damageScale||1),maxHp:Math.round((pitBoss?PIT_BOSSES[pitBoss].hp:ENEMY[type].hp*(def.difficulty||1))),state:'patrol',cooldown:pitBoss?.4:1+id*.13,tell:0,stun:0,flash:0,dead:false,phase:1,walk:0,pathTimer:0}));
   const level={index,w,h,...(campaign==='pit'?{campaign:'pit',palette:def.palette,hazards:structuredClone(def.hazards),traps:structuredClone(def.traps||[]),floorTraps:structuredClone(def.floorTraps||[]),blasts:[]}:{}),cells,doors,enemies,items:def.items.map(([type,x,y],id)=>({id,type,x,y,taken:false})),captives:def.captives.map(([x,y],id)=>({id,x,y,freed:false})),relays:def.relays.map(([x,y],id)=>({id,x,y,active:false})),key:{x:def.key[0],y:def.key[1],taken:false},exit:{x:def.exit[0],y:def.exit[1]},seen:Array(w*h).fill(false),secretFound:false};
-  decorateLevel(level,def,index);if(campaign!=='pit'&&coloredAccess)addColoredAccess(level,def.spawn,index);if(campaign==='original'&&verticalPreview)enableSoloMezzanine(level,index,def.spawn);return level;
+  decorateLevel(level,def,index);if(campaign!=='pit'&&coloredAccess)addColoredAccess(level,def.spawn,index);if(campaign==='original'&&verticalPreview){enableSoloMezzanine(level,index,def.spawn);addSoloUpperSentry(level,index,def);}return level;
 }
 export class Game {
   constructor(){this.verticalPreview=false;this.verticalOld=null;this.gallery=null;this.campaign='original';this.energyMode='survival';this.mode='title';this.events=[];this.time=0;this.levelIndex=0;this.totalFreed=0;this.totalArtifacts=0;this.totalSecrets=0;this.campaignTime=0;this.unlocked=3;this.weapon=1;this.effects=[];this.projectiles=[];this.rng=369;this.loadLevel(0,false);this.mode='title';}
@@ -130,10 +131,10 @@ export class Game {
     const base=Number.isFinite(input.angle)?input.angle:this.combatPose?Math.atan2(this.combatPose.aim.direction.y,this.combatPose.aim.direction.x):this.player.a;
     const a=base+(input.left?-Math.PI/2:input.right?Math.PI/2:input.back?Math.PI:0),dx=Math.cos(a),dy=Math.sin(a),p=this.player,l=this.level,start={x:p.x,y:p.y};
     // A narrow frontal sweep, bounded by the actual collision-safe travel.
-    const frontal=l.enemies.filter(e=>!e.dead&&Math.abs(angleDiff(Math.atan2(e.y-p.y,e.x-p.x),base))<.55&&lineOfSight(l,p,e)).map(e=>({e,forward:(e.x-p.x)*dx+(e.y-p.y)*dy,side:Math.abs((e.x-p.x)*dy-(e.y-p.y)*dx)})).filter(t=>t.forward>=0&&t.forward<=1.5&&t.side<.42).sort((a,b)=>a.forward-b.forward)[0];
+    const frontal=l.enemies.filter(e=>!e.dead&&Math.abs(angleDiff(Math.atan2(e.y-p.y,e.x-p.x),base))<.55&&(this.verticalPreview?verticalSight(l,p,e):lineOfSight(l,p,e))).filter(e=>!this.verticalPreview||Math.abs((e.floorHeight||0)-(p.height||0))<.8).map(e=>({e,forward:(e.x-p.x)*dx+(e.y-p.y)*dy,side:Math.abs((e.x-p.x)*dy-(e.y-p.y)*dx)})).filter(t=>t.forward>=0&&t.forward<=1.5&&t.side<.42).sort((a,b)=>a.forward-b.forward)[0];
     const travel=frontal?Math.min(1,Math.max(0,frontal.forward-.46)):1;
     moveBody(l,p,dx*travel,dy*travel);
-    if(frontal&&distance(p,frontal.e)<.76&&lineOfSight(l,start,frontal.e)){
+    if(frontal&&distance(p,frontal.e)<.76&&(this.verticalPreview?verticalSight(l,start,frontal.e):lineOfSight(l,start,frontal.e))){
       const e=frontal.e,boss=e.type==='warden',armored=e.type==='enforcer';
       this.damageEnemy(e,boss?8:armored?14:28,boss?.18:armored?.45:.9,'bash');
       moveBody(l,e,dx*(boss?.08:armored?.25:.5),dy*(boss?.08:armored?.25:.5),.23);
@@ -274,7 +275,7 @@ export class Game {
     const p=this.player,l=this.level;
     this.updateEnvironment(dt);if(this.mode!=='playing')return;
     if(this.gallery){this.updateProjectiles(dt);return;}
-    for(const e of l.enemies){this.updateEnemy(e,dt);if(this.mode!=='playing')return;}
+    for(const e of l.enemies){const oldX=e.x,oldY=e.y;this.updateEnemy(e,dt);if(this.verticalPreview&&e.upperGuard&&!e.dead){advanceVerticalBody(l,e,dt,{oldX,oldY});e.floorHeight=e.height;}if(this.mode!=='playing')return;}
     this.updateProjectiles(dt);
     this.oriAuto-=dt;this.warning-=dt;
     const nearby=l.enemies.find(e=>!e.dead&&distance(p,e)<4&&(this.verticalPreview?verticalSight(l,p,e):lineOfSight(l,p,e)));
@@ -291,7 +292,7 @@ export class Game {
     const p=this.player,l=this.level;
     for(const b of this.projectiles){
       const steps=3;for(let i=0;i<steps&&!b.dead;i++){const from=this.verticalPreview&&Number.isFinite(b.height)?{x:b.x,y:b.y,height:b.height}:null;b.x+=Math.cos(b.a)*b.speed*dt/steps;b.y+=Math.sin(b.a)*b.speed*dt/steps;if(Number.isFinite(b.height))b.height+=(b.vh||0)*dt/steps;
-      if(from){const delta={x:b.x-from.x,y:b.y-from.y,z:b.height-from.height},length=Math.hypot(delta.x,delta.y,delta.z);if(length>.000001){const deck=traceEnvironment(l,from,delta,length);if(deck.type==='platform'&&deck.distance<length-.0005){b.dead=true;this.emit('burst',{x:deck.x,y:deck.y,height:deck.height,color:b.color,count:6});break;}}}if(solidAt(l,b.x,b.y)||Number.isFinite(b.height)&&(b.height<0||b.height>(l.vertical?.ceiling??WALL_HEIGHT))){b.dead=true;this.emit('burst',{x:b.x,y:b.y,color:b.color,count:5,...(Number.isFinite(b.height)?{height:clamp(b.height,.01,WALL_HEIGHT-.01)}:{})});break;}if(b.enemy){if(distance(p,b)<.26&&(this.verticalPreview?Number.isFinite(b.height)&&b.height>=(p.height||0)+.04&&b.height<=(p.height||0)+1.13:!this.combatPose||!Number.isFinite(b.height)||b.height>=.08&&b.height<=this.combatPose.head.height+.08)){this.damagePlayer(b.damage,{x:b.x-Math.cos(b.a),y:b.y-Math.sin(b.a)});b.dead=true;}}else{const e=l.enemies.find(e=>!e.dead&&distance(b,e)<.4&&(!Number.isFinite(b.height)||b.height>=0&&b.height<=entityHeight(e.type)));if(e){this.damageEnemy(e,b.damage,.2);this.hits++;b.dead=true;}}}b.life-=dt;}
+      if(from){const delta={x:b.x-from.x,y:b.y-from.y,z:b.height-from.height},length=Math.hypot(delta.x,delta.y,delta.z);if(length>.000001){const deck=traceEnvironment(l,from,delta,length);if(deck.type==='platform'&&deck.distance<length-.0005){b.dead=true;this.emit('burst',{x:deck.x,y:deck.y,height:deck.height,color:b.color,count:6});break;}}}if(solidAt(l,b.x,b.y)||Number.isFinite(b.height)&&(b.height<0||b.height>(l.vertical?.ceiling??WALL_HEIGHT))){b.dead=true;this.emit('burst',{x:b.x,y:b.y,color:b.color,count:5,...(Number.isFinite(b.height)?{height:clamp(b.height,.01,WALL_HEIGHT-.01)}:{})});break;}if(b.enemy){if(distance(p,b)<.26&&(this.verticalPreview?Number.isFinite(b.height)&&b.height>=(p.height||0)+.04&&b.height<=(p.height||0)+1.13:!this.combatPose||!Number.isFinite(b.height)||b.height>=.08&&b.height<=this.combatPose.head.height+.08)){this.damagePlayer(b.damage,{x:b.x-Math.cos(b.a),y:b.y-Math.sin(b.a)});b.dead=true;}}else{const e=l.enemies.find(e=>!e.dead&&distance(b,e)<.4&&(!Number.isFinite(b.height)||b.height>=(e.floorHeight||0)&&b.height<=(e.floorHeight||0)+entityHeight(e.type)));if(e){this.damageEnemy(e,b.damage,.2);this.hits++;b.dead=true;}}}b.life-=dt;}
     this.projectiles=this.projectiles.filter(b=>!b.dead&&b.life>0);
   }
   updateEnemy(e,dt){
@@ -304,8 +305,9 @@ export class Game {
       // Crawlers can phase across one thin wall, but never into a solid tile.
       for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const x=Math.floor(e.x)+.5,y=Math.floor(e.y)+.5,landing={x:x+dx*2,y:y+dy*2};if(solidAt(l,x+dx,y+dy)&&canOccupy(l,landing.x,landing.y,.24)&&distance(landing,p)<d-1){this.emit('burst',{x:e.x,y:e.y,color:'#bd8bff',count:8});e.x=landing.x;e.y=landing.y;e.lastPhase=this.time;e.stun=.35;this.emit('burst',{x:e.x,y:e.y,color:'#5df6ec',count:8});return;}}
     }
-    if(e.tell>0){e.tell-=dt;if(e.tell<=0&&visible){if(e.range<2){if(d<1.45)this.damagePlayer(e.damage,e);}else{const def=this.definition,pressure=this.tactics,speed=def.shotSpeed||(e.type==='warden'?3.6:3),lead=Math.min(.7,d/speed)*pressure,aim={x:p.x+(this.playerMotion?.x||0)*lead,y:p.y+(this.playerMotion?.y||0)*lead},a=Math.atan2(aim.y-e.y,aim.x-e.x),count=e.type==='warden'?e.phase+(pressure>.6?2:pressure>0?1:0):pressure>.6&&e.type==='enforcer'?3:1;for(let i=0;i<count;i++)this.projectiles.push({x:e.x,y:e.y,a:a+(i-(count-1)/2)*.16,speed,life:5,damage:e.damage,enemy:true,color:e.type==='warden'?'#ffbd62':'#ff667d',r:.13,...(this.combatPose||this.verticalPreview?{height:Math.min(1,entityHeight(e.type)*.8),vh:(Math.min(this.verticalPreview?(p.height||0)+.8:.8,(this.combatPose?.head.height??1.2)*.65+(this.verticalPreview?(p.height||0):0))-Math.min(1,entityHeight(e.type)*.8))/Math.max(.1,d/speed)}:{})});this.emit('sound',{name:'enemy',position:{x:e.x,y:e.y,height:.8}});}e.cooldown=e.delay/(e.type==='warden'?1+e.phase*.13:1)/(1+this.tactics*.55);}return;}
+    if(e.tell>0){e.tell-=dt;if(e.tell<=0&&visible){if(e.range<2){if(d<1.45)this.damagePlayer(e.damage,e);}else{const def=this.definition,pressure=this.tactics,speed=def.shotSpeed||(e.type==='warden'?3.6:3),lead=Math.min(.7,d/speed)*pressure,aim={x:p.x+(this.playerMotion?.x||0)*lead,y:p.y+(this.playerMotion?.y||0)*lead},a=Math.atan2(aim.y-e.y,aim.x-e.x),count=e.type==='warden'?e.phase+(pressure>.6?2:pressure>0?1:0):pressure>.6&&e.type==='enforcer'?3:1;for(let i=0;i<count;i++)this.projectiles.push({x:e.x,y:e.y,a:a+(i-(count-1)/2)*.16,speed,life:5,damage:e.damage,enemy:true,color:e.type==='warden'?'#ffbd62':'#ff667d',r:.13,...(this.combatPose||this.verticalPreview?{height:(this.verticalPreview?(e.floorHeight||0):0)+Math.min(1,entityHeight(e.type)*.8),vh:((this.verticalPreview?(p.height||0)+.75:Math.min(.8,(this.combatPose?.head.height??1.2)*.65))-((this.verticalPreview?(e.floorHeight||0):0)+Math.min(1,entityHeight(e.type)*.8)))/Math.max(.1,d/speed)}:{})});this.emit('sound',{name:'enemy',position:{x:e.x,y:e.y,height:.8}});}e.cooldown=e.delay/(e.type==='warden'?1+e.phase*.13:1)/(1+this.tactics*.55);}return;}
     if(e.state==='pursue'&&visible&&d<e.range&&e.cooldown<=0){e.tell=(e.type==='warden'?.95:.65)*(1-this.tactics*.22);this.emit('telegraph',{x:e.x,y:e.y});if(e.type==='warden')this.banter('warden-tell-'+e.phase,[['ORI','Warden charge! Strafe now. I will keep its signal busy.']],2);if(e.type==='repeater'&&this.time-(this.broadcastTime??-10)>9){this.broadcastTime=this.time;this.emit('toast',{text:['REPEATER: YOUR COMPLIANCE IS OUR PRIORITY.','REPEATER: PLEASE ACCEPT ALL REALITY COOKIES.','REPEATER: NOTHING TO THINK ABOUT HERE.'][e.id%3]});}return;}
+    if(this.verticalPreview&&e.upperGuard){if(e.state==='pursue')moveSoloUpperSentry(l,e,p,dt);return;}
     const pressure=this.tactics;if(pressure&&e.state==='pursue'&&visible&&d>2&&d<e.range){const side=e.id%2?1:-1,a=Math.atan2(p.y-e.y,p.x-e.x)+Math.PI/2*side;moveBody(l,e,Math.cos(a)*e.speed*pressure*dt,Math.sin(a)*e.speed*pressure*dt,.23);}
     if(e.state==='pursue'&&d>.8&&(d>e.range*.6||!visible)){
       // Local navigation via a shared breadth-first distance field.
