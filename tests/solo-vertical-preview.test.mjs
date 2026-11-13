@@ -4,78 +4,83 @@ import {Game,createLevel,moveBody,SECTORS} from '../src/core.js';
 import {buildLevelGeometry} from '../src/level-geometry.js';
 import {traceEnvironment} from '../src/spatial.js';
 import {initVerticalBody,advanceVerticalBody,requestVerticalJump,STACK_HEIGHT} from '../src/net/vertical-arena.js';
-import {isSoloPreview,SOLO_MEZZANINE,validSoloPreviewCheckpoint} from '../src/solo-vertical.js';
+import {isSoloPreview,SOLO_MEZZANINE,chooseSoloMezzanine,validSoloPreviewCheckpoint} from '../src/solo-vertical.js';
 import {writeCampaignCheckpoint} from '../src/campaign-storage.js';
 
-test('Sector 01 mezzanine is opt-in; other eleven stages, Pit and canonical levels remain flat',()=>{
- const baseline=createLevel(0);
- assert.equal(baseline.vertical,undefined);
- for(let i=1;i<12;i++)assert.equal(createLevel(i,'original',{verticalPreview:true}).vertical,undefined);
- assert.equal(createLevel(0,'pit',{verticalPreview:true}).vertical,undefined);
- const live=createLevel(0,'original',{verticalPreview:true});
- assert(isSoloPreview(live));assert.equal(live.vertical.ceiling,3.9);
- assert.deepEqual(live.cells,baseline.cells,'preview adds geometry without destroying the original ground layout');
- assert.deepEqual(live.doors,baseline.doors);
- assert.equal(live.relays.length,baseline.relays.length);
- assert.deepEqual(live.key,baseline.key);assert.deepEqual(live.exit,baseline.exit);
- assert.equal(live.items.length,baseline.items.length+1);
- const upstairs=live.items.find(item=>item.bonusUpper);
- assert(upstairs&&upstairs.floorHeight===STACK_HEIGHT);
- assert.equal(SECTORS[0].spawn.x,4.5);
-});
-test('physical ramp and upper deck support real movement, underside blocks below-deck bullets',()=>{
- const level=createLevel(0,'original',{verticalPreview:true});
- const p=initVerticalBody({x:9.5,y:21.5},0);
- for(let i=0;i<120;i++){
-  const oldX=p.x,oldY=p.y;moveBody(level,p,.05,0);
-  advanceVerticalBody(level,p,1/60,{oldX,oldY});
+test('all 12 standard stages have a real optional two-story layout with ground mission geometry intact',()=>{
+ for(let index=0;index<12;index++){
+  const original=createLevel(index),l=createLevel(index,'original',{verticalPreview:true});
+  assert.equal(original.vertical,undefined,SECTORS[index].name);
+  assert(isSoloPreview(l),SECTORS[index].name);
+  assert.equal(l.vertical.ceiling,3.9);
+  assert.deepEqual(l.cells,original.cells,SECTORS[index].name+' grid');
+  assert.deepEqual(l.doors,original.doors,SECTORS[index].name+' door states');
+  assert.deepEqual(l.key,original.key,SECTORS[index].name+' gold key');
+  assert.deepEqual(l.exit,original.exit,SECTORS[index].name+' exit');
+  assert.deepEqual(l.relays,original.relays,SECTORS[index].name+' relay');
+  assert.deepEqual(l.captives,original.captives,SECTORS[index].name+' captives');
+  const {upper,ramp}=l.vertical;
+  assert((upper.x1-upper.x0)*(upper.y1-upper.y0)>=9);
+  assert(ramp.x1===upper.x0&&ramp.y0>=upper.y0&&ramp.y1<=upper.y1);
+  assert((ramp.x1-ramp.x0)>=3&&ramp.y1-ramp.y0===2);
+  for(const area of [upper,ramp])for(let y=area.y0;y<area.y1;y++)
+   for(let x=area.x0;x<area.x1;x++)assert.equal(l.cells[y][x],0,SECTORS[index].name+' blocked at '+x+','+y);
+  assert(l.items.some(i=>i.bonusUpper&&i.floorHeight===STACK_HEIGHT));
+  if(index>0)assert(l.items.some(i=>i.type.startsWith('key:')&&i.floorHeight===STACK_HEIGHT),'upper key for '+SECTORS[index].name);
+  assert.equal(createLevel(index,'pit',{verticalPreview:true}).vertical,undefined);
+  assert(validSoloPreviewCheckpoint(l,initVerticalBody({height:0,vz:0,x:SECTORS[index].spawn.x,y:SECTORS[index].spawn.y})));
+  const geometry=buildLevelGeometry(l),flat=buildLevelGeometry(original);
+  assert(geometry.vertexCount>flat.vertexCount,'native two-story meshes '+SECTORS[index].name);
  }
- assert(p.x>14.5&&p.x<17.5,`ramp traverse x=${p.x.toFixed(3)} feet=${p.height.toFixed(3)} grounded=${p.grounded} surface=${p.supportSurface}`);
- assert(Math.abs(p.height-STACK_HEIGHT)<.05, 'a real continuous ramp reaches the upper floor');
- assert.equal(p.supportSurface,'upper');
- const above=traceEnvironment(level,{x:16.5,y:20.5,height:3.0},{x:0,y:0,z:-1},3);
- assert.equal(above.type,'platform');
- const below=traceEnvironment(level,{x:16.5,y:20.5,height:.8},{x:0,y:0,z:1},3);
- assert.equal(below.type,'platform');
- const native=buildLevelGeometry(level),flat=buildLevelGeometry(createLevel(0));
- assert(native.vertexCount>flat.vertexCount);
- assert.equal(native.wallHeight,SOLO_MEZZANINE.ceiling*1.6);
 });
-test('solo Game can jump in the preview and collect only floor-matching pickups',()=>{
- const g=new Game();g.start({verticalPreview:true});assert(g.level.vertical?.soloPreview);
- assert(g.jump());
- g.update(1/60,{});assert(g.player.height>0);
- const upstairs=g.level.items.find(i=>i.bonusUpper);
- g.player.x=upstairs.x;g.player.y=upstairs.y;g.player.height=0;
- g.player.vz=0;g.player.grounded=true;g.player.reserve=0;
- g.update(1/60,{});assert.equal(upstairs.taken,false,'no collecting through the deck');
- g.player.height=STACK_HEIGHT;g.player.supportSurface='upper';
- g.update(1/60,{});assert.equal(upstairs.taken,true);assert(g.player.reserve>0);
+test('a continuous walk from the ramp foot reaches each of the twelve upper decks',()=>{
+ for(let index=0;index<12;index++){
+  const level=createLevel(index,'original',{verticalPreview:true}),r=level.vertical.ramp,u=level.vertical.upper;
+  const p=initVerticalBody({x:r.x0+.5,y:r.y0+.5},0);
+  for(let step=0;step<260&&p.x<u.x0+.45;step++){
+   const oldX=p.x,oldY=p.y;moveBody(level,p,.035,0);
+   advanceVerticalBody(level,p,1/60,{oldX,oldY});
+  }
+  assert(p.x>=u.x0+.4,SECTORS[index].name+' ramp stopped at '+p.x.toFixed(2));
+  assert(Math.abs(p.height-STACK_HEIGHT)<.06,SECTORS[index].name+' feet '+p.height.toFixed(2));
+  assert.equal(p.supportSurface,'upper');
+ }
 });
-test('solo vertical shots cannot phase through the platform from either story',()=>{
+test('upstairs rewards and optional color cards cannot be collected from below',()=>{
+ for(let index=0;index<12;index++){
+  const g=new Game();g.start({verticalPreview:true});if(index>0)g.loadLevel(index,false);
+  const item=g.level.items.find(o=>o.bonusUpper&&o.floorHeight===STACK_HEIGHT);
+  assert(item);Object.assign(g.player,{x:item.x,y:item.y,height:0,vz:0,grounded:true});
+  g.collectPlayerItems();assert.equal(item.taken,false);
+  Object.assign(g.player,{height:STACK_HEIGHT,vz:0,grounded:true,supportSurface:'upper'});
+  g.collectPlayerItems();assert.equal(item.taken,true);
+ }
+});
+test('platform and jump physics block shots and heads through either side',()=>{
+ const l=createLevel(0,'original',{verticalPreview:true}),p=initVerticalBody({x:16.5,y:20.5},0);
+ requestVerticalJump(l,p);let highest=0;
+ for(let i=0;i<90;i++){advanceVerticalBody(l,p,1/60);highest=Math.max(highest,p.height);}
+ assert(highest<STACK_HEIGHT-1);assert.equal(p.height,0);
+ for(const [origin,direction] of [[{x:16.5,y:20.5,height:3.0},{x:0,y:0,z:-1}],
+  [{x:16.5,y:20.5,height:.8},{x:0,y:0,z:1}]]){
+  const hit=traceEnvironment(l,origin,direction,3);assert.equal(hit.type,'platform');
+ }
+ const g=new Game();g.start({verticalPreview:true});g.level.enemies=[];
+ const bullet=(height,vh)=>({x:16.5,y:20.5,height,vh,a:0,speed:0,life:2,damage:12,enemy:false,color:'#5df6ec',r:.12});
+ for(const [h,vh] of [[2.4,-9],[.8,9]]){g.projectiles=[bullet(h,vh)];g.updateProjectiles(.2);assert.equal(g.projectiles.length,0);}
+});
+test('preview state survives in-memory stage progression but never overwrites v1 disk checkpoints',()=>{
  const g=new Game();g.start({verticalPreview:true});
- const make=(x,height,vh)=>({x,y:20.5,height,vh,a:0,speed:0,life:2,
-  damage:12,enemy:false,color:'#5df6ec',r:.12});
- g.level.enemies=[];g.projectiles=[make(16.5,2.4,-9)];
- g.updateProjectiles(.2);assert.equal(g.projectiles.length,0,'downward shot strikes upper deck');
- g.projectiles=[make(16.5,.8,9)];
- g.updateProjectiles(.2);assert.equal(g.projectiles.length,0,'upward shot strikes deck underside');
- g.projectiles=[make(10.5,2.4,-9)];
- g.updateProjectiles(.2);assert.equal(g.projectiles.length,1,'clear uncovered lane remains free');
-});
-test('normal saves are untouched by preview; in-memory retry supports validated vertical state',()=>{
- const g=new Game();g.start({verticalPreview:true});
- const saved=[];const storage={setItem:(k,v)=>saved.push([k,v])};
+ const storage={items:[],setItem(k,v){this.items.push([k,v]);}};
  assert.throws(()=>writeCampaignCheckpoint(storage,g),/Preview/i);
- assert.equal(saved.length,0);
- g.player.x=15.5;g.player.y=21.5;g.player.height=STACK_HEIGHT;
- g.player.grounded=true;g.player.supportSurface='upper';g.saveCheckpoint();
- const snap=g.snapshot(),next=new Game();
- assert(validSoloPreviewCheckpoint(snap.level,snap.player));
- next.restore(snap);assert(isSoloPreview(next.level));
- assert.equal(next.player.height,STACK_HEIGHT);
- snap.player.vz=999;
- assert.throws(()=>new Game().restore(snap),/checkpoint/i);
- const flat=new Game();flat.start();assert.equal(flat.verticalPreview,false);
- assert.doesNotThrow(()=>writeCampaignCheckpoint(storage,flat));assert.equal(saved.length,1);
+ const saved=g.snapshot();const restored=new Game();restored.restore(saved);
+ assert(restored.verticalPreview);restored.loadLevel(1);
+ assert(restored.verticalPreview&&restored.level.index===1&&restored.level.vertical);
+ assert.throws(()=>writeCampaignCheckpoint(storage,restored),/Preview/i);
+ assert.equal(storage.items.length,0);
+ const wrong=restored.snapshot();wrong.player.vz=1000;
+ assert.throws(()=>new Game().restore(wrong),/checkpoint/i);
+ const flat=new Game();flat.start();assert.doesNotThrow(()=>writeCampaignCheckpoint(storage,flat));
+ assert.equal(storage.items.length,1);
+ assert.equal(createLevel(0).vertical,undefined);
 });
