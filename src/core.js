@@ -327,7 +327,7 @@ export class Game {
   }
   updateEnemy(e,dt){
     if(e.dead)return;const p=this.player,l=this.level;e.walk+=dt*(e.state==='pursue'?7:3);e.flash=Math.max(0,e.flash-dt);e.pain=Math.max(0,(e.pain||0)-dt);e.recoil=Math.max(0,(e.recoil||0)-dt);e.stun=Math.max(0,e.stun-dt);e.cooldown-=dt;
-    if(e.upperGuardRole==='bulwark'&&!e.coverReady){e.coverRecharge=Math.max(0,(e.coverRecharge||0)-dt);if(e.coverRecharge===0)e.coverReady=true;}
+    if(e.upperGuardRole==='bulwark'&&!e.coverReady){e.coverRecharge=Math.max(0,(e.coverRecharge||0)-dt);if(e.coverRecharge<=.00001){e.coverRecharge=0;e.coverReady=true;}}
     if(e.pitBoss){updatePitBoss(this,e,dt);return;}
     const d=distance(e,p),visible=d<12&&(this.verticalPreview?verticalSight(l,e,p):lineOfSight(l,e,p));if(visible)e.state='pursue';
     if(e.type==='warden'){const phase=e.hp<e.maxHp*.34?3:e.hp<e.maxHp*.67?2:1;if(phase!==e.phase){e.phase=phase;this.say(`Warden phase ${phase}. Its argument is getting louder.`);this.emit('sound',{name:'alarm'});}}

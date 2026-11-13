@@ -53,7 +53,7 @@ export function moveSoloUpperSentry(level,sentry,target,dt){
  const waypoint=soloSentryWaypoint(level,sentry,target);
  // Marksmen strafe laterally on the upper floor rather than acting like
  // another melee enforcer. Never strafe off the authored deck or block ramp pursuit.
- if(!waypoint&&sentry.upperGuardRole==='marksman'&&high(level,sentry)&&high(level,target)){
+ if(!waypoint&&sentry.state==='pursue'&&sentry.upperGuardRole==='marksman'&&high(level,sentry)&&high(level,target)){
   const d=dist(sentry,target);
   if(d<sentry.range*.82&&d>.1){
    const u=level.vertical.upper,dx=(target.x-sentry.x)/d,dy=(target.y-sentry.y)/d,
