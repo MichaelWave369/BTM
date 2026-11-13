@@ -115,7 +115,7 @@ function showScreen(id){
   $('view-top').hidden=!!id;$('touch-controls').hidden=!!id||!touch||inputMode!=='keyboard';$('onboarding').hidden=!!id||!!game.gallery||game.campaign==='pit'||game.levelIndex!==0||game.lesson>=3;
   document.body.classList.toggle('playing',!id);$('app').dataset.screen=id||'playing';
   if(id){capture.release();if(document.pointerLockElement)document.exitPointerLock();if(inputMode!=='keyboard')controllerMenu.focus(controllerMenu.items()[0]);}
-  if(id==='pause-screen')$('save-btn').hidden=!!game.gallery;
+  if(id==='pause-screen'){$('save-btn').hidden=!!game.gallery;$('two-story-next-btn').hidden=!game.verticalPreview||game.levelIndex>=SECTORS.length-1;}
   if(id==='title-screen'){$('dialogue').hidden=true;$('boss-bar').hidden=true;$('vision-tag').hidden=true;$('interaction').textContent='';$('header-sector').textContent='SIMULATION ONLINE';}updateCapture();
 }
 function lockMouse(){if(touch||vr.active||inputMode!=='keyboard'||settings.controlMode!=='auto')return;canvas.focus({preventScroll:true});void capture.capture();}
@@ -453,7 +453,15 @@ $('continue-pit-btn').addEventListener('click',()=>{try{game.restore(pitSaved,{c
 $('continue-btn').addEventListener('click',()=>{try{game.restore(saved,{campaign:'original'});play();showDialogue('Welcome back, Michael. I saved your place in the rebellion.');}catch(e){showToast(e.message);saved=null;$('continue-btn').hidden=true;}});
 function refreshCommunications(){const entries=communications.log.slice(-30);$('communication-log').textContent=entries.map(e=>e.speaker+': '+e.text).join('\n')||'No transmissions yet.';}
 $('energyMode').addEventListener('input',()=>{settings.energyMode=$('energyMode').value;storeSettings();});
-$('resume-btn').addEventListener('click',()=>play());$('save-btn').addEventListener('click',()=>{if(game.gallery)return;game.saveCheckpoint();saveCheckpoint();showToast(game.verticalPreview?'MEZZANINE PREVIEW / MEMORY CHECKPOINT ONLY':'CHECKPOINT SAVED / YOUR SIGNAL IS YOURS');});$('quit-btn').addEventListener('click',home);$('result-home').addEventListener('click',home);
+$('resume-btn').addEventListener('click',()=>play());
+$('two-story-next-btn').addEventListener('click',()=>{
+  if(!game.verticalPreview||screen!=='pause-screen'||game.levelIndex>=SECTORS.length-1)return;
+  const next=game.levelIndex+1;
+  // Test-only jump: fresh combat state for each authored floor, no v1 campaign save.
+  game.loadLevel(next,false);mapOpen=false;play();
+  showToast('TWO-STORY FIELD TEST / SECTOR '+String(next+1).padStart(2,'0')+' / 12');
+});
+$('save-btn').addEventListener('click',()=>{if(game.gallery)return;game.saveCheckpoint();saveCheckpoint();showToast(game.verticalPreview?'MEZZANINE PREVIEW / MEMORY CHECKPOINT ONLY':'CHECKPOINT SAVED / YOUR SIGNAL IS YOURS');});$('quit-btn').addEventListener('click',home);$('result-home').addEventListener('click',home);
 $('result-btn').addEventListener('click',()=>{if(game.campaign==='pit'){if(game.mode==='dead')game.retry();else if(game.mode==='ending')game.startPit();else game.next();play();return;}if(game.phiwadCustom){if(game.mode==='dead'){game.retry();play();}else home();return;}if(game.mode==='dead'){game.retry();play();}else if(game.mode==='ending'&&game.levelIndex<SECTORS.length-1){game.continueCampaign()||game.continueBeyond();play();}else if(game.mode==='ending')play(true);else{game.next();play();}});
 $('trophy-btn').addEventListener('click',openTrophyRoom);$('pause-trophy').addEventListener('click',openTrophyRoom);$('trophy-back').addEventListener('click',trophyBack);$('trophy-open-ledger').addEventListener('click',openArchive);$('trophy-open-range').addEventListener('click',()=>{if(trophyReturnScreen==='pause-screen')return;communications.reset();enterGallery(game);mapOpen=false;play();});$('title-archive').addEventListener('click',openArchive);$('pause-archive').addEventListener('click',openArchive);$('archive-back').addEventListener('click',()=>showScreen(returnScreen));$('title-settings').addEventListener('click',openSettings);$('map-toggle').addEventListener('click',()=>{if(game.mode==='playing'){mapOpen=!mapOpen;updateHUD();}});$('settings-btn').addEventListener('click',openSettings);$('pause-settings').addEventListener('click',openSettings);$('settings-back').addEventListener('click',()=>showScreen(returnScreen));$('howto-btn').addEventListener('click',openHelp);$('help-back').addEventListener('click',()=>showScreen(returnScreen));
 $('controller-setup').addEventListener('click',()=>{openSettings();if(inputMode!=='keyboard')controllerMenu.focus($('controllerSensitivity'));else $('controller-section').scrollIntoView({block:'nearest'});});
