@@ -38,7 +38,7 @@ test('two Resonance Sweep pads fit all twelve authored decks without blocking co
 
 test('pads have 1.2-second amber warning and 0.7-second red pulse, staggered by 3 seconds',()=>{
  assert.equal(SWEEP_PERIOD,6);
- assert.equal(SWEEP_ACTIVE_START-SWEEP_WARNING_START,1.2);
+ assert(Math.abs(SWEEP_ACTIVE_START-SWEEP_WARNING_START-1.2)<1e-8);
  assert(Math.abs(SWEEP_ACTIVE_END-SWEEP_ACTIVE_START-.7)<1e-8);
  assert.equal(soloSweepPhase(0),'safe');
  assert.equal(soloSweepPhase(3.75),'warning');
@@ -113,7 +113,7 @@ test('no sweep state is persisted to old save formats or the memory-only preview
  const save=g.snapshot(),restored=new Game();assert.equal(restored.restore(save),true);
  assert(validSoloPreviewCheckpoint(restored.level,restored.player));
  assert.equal(restored.player.health,91);
- const normal=new Game();normal.start(),pit=new Game();pit.startPit();
+ const normal=new Game();normal.start();const pit=new Game();pit.startPit();
  assert.deepEqual(soloSweepMarkers(normal.level,5),[]);
  assert.deepEqual(soloSweepMarkers(pit.level,5),[]);
  const store={writes:0,setItem(){this.writes++}};
