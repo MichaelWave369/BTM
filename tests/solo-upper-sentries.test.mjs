@@ -71,7 +71,9 @@ test('upper sentry can climb back up the actual ramp instead of phasing through 
 });
 test('upper guard AI can recognize and pursue a player standing on the same deck',()=>{
  const g=preview(0),e=sentry(g);
- g.player.x=e.x-1.5;g.player.y=e.y;g.player.height=STACK_HEIGHT;g.player.grounded=true;g.player.supportSurface='upper';
+ // Stay beside the north-row barricade: the blocked straight-line case is
+ // separately covered by tests/solo-upper-cover.test.mjs.
+ g.player.x=e.x-.7;g.player.y=e.y+1.05;g.player.height=STACK_HEIGHT;g.player.grounded=true;g.player.supportSurface='upper';
  const oldX=e.x;for(let n=0;n<90;n++){g.time+=1/60;g.updateWorld(1/60);}
  assert(e.state==='pursue');
  assert(e.x<oldX-.2,'guard moves toward nearby deck player');

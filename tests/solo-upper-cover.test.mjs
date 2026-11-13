@@ -61,7 +61,7 @@ test('tracked shots, Classic vertical sight, and projectiles use one real 3D cov
  g.projectiles=[bullet(h)];for(let i=0;i<5&&g.projectiles.length;i++)g.updateProjectiles(.05);
  assert.equal(e.hp,before,'cover absorbed the weapon projectile');
  assert.equal(g.projectiles.length,0);
- const behind={x:e.x,y:e.y,height:STACK_HEIGHT+1.0};
+ const behind={x:e.x,y:e.y,height:STACK_HEIGHT+.75};
  assert.equal(traceEnvironment(l,behind,{x:-1,y:0,z:0},4).type==='cover',true,'cover works from either side');
 });
 
