@@ -95,11 +95,14 @@ export function validSoloPreviewCheckpoint(level,player){
  let expected;try{expected=chooseSoloMezzanine(level,level.index,l.entry||{x:4.5,y:21.5});}catch{return false;}
  const uplink=level.upperUplink,authored=soloUplinkPosition(expected);
  const fragments=level.items.filter(i=>i.upperFragment),fragment=fragments[0],fragmentPosition=upperFragmentPosition(expected);
+ const sentries=level.enemies.filter(e=>e.upperGuard);
  return JSON.stringify(l)===JSON.stringify(expected)&&
   !!uplink&&uplink.id==='upper-uplink-'+level.index&&uplink.type==='relay'&&uplink.optional===true&&typeof uplink.active==='boolean'&&
   uplink.x===authored.x&&uplink.y===authored.y&&uplink.floorHeight===authored.floorHeight&&
   fragments.length===1&&fragment.type==='artifact'&&fragment.bonusUpper===true&&typeof fragment.taken==='boolean'&&
   fragment.x===fragmentPosition.x&&fragment.y===fragmentPosition.y&&fragment.floorHeight===fragmentPosition.floorHeight&&
+  sentries.length===1&&typeof sentries[0].dead==='boolean'&&typeof level.upperGuardCleared==='boolean'&&
+  level.upperGuardCleared===sentries[0].dead&&
   [player.height,player.vz,player.jumpBuffer,player.coyote].every(Number.isFinite)&&
   player.height>=0&&player.height<=STACK_CEILING-1.1+.01&&
   Math.abs(player.vz)<=18.01&&typeof player.grounded==='boolean'&&

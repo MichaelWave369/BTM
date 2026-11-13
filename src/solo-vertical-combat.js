@@ -17,6 +17,7 @@ export function addSoloUpperSentry(level,index,definition){
  },STACK_HEIGHT);
  e.floorHeight=e.height;
  level.enemies.push(e);
+ level.upperGuardCleared=false;
  return e;
 }
 export function soloSentryWaypoint(level,sentry,target){
