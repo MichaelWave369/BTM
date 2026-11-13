@@ -53,6 +53,22 @@ test('upper sentry navigates the authored ramp down without teleporting between 
   assert(back,SECTORS[i].name+' can route back upstairs');
  }
 });
+test('upper sentry can climb back up the actual ramp instead of phasing through the deck',()=>{
+ for(let i=0;i<12;i++){
+  const g=preview(i),e=sentry(g),r=g.level.vertical.ramp,
+   home={x:e.homeX,y:e.homeY,height:STACK_HEIGHT};
+  e.x=r.x0+.5;e.y=(r.y0+r.y1)/2;e.height=0;e.vz=0;
+  e.grounded=true;e.supportSurface='ground';e.floorHeight=0;
+  let reached=false;
+  for(let n=0;n<2500;n++){
+   const oldX=e.x,oldY=e.y;
+   moveSoloUpperSentry(g.level,e,home,1/60);
+   advanceVerticalBody(g.level,e,1/60,{oldX,oldY});
+   if(e.height>=STACK_HEIGHT-.05&&Math.hypot(e.x-home.x,e.y-home.y)<.7){reached=true;break;}
+  }
+  assert(reached,SECTORS[i].name+' sentry cannot get back upstairs');
+ }
+});
 test('upper guard AI can recognize and pursue a player standing on the same deck',()=>{
  const g=preview(0),e=sentry(g);
  g.player.x=e.x-1.5;g.player.y=e.y;g.player.height=STACK_HEIGHT;g.player.grounded=true;g.player.supportSurface='upper';
