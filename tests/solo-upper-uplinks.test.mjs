@@ -66,7 +66,9 @@ test('preview snapshots remember activated uplinks, reject tampering, and leave 
  assert.throws(()=>writeCampaignCheckpoint({setItem(){throw Error('unexpected write')}},g),/Preview/i);
  const tampered=structuredClone(snap);tampered.level.upperUplink.x+=1;
  assert.throws(()=>new Game().restore(tampered),/checkpoint/i);
- const old=new Game();old.start();const legacy=old.snapshot();delete legacy.totalUplinks;
+ const old=new Game();old.start();const legacy=old.snapshot();
+ assert.equal('totalUplinks' in legacy,false,'normal original save format is unmodified');
+ const pit=new Game();pit.startPit();assert.equal('totalUplinks' in pit.snapshot(),false,'Pit schema is unmodified');
  const restored=new Game();restored.restore(legacy);
  assert.equal(restored.totalUplinks,0);
 });
