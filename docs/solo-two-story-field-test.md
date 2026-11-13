@@ -35,3 +35,10 @@ For direct late-stage access, use `?solo2f=1` + **NIGHTMARE RUN** (starts at Sec
 For every issue record: device, headset/browser version, build SHA, sector, VR settings (posture, quality, smooth/snap turning), whether it reproduced on both devices, expected vs. observed behavior, and a screenshot or short clip where feasible. Record battery/thermal comfort separately. A single software browser pass does **not** establish physical Quest acceptance.
 
 The first acceptance priorities are **ramp collision, motion comfort, upstairs enemy shots, usable right-grip uplinks, and color-key access**. Stop testing if discomfort develops. Keep existing campaign checkpoints untouched.
+
+## Upper-deck Frequency Fragments (new candidate)
+
+Each experimental mezzanine also carries **one violet Frequency Fragment** opposite the uplink. Walk onto the upper deck and collect the artifact-shaped object. It grants **12 armor, 12 Ori and 20 reserve energy** (or 20 regular energy in Legacy), capped at normal limits, and advances a separate **FRAGMENTS 0/12** counter. This is **not** a normal weapon-upgrading artifact, gold key, relay or requirement to finish a sector. It cannot be collected from beneath the slab, and its temporary progress follows in-memory preview retry and sector transitions.
+
+The wrist status and minimaps show a violet fragment marker after the relevant tile has been explored; the objective panel shows the 0/12 count. Compare the same pickup on both headsets, including whether the object appears above the deck, disappears only once and retains its collected state after retry. The normal campaign, Pit and BBS have no Frequency Fragments.
+
