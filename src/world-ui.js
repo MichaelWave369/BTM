@@ -1,4 +1,5 @@
 import {WEAPONS} from './core.js';
+import {soloWayfinder,SOLO_WAYFINDER_COLORS} from './solo-wayfinder.js';
 import {searchRecoveredArchive,ARCHIVE_SEARCH_FILTERS} from './archive-ledger.js';
 import {FieldNavigator} from './genewrist-bridge.js';
 import {paintGenEWristView} from './genewrist-ui.js';
@@ -49,6 +50,14 @@ export class WorldUI{
    const l=game.level,x0=24,y0=191,cell=Math.min(720/l.w,225/l.h),origin=(768-l.w*cell)/2;g.fillStyle='#050e18';g.fillRect(x0,y0,720,231);
    for(let y=0;y<l.h;y++)for(let x=0;x<l.w;x++){if(!l.seen[y*l.w+x])continue;g.fillStyle=l.doors[x+','+y]?(l.doors[x+','+y].lockColor?({'red':'#ff6878','blue':'#65b8ff','green':'#81e6a0'})[l.doors[x+','+y].lockColor]:l.doors[x+','+y].type===5?UI.gold:UI.violet):l.cells[y][x]?'#426077':'#142c3d';g.fillRect(origin+x*cell,y0+y*cell,Math.max(1,cell-1),Math.max(1,cell-1));}
    if(l.vertical){const {upper,ramp}=l.vertical;g.fillStyle=(p.height||0)>upper.height-.2?'rgba(133,216,255,.32)':'rgba(84,143,191,.2)';for(let y=upper.y0;y<upper.y1;y++)for(let x=upper.x0;x<upper.x1;x++)if(l.seen[y*l.w+x])g.fillRect(origin+x*cell,y0+y*cell,cell-1,cell-1);g.strokeStyle=UI.gold;g.lineWidth=2;g.strokeRect(origin+ramp.x0*cell,y0+ramp.y0*cell,(ramp.x1-ramp.x0)*cell,(ramp.y1-ramp.y0)*cell);}
+    for(const mark of soloWayfinder(game)){
+     if(mark.kind==='uplink'||mark.kind==='fragment')continue;
+     const cellId=Math.floor(mark.y)*l.w+Math.floor(mark.x);
+     if(!l.seen[cellId]&&game.objectiveTime<=0)continue;
+     g.fillStyle=SOLO_WAYFINDER_COLORS[mark.kind];
+     const d=mark.kind==='entrance'?5:Math.max(2,cell*.23);
+     g.fillRect(origin+mark.x*cell-d/2,y0+mark.y*cell-d/2,d,d);
+    }
     for(const [objects,color]of [[l.relays.filter(r=>!r.active),UI.pink],[l.captives.filter(c=>!c.freed),UI.cyan],[[l.exit],UI.violet]])for(const o of objects)if(l.seen[Math.floor(o.y)*l.w+Math.floor(o.x)]){g.fillStyle=color;g.fillRect(origin+o.x*cell-2,y0+o.y*cell-2,4,4);}
    if(l.upperUplink){const u=l.upperUplink,c=u.active?UI.cyan:UI.violet;g.fillStyle=c;g.fillRect(origin+u.x*cell-cell*.5,y0+u.y*cell-cell*.5,Math.max(3,cell),Math.max(3,cell));g.strokeStyle=UI.text;g.lineWidth=1.5;g.strokeRect(origin+u.x*cell-cell*.5,y0+u.y*cell-cell*.5,Math.max(3,cell),Math.max(3,cell));}const guard=l.enemies.find(e=>e.upperGuard&&!e.dead);if(guard&&l.seen[Math.floor(guard.y)*l.w+Math.floor(guard.x)]){g.fillStyle=UI.red;g.fillRect(origin+guard.x*cell-2,y0+guard.y*cell-2,4,4);}const fragment=l.items.find(i=>i.upperFragment&&!i.taken);if(fragment&&l.seen[Math.floor(fragment.y)*l.w+Math.floor(fragment.x)]){g.fillStyle=UI.violet;g.fillRect(origin+fragment.x*cell-3,y0+fragment.y*cell-3,6,6);g.strokeStyle=UI.text;g.strokeRect(origin+fragment.x*cell-3,y0+fragment.y*cell-3,6,6);}g.save();g.translate(origin+p.x*cell,y0+p.y*cell);g.rotate(p.a);g.fillStyle=UI.text;g.beginPath();g.moveTo(6,0);g.lineTo(-4,-4);g.lineTo(-2,0);g.lineTo(-4,4);g.closePath();g.fill();g.restore();this.button(20,444,192,46,'CLOSE MAP',()=>activate('map'),{icon:'M'});
   }else{
