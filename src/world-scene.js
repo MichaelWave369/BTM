@@ -37,6 +37,7 @@ export class WorldScene {
   for(const i of l.items)if(!i.taken&&visible(i.x,i.y)){b.billboard(i.x*s,(i.floorHeight||0)*s+.04,i.y*s,.85,.85,'item:'+i.type,eye);this.counts.objects++;}
   if(!l.key.taken){b.billboard(l.key.x*s,.12,l.key.y*s,.75,.75,'item:key',eye);this.counts.objects++;}
   for(const r of l.relays){b.billboard(r.x*s,0,r.y*s,.9,1.15,r.active?'relay:on':'relay:off',eye);this.counts.objects++;}
+   if(l.upperUplink&&visible(l.upperUplink.x,l.upperUplink.y)){const u=l.upperUplink;b.billboard(u.x*s,u.floorHeight*s,u.y*s,.95,1.2,u.active?'relay:on':'relay:off',eye,u.active?WHITE:[.7,.9,1.15,1]);this.counts.objects++;}
   for(const c of l.captives)if(!c.freed){b.billboard(c.x*s,0,c.y*s,1.3,1.65,'captive',eye);this.counts.objects++;}
   for(const prop of l.props||[])if(visible(prop.x,prop.y)){const h=prop.height*s;b.billboard(prop.x*s,0,prop.y*s,h*.8,h,'prop:'+prop.type,eye);this.counts.objects++;}
   if(!game.networkCompetitive&&!game.gallery)b.billboard(l.exit.x*s,.05,l.exit.y*s,1.55,2.15,'portal',eye,game.exitReady?WHITE:[.35,.45,.55,1]);
