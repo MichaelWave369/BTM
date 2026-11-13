@@ -1,6 +1,6 @@
 // Optional upper-story enforcers for solo Quest/Classic research.
 // No multiplayer messages, no new mandatory boss kills, no original save writes.
-import {findRoute,moveBody} from './collision.js';
+import {findRoute,moveBody,canOccupy} from './collision.js';
 import {STACK_HEIGHT,initVerticalBody,upperAt,rampHeight} from './net/vertical-arena.js';
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const high=(level,o)=>upperAt(level,o.x,o.y)&&(o.height||0)>=STACK_HEIGHT-.3;
@@ -48,9 +48,69 @@ export function soloSentryWaypoint(level,sentry,target){
  }
  return null;
 }
+// Tiny, deterministic upper-deck collision graph. The 0.5-tile nodes are
+// checked with the *same* body radius/cover hitboxes as actual movement.
+// This is a local path suggestion, not teleportation or a second AI engine.
+// No path state enters saves, multiplayer messages or mission objectives.
+export function soloUpperFlankWaypoint(level,sentry,target){
+ if(!level?.vertical?.soloPreview||!sentry?.upperGuard||!target||
+    !high(level,sentry)||!upperAt(level,target.x,target.y))return null;
+ const u=level.vertical.upper,radius=.23,edge=radius+.012,
+  inside=(x,y)=>x>=u.x0+edge&&x<u.x1-edge&&y>=u.y0+edge&&y<u.y1-edge,
+  free=(x,y)=>inside(x,y)&&canOccupy(level,x,y,radius,sentry),
+  segment=(from,to)=>{
+   const d=Math.hypot(to.x-from.x,to.y-from.y);
+   for(let i=1,n=Math.max(1,Math.ceil(d/.1));i<=n;i++){
+    const t=i/n;
+    if(!free(from.x+(to.x-from.x)*t,from.y+(to.y-from.y)*t))return false;
+   }
+   return true;
+  };
+ // When the direct lane is clear, preserve the existing chase/strafe.
+ if(segment(sentry,target))return null;
+ const columns=(u.x1-u.x0)*2,rows=(u.y1-u.y0)*2,total=columns*rows,
+  node=id=>({x:u.x0+.25+(id%columns)*.5,y:u.y0+.25+Math.floor(id/columns)*.5});
+ const nodes=Array.from({length:total},(_,i)=>node(i));
+ const open=nodes.map(p=>free(p.x,p.y));
+ const nearest=point=>{
+  let best=-1,score=Infinity;
+  for(let i=0;i<total;i++){
+   const q=nodes[i],d=Math.hypot(q.x-point.x,q.y-point.y);
+   if(!open[i]||d>=score||!segment(point,q))continue;
+   best=i;score=d;
+  }
+  return best;
+ };
+ const start=nearest(sentry),end=nearest(target);
+ if(start<0||end<0)return null;
+ const previous=Array(total).fill(-1),queue=[start];
+ previous[start]=start;
+ for(let head=0;head<queue.length&&previous[end]<0;head++){
+  const id=queue[head],x=id%columns,y=Math.floor(id/columns);
+  for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0]]){
+   const nx=x+dx,ny=y+dy;
+   if(nx<0||ny<0||nx>=columns||ny>=rows)continue;
+   const next=ny*columns+nx;
+   if(previous[next]>=0||!open[next]||!segment(nodes[id],nodes[next]))continue;
+   previous[next]=id;queue.push(next);
+  }
+ }
+ if(previous[end]<0)return null;
+ const path=[];for(let at=end;;at=previous[at]){path.push(at);if(at===start)break;}
+ path.reverse();
+ // Join the first node safely before following BFS steps. Once close enough,
+ // take the next node; recomputation per frame cannot skip the real cover.
+ return Math.hypot(sentry.x-nodes[start].x,sentry.y-nodes[start].y)>.14?
+  nodes[start]:nodes[path[1]??start];
+}
 export function moveSoloUpperSentry(level,sentry,target,dt){
  if(!level?.vertical?.soloPreview||!sentry?.upperGuard||sentry.dead)return false;
  const waypoint=soloSentryWaypoint(level,sentry,target);
+ const detour=soloUpperFlankWaypoint(level,sentry,waypoint||target);
+ if(detour){
+  const d=dist(sentry,detour);
+  if(d>.015){const step=Math.min(sentry.speed*dt,d)/d;moveBody(level,sentry,(detour.x-sentry.x)*step,(detour.y-sentry.y)*step,.23);return true;}
+ }
  // Marksmen strafe laterally on the upper floor rather than acting like
  // another melee enforcer. Never strafe off the authored deck or block ramp pursuit.
  if(!waypoint&&sentry.state==='pursue'&&sentry.upperGuardRole==='marksman'&&high(level,sentry)&&high(level,target)){
