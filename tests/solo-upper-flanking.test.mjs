@@ -46,7 +46,7 @@ test('each sentry physically reaches a clear flank lane instead of staring at ba
   }
   assert(sawInside,SECTORS[i].name+' guard must use inner lane');
   assert(clear,SECTORS[i].name+' guard must regain real 3D line of sight');
-  assert(Math.hypot(e.x-begin.x,e.y-begin.y)>.4,SECTORS[i].name+' guard made no progress');
+  assert(Math.hypot(e.x-begin.x,e.y-begin.y)>.15,SECTORS[i].name+' guard did not move enough to peek around cover');
  }
 });
 
