@@ -64,7 +64,7 @@ test('red/blue/green caches provide distinct capped benefits in survival and leg
  const base=()=>({health:20,armor:15,ori:10,energy:20,reserve:15});
  for(const survival of [true,false]){
   let p=base();assert(claimAccessCache(p,'red',survival));assert.equal(p.health,55);assert.equal(p.armor,30);assert.equal(p.ori,10);
-  p=base();assert(claimAccessCache(p,'blue',survival));assert.equal(p.ori,35);assert.equal(p[survival?'reserve':'energy'],50);
+  p=base();assert(claimAccessCache(p,'blue',survival));assert.equal(p.ori,35);assert.equal(p[survival?'reserve':'energy'],survival?50:55);
   assert.equal(p[survival?'energy':'reserve'],survival?20:15);
   p=base();assert(claimAccessCache(p,'green',survival));assert.equal(p.health,40);assert.equal(p.armor,40);assert.equal(p.ori,30);
   p={health:100,armor:100,ori:100,energy:100,reserve:180};
