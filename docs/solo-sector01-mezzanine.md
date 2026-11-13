@@ -1,21 +1,28 @@
-# Solo Sector 01 two-story Quest preview
+# All 12 solo-sector two-story research preview
 
-**Experimental, opt-in, never auto-merged or auto-saved to your normal slot.**
+**Experimental WebXR and desktop feature.** A playable mezzanine now appears in each of the twelve original single-player sectors when launched with `?solo2f=1` and a **New Campaign**. The standard campaign URL remains flat until human Quest 3 testing completes.
 
-This is the first playable vertical research slice for issue #75. The original Sector 01 layout, colored doors, gold key, relays, enemies, and exits remain in place. A real 4×4-tile elevated platform and five-tile ascending ramp are placed over the open southeast/center sector room, with a genuine optional energy cache upstairs.
+## Gameplay
 
-## How to launch on a branch preview
+- Every sector receives an actual double-sided elevated floor, supporting ramp, deck collision and jump, rather than an unsupported raised decorative texture.
+- Sector 01 keeps its original manually located mezzanine. Sectors 02–12 choose the largest accessible upper-room footprint from a bounded deterministic search. The planner checks solid cells, doors and the original ground approach, and rejects ramps intersecting essential objectives or locked doors. No stage may silently omit the upper floor.
+- Sector 02 onward moves one **optional colored access card** onto the upper story. It opens an optional colored supply alcove on the ground level. **Gold keys, relay, rescues and extraction stay on the original ground floor**, so none of the main campaign completion conditions requires upstairs access. Additional armor/energy supplies wait upstairs.
+- Ceiling and supporting platforms are shared by native VR stereo geometry, desktop preview, vertical collision, tracked weapons, and shot/deck occlusion. Wrist and classic automaps mark the elevated deck and ramp.
+- Quest 3: open Gen.E.Wrist and select **JUMP**. The headset's right-grip USE, left-grip ORI, trigger, stick turn, weapon selection, Dash Bash, seated/standing calibration and normal controls remain unchanged. Desktop: **J** jumps; familiar **Space** still performs Dash Bash.
 
-Serve this branch's web build using HTTPS (WebXR requires a secure context). Add `?solo2f=1` to the game URL, choose **New Campaign**, then move into Sector 01. The ramp runs from **x=9..14, y=21..23**, climbing east; the upstairs deck covers **x=14..18, y=19..23**. Use **J** on desktop, or the **JUMP** command on Gen.E.Wrist in immersive mode. Right grip still interacts; left grip still summons Ori. Standard campaign without the query parameter remains flat.
+## Protecting your existing game
 
-This slice uses the same `btm.vertical-prototype/1` geometry/physics as BBS Stackyard, with solo-only opt-in. Collision, lower/upper pickup separation, enemy sightlines, projectile/deck collision and stereo geometry share the existing runtime. The two-floor map is not yet populated with upstairs enemies or mandatory objectives.
+- Enable solely via the URL query parameter and starting a fresh campaign. Original saves load as original flat geometry, even if opened on the experimental URL.
+- The preview uses its own in-memory checkpoint/retry, and is barred from writing the persistent original v1 save. Leaving the browser tab discards that preview checkpoint.
+- BBS multiplayer, Stackyard and Pit never receive the solo vertical flag.
+- No automatic live rollout or physical Quest 3 pass is claimed until the complete CI and a headset walkthrough are recorded.
 
-## Save and verification boundaries
+## Validation checklist
 
-- Normal canonical v1 campaign saves are never overwritten while inside preview Sector 01. Retry checkpoint is available in memory only; leaving the page discards preview progress.
-- Existing `version:1` saves restore as flat maps. Preview snapshots validate their authored geometry and vertical physics fields; no migration from an existing checkpoint.
-- Co-op, Pit, competitive BBS and their server-side snapshots do not enable this preview.
-- CI Node tests and production build are prerequisites, but real Quest 3 seated and standing headset tests are still required before expanding to the other eleven sectors.
-- Test upper-deck pickup from both stories, ramp ascend/descend, falling, strafing near the deck edge, aiming from above, Ori, Gen.E.Wrist placement, headroom, offline cache and load/retry.
+- Twelve sector layouts and a continuous ramp ascent to deck; assert original cells, doors, gold keys, relays and exits remain unchanged.
+- All colored cards remain accessible from the original spawn, on either floor; all floors are reachable without needing an optional color card.
+- Ground pickups cannot be collected upstairs and upper-floor pickups cannot be collected through the slab.
+- Up/down projectile occlusion, underside jump collision, stage-to-stage transitions, old-flat-save restoration and malformed vertical snapshot rejection.
+- Production build, offline shell, multiplayer regression, immersive browser smoke, and actual headset (seated and standing) comfort and aim.
 
-**Status is one experimental Sector 01 preview, not all twelve fully converted levels.**
+This builds toward issue #75. Full 2-level enemy navigation, upper-level tactical combat, and multistory mandatory mission layouts are future tasks, not implied by this preview.
