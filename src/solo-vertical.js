@@ -2,6 +2,7 @@
 // original solo sectors. Activated only by ?solo2f=1 + a new campaign.
 // Standard/Pit/BBS checkpoint geometry and native controller actions stay intact.
 import {STACK_HEIGHT,STACK_CEILING,rampHeight} from './net/vertical-arena.js';
+import {authoredSoloUpperCover,coverIntersectsBody} from './solo-cover.js';
 export const SOLO_MEZZANINE=Object.freeze({
  schema:'btm.vertical-prototype/1',soloPreview:true,ceiling:STACK_CEILING,
  upper:Object.freeze({x0:14,x1:18,y0:19,y1:23,height:STACK_HEIGHT}),
@@ -64,6 +65,7 @@ export function enableSoloMezzanine(level,index,spawn){
  if(!footprint.every(([x,y])=>open(level,x,y)))
   throw Error('Unsafe mezzanine floor in sector '+(index+1));
  level.vertical=layout;
+ level.upperCover=authoredSoloUpperCover(layout);
  for(const item of level.items){
   const elevation=rampHeight(level,item.x,item.y);
   if(elevation!==null)item.floorHeight=elevation;
@@ -97,6 +99,8 @@ export function validSoloPreviewCheckpoint(level,player){
  const fragments=level.items.filter(i=>i.upperFragment),fragment=fragments[0],fragmentPosition=upperFragmentPosition(expected);
  const sentries=level.enemies.filter(e=>e.upperGuard),expectedRole=['breacher','marksman','bulwark'][level.index%3];
  return JSON.stringify(l)===JSON.stringify(expected)&&
+  JSON.stringify(level.upperCover)===JSON.stringify(authoredSoloUpperCover(expected))&&
+  !coverIntersectsBody(level,player.x,player.y,.2,player)&&
   !!uplink&&uplink.id==='upper-uplink-'+level.index&&uplink.type==='relay'&&uplink.optional===true&&typeof uplink.active==='boolean'&&
   uplink.x===authored.x&&uplink.y===authored.y&&uplink.floorHeight===authored.floorHeight&&
   fragments.length===1&&fragment.type==='artifact'&&fragment.bonusUpper===true&&typeof fragment.taken==='boolean'&&

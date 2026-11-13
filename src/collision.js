@@ -1,17 +1,19 @@
 // Shared collision and navigation. Core re-exports the original API.
+import {coverIntersectsBody} from './solo-cover.js';
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export function tileAt(level,x,y){return level.cells[Math.floor(y)]?.[Math.floor(x)]??1;}
 export function solidAt(level,x,y){
   const t=tileAt(level,x,y);if(t===0)return false;
   const door=level.doors[`${Math.floor(x)},${Math.floor(y)}`];return !door||door.open<.84;
 }
-export function canOccupy(level,x,y,r=.2){
-  return ![[x-r,y-r],[x+r,y-r],[x-r,y+r],[x+r,y+r]].some(([xx,yy])=>solidAt(level,xx,yy));
+export function canOccupy(level,x,y,r=.2,body=null){
+  return ![[x-r,y-r],[x+r,y-r],[x-r,y+r],[x+r,y+r]].some(([xx,yy])=>solidAt(level,xx,yy))&&
+    !coverIntersectsBody(level,x,y,r,body);
 }
 export function moveBody(level,body,dx,dy,r=.2){
   // Substeps prevent tunnelling, even after a slow frame or a large knockback.
   const n=Math.max(1,Math.ceil(Math.max(Math.abs(dx),Math.abs(dy))/.12));
-  for(let i=0;i<n;i++){if(canOccupy(level,body.x+dx/n,body.y,r))body.x+=dx/n;if(canOccupy(level,body.x,body.y+dy/n,r))body.y+=dy/n;}
+  for(let i=0;i<n;i++){if(canOccupy(level,body.x+dx/n,body.y,r,body))body.x+=dx/n;if(canOccupy(level,body.x,body.y+dy/n,r,body))body.y+=dy/n;}
 }
 export function castRay(level,x,y,dx,dy,max=40,ignoreCell=null){
   let mx=Math.floor(x),my=Math.floor(y),sx=dx<0?-1:1,sy=dy<0?-1:1;

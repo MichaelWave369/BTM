@@ -39,6 +39,15 @@ export function buildLevelGeometry(level){
      pushBox(v,[(x+.03)*s,H,(y+.5)*s],[thin,.055*s,s],'white',color);
    }
   }
+  // Two authored physical cover blocks: native stereo mesh, collision and
+  // shot occlusion all use the exact same dimensions in solo-cover.js.
+  for(const c of level.upperCover||[]){
+   const v=get(Math.floor(c.x),Math.floor(c.y));
+   pushBox(v,[c.x*s,(c.floorHeight+c.height/2)*s,c.y*s],
+    [c.width*s,c.height*s,c.depth*s],'white',[.25,.46,.61,1]);
+   pushBox(v,[c.x*s,(c.floorHeight+c.height*.88)*s,c.y*s],
+    [c.width*s,.07*s,c.depth*s+.025*s],'white',[.47,.96,1,1]);
+  }
   // Continuous ramp rise, instead of a floor-change teleport. Its top surface
   // exactly meets the upper deck at x=upper.x0 and shows the same gradient
   // encoded in server supportHeight.
