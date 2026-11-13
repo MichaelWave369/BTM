@@ -8,6 +8,7 @@
 2. From the title screen, enter **IMMERSIVE VR**, then select **TWO-STORY FIELD TEST** in the in-headset title menu. On desktop, the same new menu choice launches the preview directly.
 3. Backward-compatible method: add `?solo2f=1` to the candidate URL and select **ENTER THE MATRIX**. The default URL without this flag and without the new button keeps the flat campaign.
 4. Confirm the HUD contains **TWO-STORY PREVIEW**. The room label switches between **GROUND FLOOR**, **RAMP**, and **UPPER DECK** based on the player support surface.
+5. To sample all levels without finishing every original mission, **PAUSE → NEXT TWO-STORY TEST SECTOR**. This resets health, enemies and objectives for the next sector but keeps the preview's 0/12 signal ledger. The control is absent from normal campaign, Pit and BBS, and is hidden on Sector 12.
 
 **Save safety:** This is a *memory-only* research campaign. Retry and sector changes retain temporary preview checkpoints, but closing/reloading the tab loses preview progress. No permanent normal-campaign save should be written. The existing **CONTINUE TRANSMISSION** button remains the original flat save.
 
@@ -25,6 +26,7 @@
 | 2F-08 | Retry after a failure; open and close the wrist while moving; turn smoothly or snap | Preview checkpoint and movement survive, menu does not leak a shot or grip interaction |
 | 2F-09 | Return to title, start a normal campaign or CONTINUE a pre-existing save | Original flat level is preserved; preview content is absent |
 | 2F-10 | Visit at least one Act III/IV sector using the preview's NIGHTMARE RUN link (`?solo2f=1`) if a full twelve-sector run is too long | Late layouts still have a reachable ramp, guard, color card and uplink |
+| 2F-11 | Pause and use NEXT TWO-STORY TEST SECTOR repeatedly through Sector 12, then resume | Exactly the next stage, fresh combat setup, safe v1 storage isolation, 12/12 upper layouts present |
 
 For direct late-stage access, use `?solo2f=1` + **NIGHTMARE RUN** (starts at Sector 07). The separate menu button always starts Sector 01. Use the wrist map or TAB map to locate ramps/upper signals without relying on memory.
 
