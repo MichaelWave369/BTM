@@ -1,6 +1,6 @@
 # All 12 solo-sector two-story research preview
 
-**Experimental WebXR and desktop feature.** A playable mezzanine now appears in each of the twelve original single-player sectors when launched with `?solo2f=1` and a **New Campaign**. The standard campaign URL remains flat until human Quest 3 testing completes.
+**Experimental WebXR and desktop feature.** A playable mezzanine now appears in each of the twelve original single-player sectors when launched from **TWO-STORY FIELD TEST** on the title screen or with `?solo2f=1` and a **New Campaign**. The normal campaign remains flat unless explicitly opted in. A two-headset verification circuit lives in [`solo-two-story-field-test.md`](solo-two-story-field-test.md).
 
 ## Gameplay
 
