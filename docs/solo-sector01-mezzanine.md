@@ -7,7 +7,8 @@
 - Every sector receives an actual double-sided elevated floor, supporting ramp, deck collision and jump, rather than an unsupported raised decorative texture.
 - Sector 01 keeps its original manually located mezzanine. Sectors 02–12 choose the largest accessible upper-room footprint from a bounded deterministic search. The planner checks solid cells, doors and the original ground approach, and rejects ramps intersecting essential objectives or locked doors. No stage may silently omit the upper floor.
 - Sector 02 onward moves one **optional colored access card** onto the upper story. It opens an optional colored supply alcove on the ground level. **Gold keys, relay, rescues and extraction stay on the original ground floor**, so none of the main campaign completion conditions requires upstairs access. Additional armor/energy supplies wait upstairs.
-- Ceiling and supporting platforms are shared by native VR stereo geometry, desktop preview, vertical collision, tracked weapons, and shot/deck occlusion. Wrist and classic automaps mark the elevated deck and ramp.
+- Ceiling and supporting platforms are shared by native VR stereo geometry, desktop preview, vertical collision, tracked weapons, and shot/deck occlusion.
+- Each preview sector has one **optional enforcer upstairs**. Its feet, VR/desktop sprite, hit volume, and AI path are elevated with the deck; when chasing a player between floors it uses the authored ramp instead of teleporting. These guards do not add a mandatory boss condition or change the original host-liberation count. Wrist and classic automaps mark the elevated deck and ramp.
 - Quest 3: open Gen.E.Wrist and select **JUMP**. The headset's right-grip USE, left-grip ORI, trigger, stick turn, weapon selection, Dash Bash, seated/standing calibration and normal controls remain unchanged. Desktop: **J** jumps; familiar **Space** still performs Dash Bash.
 
 ## Protecting your existing game

@@ -1,5 +1,6 @@
 import {playerSprite,finaleSprite,crawlerBeastSprite,repeaterBeastSprite,pluggedBeastSprite,wardenBeastSprite} from './net/presentation.js';
 import {castRay,distance,angleDiff,findRoute,SECTORS,WEAPONS,clamp} from './core.js';
+import {verticalSight} from './net/vertical-arena.js';
 import {pitBossSprite,pitFloorState} from './pit-presentation.js';
 import {floorTrapState} from './pit-floor-traps.js';
 import {paintSignalSurface} from './neon-signal.js';
@@ -56,8 +57,8 @@ export class Renderer {
     if(l.vertical)this.paintVerticalDeck(game,horizon);
     const things=[];
     for(const prop of l.props||[])things.push(prop);
-    for(const e of l.enemies)if(!e.dead)things.push({x:e.x,y:e.y,type:e.type,height:e.type==='warden'?1.65:1,frame:Math.floor(e.walk)%4,e});
-    for(const item of l.items)if(!item.taken)things.push({...item,height:.5,bob:true});
+    for(const e of l.enemies)if(!e.dead&&(!l.vertical?.soloPreview||verticalSight(l,p,e)))things.push({x:e.x,y:e.y,type:e.type,height:e.type==='warden'?1.65:1,floorHeight:e.floorHeight||0,frame:Math.floor(e.walk)%4,e});
+    for(const item of l.items)if(!item.taken&&(!l.vertical?.soloPreview||verticalSight(l,p,{x:item.x,y:item.y,height:item.floorHeight||0})))things.push({...item,height:.5,bob:true});
     for(const captive of l.captives)if(!captive.freed)things.push({...captive,type:'captive',height:1});
     for(const relay of l.relays)things.push({...relay,type:relay.active?'relayOn':'relay',height:1});
     if(!l.key.taken)things.push({...l.key,type:'key',height:.48,bob:true});

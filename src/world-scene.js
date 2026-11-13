@@ -33,7 +33,7 @@ export class WorldScene {
     v.center[1]=v.size[1]*(.5+d.open);
     b.box(v.center,v.size,doorSurfaceMaterial(d.type,game.shift),d.lockColor?DOOR_COLORS['locked-'+d.lockColor]:WHITE);
    }
-  for(const e of l.enemies){if(e.dead||!visible(e.x,e.y))continue;const h=entityHeight(e.type)*s,frame=Math.floor(e.walk||0)%4;b.billboard(e.x*s,0,e.y*s,e.raidRole==='core'?6.4*s:h,h,e.raidRole?(e.raidRole==='core'?(e.exposed>0?'raid:open':'raid:core'):'raid:pylon'):e.pitBoss?'pitboss:'+e.pitBoss+(e.exposed>0?':open':''):(e.pain>0?'pain:':'enemy:')+e.type+':'+frame,eye,e.stun>0?STUN:WHITE);this.counts.enemies++;if(e.tell>0)b.floor(e.x*s,.025,e.y*s,.7,'marker',TELL);}
+  for(const e of l.enemies){if(e.dead||!visible(e.x,e.y))continue;const h=entityHeight(e.type)*s,frame=Math.floor(e.walk||0)%4;b.billboard(e.x*s,(e.floorHeight||0)*s,e.y*s,e.raidRole==='core'?6.4*s:h,h,e.raidRole?(e.raidRole==='core'?(e.exposed>0?'raid:open':'raid:core'):'raid:pylon'):e.pitBoss?'pitboss:'+e.pitBoss+(e.exposed>0?':open':''):(e.pain>0?'pain:':'enemy:')+e.type+':'+frame,eye,e.stun>0?STUN:e.upperGuard?[.72,.95,1.15,1]:WHITE);this.counts.enemies++;if(e.tell>0)b.floor(e.x*s,(e.floorHeight||0)*s+.025,e.y*s,.7,'marker',TELL);}
   for(const i of l.items)if(!i.taken&&visible(i.x,i.y)){b.billboard(i.x*s,(i.floorHeight||0)*s+.04,i.y*s,.85,.85,'item:'+i.type,eye);this.counts.objects++;}
   if(!l.key.taken){b.billboard(l.key.x*s,.12,l.key.y*s,.75,.75,'item:key',eye);this.counts.objects++;}
   for(const r of l.relays){b.billboard(r.x*s,0,r.y*s,.9,1.15,r.active?'relay:on':'relay:off',eye);this.counts.objects++;}
