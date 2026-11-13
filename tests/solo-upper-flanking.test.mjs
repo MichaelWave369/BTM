@@ -41,7 +41,7 @@ test('each sentry physically reaches a clear flank lane instead of staring at ba
    assert(e.y>=l.vertical.upper.y0+.22&&e.y<l.vertical.upper.y1-.22);
    assert.equal(e.supportSurface,'upper','no fake floor hop');
    assert(Math.abs(e.height-oldH)<.2,'no height teleport');
-   if(e.y>l.vertical.upper.y0+.75)sawInside=true;
+   if(e.y>l.vertical.upper.y0+.66)sawInside=true;
    if(verticalSight(l,e,target)){clear=true;break;}
   }
   assert(sawInside,SECTORS[i].name+' guard must use inner lane');

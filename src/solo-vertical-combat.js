@@ -5,6 +5,9 @@ import {STACK_HEIGHT,initVerticalBody,upperAt,rampHeight} from './net/vertical-a
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const high=(level,o)=>upperAt(level,o.x,o.y)&&(o.height||0)>=STACK_HEIGHT-.3;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+// Local-only path memory prevents repeated BFS decisions from reversing the
+// guard mid-step as it navigates around physical upper-floor barricades.
+const flankPlans=new WeakMap();
 // Familiar silhouettes, different combat decisions. One role per authored deck.
 // No extra monsters and no additional extraction gates.
 export const SOLO_UPPER_GUARDS=Object.freeze([
@@ -54,7 +57,10 @@ export function soloSentryWaypoint(level,sentry,target){
 // No path state enters saves, multiplayer messages or mission objectives.
 export function soloUpperFlankWaypoint(level,sentry,target){
  if(!level?.vertical?.soloPreview||!sentry?.upperGuard||!target||
-    !high(level,sentry)||!upperAt(level,target.x,target.y))return null;
+    !high(level,sentry)||!upperAt(level,target.x,target.y)){
+  if(sentry)flankPlans.delete(sentry);
+  return null;
+ }
  const u=level.vertical.upper,radius=.23,edge=radius+.012,
   inside=(x,y)=>x>=u.x0+edge&&x<u.x1-edge&&y>=u.y0+edge&&y<u.y1-edge,
   free=(x,y)=>inside(x,y)&&canOccupy(level,x,y,radius,sentry),
@@ -66,6 +72,18 @@ export function soloUpperFlankWaypoint(level,sentry,target){
    }
    return true;
   };
+ // Keep each chosen detour stable as the sentry advances. Replanning every
+ // step causes nearby equivalent graph nodes to flip direction endlessly.
+ const goalKey=Math.floor(target.x*2)+','+Math.floor(target.y*2);
+ const plan=flankPlans.get(sentry);
+ if(plan?.level===level&&plan.goalKey===goalKey){
+  while(plan.index<plan.points.length-1&&dist(sentry,plan.points[plan.index])<.14)plan.index++;
+  if(plan.index===plan.points.length-1&&dist(sentry,plan.points[plan.index])<.14){
+   flankPlans.delete(sentry);return null;
+  }
+  return plan.points[plan.index];
+ }
+ flankPlans.delete(sentry);
  // When the direct lane is clear, preserve the existing chase/strafe.
  if(segment(sentry,target))return null;
  const columns=(u.x1-u.x0)*2,rows=(u.y1-u.y0)*2,total=columns*rows,
@@ -98,10 +116,10 @@ export function soloUpperFlankWaypoint(level,sentry,target){
  if(previous[end]<0)return null;
  const path=[];for(let at=end;;at=previous[at]){path.push(at);if(at===start)break;}
  path.reverse();
- // Join the first node safely before following BFS steps. Once close enough,
- // take the next node; recomputation per frame cannot skip the real cover.
- return Math.hypot(sentry.x-nodes[start].x,sentry.y-nodes[start].y)>.14?
-  nodes[start]:nodes[path[1]??start];
+ const points=path.map(id=>nodes[id]);
+ let index=dist(sentry,points[0])<.14&&points.length>1?1:0;
+ flankPlans.set(sentry,{level,goalKey,points,index});
+ return points[index];
 }
 export function moveSoloUpperSentry(level,sentry,target,dt){
  if(!level?.vertical?.soloPreview||!sentry?.upperGuard||sentry.dead)return false;
