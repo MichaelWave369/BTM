@@ -1,6 +1,7 @@
 import {playerSprite,finaleSprite,crawlerBeastSprite,repeaterBeastSprite,pluggedBeastSprite,wardenBeastSprite} from './net/presentation.js';
 import {castRay,distance,angleDiff,findRoute,SECTORS,WEAPONS,clamp} from './core.js';
 import {verticalSight} from './net/vertical-arena.js';
+import {soloWayfinder,SOLO_WAYFINDER_COLORS} from './solo-wayfinder.js';
 import {pitBossSprite,pitFloorState} from './pit-presentation.js';
 import {floorTrapState} from './pit-floor-traps.js';
 import {paintSignalSurface} from './neon-signal.js';
@@ -58,6 +59,10 @@ export class Renderer {
     const things=[];
     for(const prop of l.props||[])things.push(prop);
     for(const cover of l.upperCover||[])things.push({...cover,type:'upperCover'});
+    for(const mark of soloWayfinder(game))
+      if(mark.kind==='entrance'||mark.kind==='ramp'||mark.kind==='trail'||
+         verticalSight(l,p,{x:mark.x,y:mark.y,height:mark.floorHeight}))
+        things.push({...mark,type:'soloWayfinder',height:mark.kind==='uplink'||mark.kind==='fragment'?.52:.24});
     for(const e of l.enemies)if(!e.dead&&(!l.vertical?.soloPreview||verticalSight(l,p,e)))things.push({x:e.x,y:e.y,type:e.type,height:e.type==='warden'?1.65:1,floorHeight:e.floorHeight||0,frame:Math.floor(e.walk)%4,e});
     for(const item of l.items)if(!item.taken&&(!l.vertical?.soloPreview||verticalSight(l,p,{x:item.x,y:item.y,height:item.floorHeight||0})))things.push({...item,height:.5,bob:true});
     for(const captive of l.captives)if(!captive.freed)things.push({...captive,type:'captive',height:1});
@@ -164,6 +169,16 @@ export class Renderer {
     const g=this.g,w=this.canvas.width,h=this.canvas.height,p=game.player,s=this.project(o,p);if(!s||s.x< -w||s.x>w*2)return;const height=Math.min(h*5,h/s.depth*o.height),width=o.e?.raidRole==='core'?height*4:o.type==='warden'?height:height*(o.type==='relay'||o.type==='relayOn'?.8:1),x=Math.floor(s.x-width/2),y=Math.floor(horizon+h/(2*s.depth)-height+(((p.height||0)-(o.remote?.height||0)-(o.floorHeight||0))*h/(s.depth*1.75))+(o.bob?Math.sin(this.lastTime*3+o.x)*h*.04/s.depth:0));
     if(o.type==='portal'){
       for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++){if(s.depth>=this.depth[xx])continue;const f=(xx-x)/width-.5,curve=Math.sqrt(Math.max(0,1-4*f*f)),yy=height/2*curve;g.fillStyle=game.exitReady?'#64e8cd':'#614279';g.globalAlpha=.75;g.fillRect(xx,y+height/2-yy,1,yy*2);g.fillStyle='#091d25';g.globalAlpha=.8;g.fillRect(xx,y+height/2-yy*.82,1,yy*1.64);g.fillStyle=game.exitReady?'#b9ff53':'#bc89e8';g.globalAlpha=.4;for(let k=0;k<6;k++){const py=y+height/2-yy+((this.lastTime*.2+k/6)%1)*yy*2;g.fillRect(xx,py,1,1);}}g.globalAlpha=1;return;
+    }
+    if(o.type==='soloWayfinder'){
+      // Existing perspective and depth buffer keep these non-solid markers
+      // behind the original walls. No new sprites, cameras or draw buffers.
+      const color=SOLO_WAYFINDER_COLORS[o.kind];
+      for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++){
+       if(s.depth>=this.depth[xx])continue;
+       g.fillStyle=color;g.fillRect(xx,y+height*.27,1,Math.max(1,height*.73));
+      }
+      return;
     }
     if(o.type==='upperCover'){
       // Classic uses the identical authored block footprint as native WebXR.
@@ -293,6 +308,10 @@ export class Renderer {
      if(l.upperUplink){const u=l.upperUplink,c=u.active?UI.cyan:UI.violet,ux=x0+u.x*size,uy=y0+u.y*size;g.fillStyle=c;g.fillRect(ux-size*.45,uy-size*.45,size*.9,size*.9);g.strokeStyle=UI.text;g.lineWidth=Math.max(1,size*.08);g.strokeRect(ux-size*.45,uy-size*.45,size*.9,size*.9);}
      const dot=(o,color,scale=1)=>{if(!l.seen[Math.floor(o.y)*l.w+Math.floor(o.x)]&&!game.objectiveTime)return;g.fillStyle=color;g.fillRect(x0+o.x*size-size*scale/2,y0+o.y*size-size*scale/2,size*scale,size*scale);};
     if(game.objectiveTime>0){const target=game.objectiveTarget,key=`${Math.floor(p.x)},${Math.floor(p.y)}:${target.x},${target.y}:${p.key}:${Object.keys(p.keys||{}).filter(k=>p.keys[k]).sort().join(',')}:${l.secretFound}`;if(this.routeKey!==key){this.routeKey=key;this.route=findRoute(l,p,target,{allowLocked:p.key,keys:p.keys});}g.fillStyle=UI.cyan;g.globalAlpha=.7;for(const point of this.route||[])g.fillRect(x0+point.x*size-1,y0+point.y*size-1,2,2);g.globalAlpha=1;}
+    for(const mark of soloWayfinder(game)){
+      if(mark.kind==='uplink'||mark.kind==='fragment')continue;
+      dot(mark,SOLO_WAYFINDER_COLORS[mark.kind],mark.kind==='entrance'?1.7:.7);
+    }
     l.items.filter(i=>!i.taken&&i.type?.startsWith('key:')).forEach(i=>dot(i,({'key:red':'#ff6878','key:blue':'#65b8ff','key:green':'#81e6a0'})[i.type]||UI.gold,1.1));l.items.filter(i=>i.upperFragment&&!i.taken).forEach(i=>dot(i,UI.violet,1.05));l.enemies.filter(e=>e.upperGuard&&!e.dead).forEach(e=>dot(e,UI.red,1.05));l.relays.filter(r=>!r.active).forEach(r=>dot(r,UI.pink,1.4));l.captives.filter(c=>!c.freed).forEach(c=>dot(c,UI.cyan));if(!p.key)dot(l.key,UI.gold);dot(l.exit,game.exitReady?UI.cyan:UI.violet,1.5);if(game.shift)l.enemies.filter(e=>!e.dead).forEach(e=>dot(e,UI.red));
     g.save();g.translate(x0+p.x*size,y0+p.y*size);g.rotate(p.a);g.fillStyle=UI.cyan;g.strokeStyle=UI.text;g.lineWidth=.8;g.beginPath();g.moveTo(size*1.3,0);g.lineTo(-size,-size*.75);g.lineTo(-size*.5,0);g.lineTo(-size,size*.75);g.closePath();g.fill();g.stroke();g.restore();
     if(!external){g.font=`600 ${full?Math.max(9,w/64):6}px ${UI_FONT}`;g.textAlign=full?'center':'left';g.fillStyle=UI.cyan;g.fillText(full?'SECTOR SCAN / '+game.objective:'MAP / TAB',full?w/2:x0,y0-8);if(full){g.fillStyle=UI.muted;g.font=`${Math.max(8,w/80)}px ${UI_FONT}`;g.fillText('CYAN: CAPTIVES   PINK: RELAYS   GOLD: KEY   [ TAB ] CLOSE',w/2,y0+mh+23);}g.textAlign='left';}if(external)g.restore();

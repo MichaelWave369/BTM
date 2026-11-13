@@ -6,6 +6,7 @@ import {SIGNAL_QUALITY} from './neon-signal.js';
 import {DOOR_COLORS,doorFrameParts,doorSurfaceMaterial} from './door-visibility.js';
 import {WEAPONS,findRoute} from './core.js';import {materialUV,doorGeometry} from './level-geometry.js';import {WORLD_SCALE,entityHeight,traceEnvironment} from './spatial.js';import {transformPoint} from './immersive-math.js';
 import {previewTrackedShot} from './aim-diagnostics.js';
+import {soloWayfinder,SOLO_WAYFINDER_COLORS} from './solo-wayfinder.js';
 const ORDER=[0,1,2,0,2,3],FACES=[[4,5,6,7],[1,0,3,2],[0,4,7,3],[5,1,2,6],[3,7,6,2],[0,1,5,4]],WHITE=[1,1,1,1],STUN=[.65,1.1,1.35,1],TELL=[1.5,.45,.18,1],CYAN=[.5,1.5,1.4,1],PURPLE=[1.3,.45,1.8,1];
 const rgbCache=new Map();export function colorRGB(hex='#b9ff53'){if(!rgbCache.has(hex)){const v=hex.replace('#','');rgbCache.set(hex,[parseInt(v.slice(0,2),16)/255,parseInt(v.slice(2,4),16)/255,parseInt(v.slice(4,6),16)/255,1]);}return rgbCache.get(hex);}
 export class VertexBatch {
@@ -41,6 +42,16 @@ export class WorldScene {
   for(const c of l.captives)if(!c.freed){b.billboard(c.x*s,0,c.y*s,1.3,1.65,'captive',eye);this.counts.objects++;}
   for(const prop of l.props||[])if(visible(prop.x,prop.y)){const h=prop.height*s;b.billboard(prop.x*s,0,prop.y*s,h*.8,h,'prop:'+prop.type,eye);this.counts.objects++;}
   if(!game.networkCompetitive&&!game.gallery)b.billboard(l.exit.x*s,.05,l.exit.y*s,1.55,2.15,'portal',eye,game.exitReady?WHITE:[.35,.45,.55,1]);
+  // Solo preview-only Ori wayfinder. Depth-tested native stereo quads and
+  // floor discs never affect combat rays, player movement or snapshots.
+  for(const mark of soloWayfinder(game)){
+   if(!visible(mark.x,mark.y))continue;
+   const color=colorRGB(SOLO_WAYFINDER_COLORS[mark.kind]);
+   if(mark.kind==='uplink'||mark.kind==='fragment')
+    b.billboard(mark.x*s,(mark.floorHeight+.95)*s,mark.y*s,.21*s,.26*s,'marker',eye,color);
+   else b.floor(mark.x*s,(mark.floorHeight+.035)*s,mark.y*s,.22*s,'marker',color);
+   this.counts.objects++;
+  }
   for(const n of l.raidNodes||[])b.floor(n.x*s,.025,n.y*s,1.3*s,'hazard:arc',n.active?[.5,1.2,.9,1]:[1,.8,.35,1]);
   const field=game.netState?.beast?.field;
   if(field){
