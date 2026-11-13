@@ -108,9 +108,13 @@ test('both renderers and flight paths are wired to the same authored cover',()=>
  const classic=readFileSync(new URL('../src/renderer.js',import.meta.url),'utf8');
  const spatial=readFileSync(new URL('../src/spatial.js',import.meta.url),'utf8');
  const movement=readFileSync(new URL('../src/collision.js',import.meta.url),'utf8');
+ const build=readFileSync(new URL('../scripts/build.mjs',import.meta.url),'utf8');
+ const offline=readFileSync(new URL('../scripts/verify-offline.mjs',import.meta.url),'utf8');
  assert(native.includes('for(const c of level.upperCover||[])'));
  assert(classic.includes("o.type==='upperCover'"));
  assert(spatial.includes("type='cover'"));
  assert(core.includes("deck.type==='cover'"));
  assert(movement.includes('coverIntersectsBody'));
+ assert(build.includes("'./src/solo-cover.js'"),'cover dependency must be pre-cached for offline launches');
+ assert(offline.includes("'./src/solo-cover.js'"),'offline verification must check the cover dependency');
 });
