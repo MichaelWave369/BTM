@@ -56,6 +56,8 @@ export function chooseSoloMezzanine(level,index,spawn){
   upper:best.upper,ramp:best.ramp,layoutIndex:index,entry:{x:spawn.x,y:spawn.y}};
 }
 export function soloUplinkPosition(layout){return {x:layout.upper.x0+.5,y:layout.upper.y1-.5,floorHeight:STACK_HEIGHT};}
+// Opposite upper-deck corner from the uplink, supply and sentry. Available on every 3x3+ deck.
+export function upperFragmentPosition(layout){return {x:layout.upper.x1-.5,y:layout.upper.y1-.5,floorHeight:STACK_HEIGHT};}
 export function enableSoloMezzanine(level,index,spawn){
  const layout=chooseSoloMezzanine(level,index,spawn);
  const footprint=[...cells(layout.upper),...cells(layout.ramp)];
@@ -79,6 +81,9 @@ export function enableSoloMezzanine(level,index,spawn){
  const supplyX=u.x0+.5,supplyY=u.y0+.5;
  level.items.push({id:level.items.length,type:index%2?'armor':'energy',
   x:supplyX,y:supplyY,floorHeight:STACK_HEIGHT,taken:false,bonusUpper:true});
+ // Optional scavenger goal; unlike the regular artifact, this never upgrades weapons.
+ level.items.push({id:level.items.length,type:'artifact',...upperFragmentPosition(layout),
+  taken:false,upperFragment:true,bonusUpper:true});
  // Independent upstairs side mission, never a replacement for extraction objectives.
  level.upperUplink={id:'upper-uplink-'+index,type:'relay',...soloUplinkPosition(layout),active:false,optional:true};
  return true;
@@ -89,9 +94,12 @@ export function validSoloPreviewCheckpoint(level,player){
  if(!Number.isInteger(level.index)||level.index<0||level.index>11)return false;
  let expected;try{expected=chooseSoloMezzanine(level,level.index,l.entry||{x:4.5,y:21.5});}catch{return false;}
  const uplink=level.upperUplink,authored=soloUplinkPosition(expected);
+ const fragments=level.items.filter(i=>i.upperFragment),fragment=fragments[0],fragmentPosition=upperFragmentPosition(expected);
  return JSON.stringify(l)===JSON.stringify(expected)&&
   !!uplink&&uplink.id==='upper-uplink-'+level.index&&uplink.type==='relay'&&uplink.optional===true&&typeof uplink.active==='boolean'&&
   uplink.x===authored.x&&uplink.y===authored.y&&uplink.floorHeight===authored.floorHeight&&
+  fragments.length===1&&fragment.type==='artifact'&&fragment.bonusUpper===true&&typeof fragment.taken==='boolean'&&
+  fragment.x===fragmentPosition.x&&fragment.y===fragmentPosition.y&&fragment.floorHeight===fragmentPosition.floorHeight&&
   [player.height,player.vz,player.jumpBuffer,player.coyote].every(Number.isFinite)&&
   player.height>=0&&player.height<=STACK_CEILING-1.1+.01&&
   Math.abs(player.vz)<=18.01&&typeof player.grounded==='boolean'&&
