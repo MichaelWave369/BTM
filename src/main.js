@@ -3,6 +3,7 @@ import {PIT_ACTS,PIT_BOSSES} from './pit.js';
 import {EQUIPMENT_DEFAULTS,equipmentSettings} from './equipment-math.js';
 import {destinationFor} from './genewrist-bridge.js';
 import {Game,SECTORS,WEAPONS,CAMPAIGN_HOSTS,clamp,angleDiff} from './core.js';
+import {accessCacheStatus} from './solo-access-hunt.js';
 import {Renderer} from './renderer.js';
 import {textureSettings} from './texture-packs.js';
 import {offlineTextureStyle,offlineTextureStatus,requestOfflineTextures} from './texture-offline.js';
@@ -404,7 +405,7 @@ function updateHUD(){
   $('hud-sector').textContent=game.campaign==='pit'?'PIT / TRIAL '+(game.levelIndex+1)+' / 12':game.phiwadCustom?'ΦWAD / CUSTOM':'SECTOR '+String(game.levelIndex+1).padStart(2,'0')+' / 12';$('hud-sector-name').textContent=game.definition.name+(game.verticalPreview?' / TWO-STORY PREVIEW':'');
   const relays=game.level.relays.filter(r=>r.active).length,rescues=game.level.captives.filter(c=>c.freed).length;
   const summary=[['RELAYS '+relays+'/'+game.level.relays.length,relays===game.level.relays.length],['RESCUES '+rescues+'/'+game.level.captives.length,rescues===game.level.captives.length],['KEY '+(p.key?'GOLD':'NEEDED')+(Object.keys(p.keys||{}).length?' / '+Object.keys(p.keys).map(k=>k.toUpperCase()).join('+'):''),p.key]];
-  if(game.verticalPreview){summary.push(['FRAGMENTS '+(game.totalUpperFragments||0)+'/12',game.totalUpperFragments===12]);summary.push(['SENTRIES '+(game.totalUpperClears||0)+'/12',game.totalUpperClears===12]);}
+  if(game.verticalPreview){summary.push(['FRAGMENTS '+(game.totalUpperFragments||0)+'/12',game.totalUpperFragments===12]);summary.push(['SENTRIES '+(game.totalUpperClears||0)+'/12',game.totalUpperClears===12]);const caches=accessCacheStatus(game.level);summary.push(['COLOR CACHES '+caches.collected+'/'+caches.total,caches.collected===caches.total]);}
   const objectiveKey=summary.map(r=>r.join(':')).join('|');if($('objective-list').dataset.value!==objectiveKey){$('objective-list').replaceChildren(...summary.map(([text,done])=>{const item=document.createElement('span');item.textContent=text;item.classList.toggle('done',done);return item;}));$('objective-list').dataset.value=objectiveKey;}
   $('radar-panel').hidden=!!screen||mapOpen;$('map-key').textContent=vrMode?'WRIST':padMode?'VIEW':'TAB';if(!screen&&!mapOpen)renderer.drawMap(game,false,$('radar').getContext('2d'),256,220);
   const uiTime=settings.reducedMotion?0:performance.now()/1000,assisting=game.assistTime>0;document.querySelector('.ori-panel').dataset.assisting=assisting;
