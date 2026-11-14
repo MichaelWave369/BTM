@@ -155,7 +155,7 @@ test('VR and Classic interfaces announce Outbreak; no networking or disk persist
  assert(main.includes('if(game.outbreak){game.startOutbreak();play();return;}'));
  assert(main.includes('function saveCheckpoint(){if(game.outbreak)return;'));
  assert(main.includes('if(game.gallery||game.phiwadCustom||game.player.health<=0)return'));
- assert(main.includes('!game.outbreak&&!game.gallery'));
+ assert(main.includes("if(!game.gallery&&(game.mode==='playing'||game.mode==='paused')){if(!game.outbreak)"));
  assert(main.includes("game.outbreak?'ANTIΦ-ATOGEN / ROUND"));
  assert(wrist.includes("game.outbreak?'ROUND '+game.outbreak.round"));
  assert(world.includes("e.outbreak?[.52,1.27,.48,1]"));
