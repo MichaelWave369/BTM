@@ -83,22 +83,41 @@ try{
  // software-WebGL CI runners, waiting only for a visible element can race
  // module evaluation and misleadingly report a hidden Trophy Room.
  try{
-  await page.waitForLoadState('domcontentloaded',{timeout:90000});
-  await page.locator('#trophy-screen').waitFor({state:'visible',timeout:45000});
+  // Wait for a fully initialized, SAME-DOCUMENT trophy view. During the
+  // BBS -> game navigation the browser can briefly expose an already-visible
+  // #trophy-screen between loads, then detach its DOM before the following
+  // Playwright locator resolves. The notice and cabinet must exist together.
+  await page.waitForFunction(()=>{
+   const trophy=document.querySelector('#trophy-screen');
+   const notice=trophy?.querySelector('.trophy-network');
+   return location.pathname==='/'&&document.readyState!=='loading'&&
+    trophy&&!trophy.hidden&&!!notice&&
+    /not online ranks/.test(notice.textContent||'');
+  },null,{timeout:90000});
  }catch(error){
   const diagnostic=await page.evaluate(()=>({
    url:location.href,ready:document.readyState,hash:location.hash,
    titleVisible:!document.querySelector('#title-screen')?.hidden,
    trophyExists:!!document.querySelector('#trophy-screen'),
    trophyHidden:document.querySelector('#trophy-screen')?.hidden,
+   noticeExists:!!document.querySelector('#trophy-screen .trophy-network'),
+   noticeText:document.querySelector('#trophy-screen .trophy-network')?.textContent,
    shellStatus:document.querySelector('#offline-status')?.textContent
   })).catch(e=>({evaluateError:e.message}));
   throw Error('BBS Trophy Room navigation did not initialize: '+
    JSON.stringify({diagnostic,pageErrors:errors,reason:error.message}));
  }
- assert.equal(new URL(page.url()).pathname,'/','BBS doorway loads the solo app');
- assert.equal(await page.locator('#trophy-screen').isVisible(),true,'BBS doorway opens actual cabinet');
- assert.match(await page.locator('.trophy-network').textContent(),/not online ranks/);
+ // Inspect the cabinet AND its local-only multiplayer disclaimer atomically:
+ // a second cross-navigation locator query can race an old detached document.
+ const navigated=await page.evaluate(()=>{
+  const trophy=document.querySelector('#trophy-screen');
+  return {pathname:location.pathname,visible:!!trophy&&!trophy.hidden,
+   notice:trophy?.querySelector('.trophy-network')?.textContent||''};
+ });
+ assert.equal(navigated.pathname,'/','BBS doorway loads the solo app');
+ assert.equal(navigated.visible,true,'BBS doorway opens actual cabinet');
+ assert.match(navigated.notice,/not online ranks/,
+  'BBS-linked Trophy Room must still show its honest local-only status');
  // The accelerated title background sometimes never satisfies Playwright's
  // mouse-pointer "stable" heuristic after a full BBS -> title navigation.
  // Activate the *actual focused button* with a trusted keyboard event, as a
