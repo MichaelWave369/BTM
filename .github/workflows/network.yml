@@ -13,7 +13,7 @@ concurrency:
 jobs:
   campaign_and_raid:
     name: Campaign + earned raid proof
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 38
     steps:
       - uses: actions/checkout@v4
@@ -58,7 +58,7 @@ jobs:
 
   arena_browsers:
     name: Arena browser modes + stereo proof
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -96,7 +96,7 @@ jobs:
 
   coop_browsers:
     name: Co-op objectives + revive browser proof
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -137,7 +137,7 @@ jobs:
     name: multiplayer
     if: ${{ always() }}
     needs: [campaign_and_raid, arena_browsers, coop_browsers]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
       - name: Confirm all authoritative proof groups succeeded
