@@ -79,7 +79,18 @@ export class WorldUI{
    const labels=['SLAP','BLASTER','BASS','Φ PULSE','DISRUPT','UNPLUG'];for(let i=0;i<6;i++)this.button(20+i%3*246,192+Math.floor(i/3)*62,236,54,labels[i],()=>activate('weapon',i),{weapon:i,enabled:i<game.unlocked,selected:i===game.weapon});
    const arenaTool=game.level.vertical?['JUMP','jump','↑']:['BASS','bass','B'];
    const tools=[['MAP','map','M'],['ORI','ori','O'],arenaTool,[game.survival?'RELOAD':'VENT','reload','R'],[game.survival?'BASH / SHIELD':'DODGE','dodge','D'],['VISION','vision','Φ'],['PAUSE','pause','II'],['CENTER','recenter','C']];tools.forEach(([label,action,icon],i)=>this.button(20+i%4*185,326+Math.floor(i/4)*51,175,43,label,()=>activate(action),{icon,enabled:!(game.networkCompetitive&&['ori','bass'].includes(action))&&!(game.oriCorrupted&&action==='ori')}));
-   g.font='15px '+UI_FONT;g.fillStyle=UI.muted;const hint=data.focus?data.focus.label:game.interactionHint().replace('[ E ]','[GRIP]');g.fillText(hint||'POINT + TRIGGER  /  PRESS WATCH TO CLOSE',20,434);const d=data.diagnostics;g.font='13px '+UI_FONT;g.fillStyle=UI.cyan;g.fillText(data.settings?.vrDiagnostics&&d?'WORLD '+d.drawCalls+' DRAWS / CPU '+d.frameMs.toFixed(1)+'ms':'LINK STABLE  /  '+game.portraitMood,395,474,185);
+   g.font='15px '+UI_FONT;g.fillStyle=UI.muted;
+   if(data.settings?.vrDiagnostics&&data.quickBotsActive&&data.xrTiming){
+    const xr=data.xrTiming,bot=data.botTiming||{},cpu=data.diagnostics?.frameMs;
+    const cadence=xr.samples>=3?xr.fps+'Hz / '+xr.avgMs.toFixed(1)+'ms / PEAK '+xr.peakMs.toFixed(1)+'ms':'WARMING UP';
+    const snapshot=bot.gapMs?bot.gapMs+'ms':'WAITING';
+    g.font='12px '+UI_FONT;g.fillStyle=UI.cyan;
+    g.fillText('XR CALLBACK '+cadence+' | CPU '+(Number.isFinite(cpu)?cpu.toFixed(1)+'ms':'--')+' | BOT GAP '+snapshot+' / AGE '+(bot.ageMs??0)+'ms',20,434,720);
+   }else{
+    const hint=data.focus?data.focus.label:game.interactionHint().replace('[ E ]','[GRIP]');
+    g.fillText(hint||'POINT + TRIGGER  /  PRESS WATCH TO CLOSE',20,434);
+   }
+   const d=data.diagnostics;g.font='13px '+UI_FONT;g.fillStyle=UI.cyan;g.fillText(data.settings?.vrDiagnostics&&d?'WORLD '+d.drawCalls+' DRAWS / CPU '+d.frameMs.toFixed(1)+'ms':'LINK STABLE  /  '+game.portraitMood,395,474,185);
   }
   this.button(map?224:20,444,map?160:238,46,'COMMS LOG',()=>{this.logOpen=true;this.logPage=0;this.archiveOpen=false;this.lastPaint=-Infinity;});
   this.button(map?392:270,444,map?183:305,46,'HUMAN LEDGER',()=>{this.archiveOpen=true;this.archiveSelected=null;this.archivePage=0;this.archiveFilter='all';this.logOpen=false;this.lastPaint=-Infinity;});
