@@ -10,6 +10,10 @@ import {soloAccessMarkers,CACHE_COLORS} from './solo-access-hunt.js';
 import {soloSweepMarkers,SOLO_SWEEP_COLORS} from './solo-resonance-sweep.js';
 import {soloWayfinder,SOLO_WAYFINDER_COLORS} from './solo-wayfinder.js';
 const ORDER=[0,1,2,0,2,3],FACES=[[4,5,6,7],[1,0,3,2],[0,4,7,3],[5,1,2,6],[3,7,6,2],[0,1,5,4]],WHITE=[1,1,1,1],STUN=[.65,1.1,1.35,1],TELL=[1.5,.45,.18,1],CYAN=[.5,1.5,1.4,1],PURPLE=[1.3,.45,1.8,1];
+// Variant colors are renderer-only; no change to authoritative hitboxes.
+const OUTBREAK_TINT=Object.freeze({
+ shambler:[.52,1.27,.48,1],runner:[1.45,.52,.69,1],brute:[1.48,1.03,.48,1]
+});
 const rgbCache=new Map();export function colorRGB(hex='#b9ff53'){if(!rgbCache.has(hex)){const v=hex.replace('#','');rgbCache.set(hex,[parseInt(v.slice(0,2),16)/255,parseInt(v.slice(2,4),16)/255,parseInt(v.slice(4,6),16)/255,1]);}return rgbCache.get(hex);}
 export class VertexBatch {
  constructor(capacity=262144){this.data=new Float32Array(capacity);this.length=0;this.uvCache=new Map();this.points=new Float32Array(24);this.quadPoints=new Float32Array(12);this.tmp=new Float32Array(3);this.dropped=0;}
@@ -44,7 +48,10 @@ export class WorldScene {
       d.lockColor?DOOR_COLORS['locked-'+d.lockColor]:WHITE);
     }
    }
-  for(const e of l.enemies){if(e.dead||!visible(e.x,e.y))continue;const h=entityHeight(e.type)*s,frame=Math.floor(e.walk||0)%4;b.billboard(e.x*s,(e.floorHeight||0)*s,e.y*s,e.raidRole==='core'?6.4*s:h,h,e.raidRole?(e.raidRole==='core'?(e.exposed>0?'raid:open':'raid:core'):'raid:pylon'):e.pitBoss?'pitboss:'+e.pitBoss+(e.exposed>0?':open':''):(e.pain>0?'pain:':'enemy:')+e.type+':'+frame,eye,e.outbreak?[.52,1.27,.48,1]:e.stun>0?STUN:e.upperGuard?(e.upperGuardRole==='breacher'?[1.15,.55,.48,1]:e.upperGuardRole==='marksman'?[.54,.95,1.3,1]:[1.04,.88,1.42,1]):WHITE);this.counts.enemies++;if(e.upperGuardRole==='bulwark'&&e.coverReady)b.billboard(e.x*s,(e.floorHeight+1.12)*s,e.y*s,.23,.23,'marker',eye,[.55,1.05,1.4,1]);if(e.tell>0)b.floor(e.x*s,(e.floorHeight||0)*s+.025,e.y*s,.7,'marker',TELL);}
+  for(const e of l.enemies){if(e.dead||!visible(e.x,e.y))continue;const h=entityHeight(e.type)*s,frame=Math.floor(e.walk||0)%4;b.billboard(e.x*s,(e.floorHeight||0)*s,e.y*s,e.raidRole==='core'?6.4*s:h,h,e.raidRole?(e.raidRole==='core'?(e.exposed>0?'raid:open':'raid:core'):'raid:pylon'):e.pitBoss?'pitboss:'+e.pitBoss+(e.exposed>0?':open':''):(e.pain>0?'pain:':'enemy:')+e.type+':'+frame,eye,e.outbreak?(OUTBREAK_TINT[e.outbreakVariant]||OUTBREAK_TINT.shambler):e.stun>0?STUN:e.upperGuard?(e.upperGuardRole==='breacher'?[1.15,.55,.48,1]:e.upperGuardRole==='marksman'?[.54,.95,1.3,1]:[1.04,.88,1.42,1]):WHITE);this.counts.enemies++;
+   if(e.outbreak&&e.outbreakVariant&&e.outbreakVariant!=='shambler')
+    b.billboard(e.x*s,(e.floorHeight||0)*s+h*.98,e.y*s,.15*s,.15*s,'marker',eye,OUTBREAK_TINT[e.outbreakVariant]||WHITE);
+   if(e.upperGuardRole==='bulwark'&&e.coverReady)b.billboard(e.x*s,(e.floorHeight+1.12)*s,e.y*s,.23,.23,'marker',eye,[.55,1.05,1.4,1]);if(e.tell>0)b.floor(e.x*s,(e.floorHeight||0)*s+.025,e.y*s,.7,'marker',TELL);}
   for(const i of l.items)if(!i.taken&&visible(i.x,i.y)){b.billboard(i.x*s,(i.floorHeight||0)*s+.04,i.y*s,.85,.85,'item:'+i.type,eye,i.upperFragment?[.85,.65,1.35,1]:WHITE);this.counts.objects++;}
   if(!l.key.taken){b.billboard(l.key.x*s,.12,l.key.y*s,.75,.75,'item:key',eye);this.counts.objects++;}
   for(const r of l.relays){b.billboard(r.x*s,0,r.y*s,.9,1.15,r.active?'relay:on':'relay:off',eye);this.counts.objects++;}
