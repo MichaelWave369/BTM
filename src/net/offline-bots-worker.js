@@ -2,7 +2,7 @@
 // Never creates WebSockets, user accounts, localStorage saves or competitive receipts.
 import {createOfflineArena} from './offline-bots.js';
 import {PROTOCOL,TICK_RATE,SNAPSHOT_RATE,validateMessage} from './protocol.js';
-let room=null,player=null,revision=-1,acc=0,last=performance.now(),snapshotTicks=0;
+let room=null,player=null,revision=-1,acc=0,last=performance.now(),snapshotTicks=0,held=false;
 const post=message=>self.postMessage(message);
 function publish(){
  if(!room||!player)return;
@@ -11,6 +11,11 @@ function publish(){
 }
 function command(message){
  if(!message||typeof message!=='object')throw Error('Invalid local command');
+ if(message.type==='local-hold'){
+  if(typeof message.hold!=='boolean')throw Error('Invalid local hold state');
+  held=message.hold;acc=0;last=performance.now();
+  return;
+ }
  if(message.type==='create'){
   if(room)throw Error('Return to setup before starting another match');
   const started=createOfflineArena(message);
@@ -20,7 +25,7 @@ function command(message){
  }
  // A local arena can be discarded immediately. No remote room to abandon.
  if(message.type==='leave'||message.type==='lobby'){
-  room=null;player=null;revision=-1;post({type:'left'});return;
+  room=null;player=null;revision=-1;acc=0;held=false;post({type:'left'});return;
  }
  validateMessage(JSON.stringify(message));
  if(message.type==='ping'){post({type:'pong',id:message.id});return;}
@@ -36,7 +41,7 @@ function command(message){
 self.onmessage=event=>{try{command(event.data);}catch(error){post({type:'error',message:String(error.message).slice(0,160)});}};
 setInterval(()=>{
  const now=performance.now();acc+=Math.min(.25,Math.max(0,(now-last)/1000));last=now;
- if(!room){acc=0;return;}
+ if(!room||held){acc=0;return;}
  try{
   let steps=0;
   while(acc>=1/TICK_RATE&&steps++<6){

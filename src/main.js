@@ -20,6 +20,7 @@ import {AudioEngine} from './audio.js';
 import {mountSoundtrackControls} from './soundtrack-ui.js';
 import {drawPortrait} from './assets.js';
 import {VRArcade} from './vr.js';
+import {QuickBotArena} from './net/quick-bots.js';
 import {IMMERSIVE_DEFAULTS,immersiveSettings} from './immersive-rig.js';
 import {stepImmersive} from './immersive-play.js';
 import {PointerCapture,keyCode} from './controls.js';
@@ -64,10 +65,30 @@ try{
 }catch{$('storage-warning').hidden=false;}
 game.events=[];
 const capture=new PointerCapture({request:()=>{if(!canvas.requestPointerLock)throw Error('Unavailable');return canvas.requestPointerLock();},onState:()=>updateCapture(),onLost:()=>{if(game.mode==='playing')pause();}});
-function controllerBack(){if(screen==='trophy-screen'){showScreen(trophyReturnScreen);return;}if(screen==='gallery-result-screen'){home();return;}if(screen==='settings-screen'||screen==='help-screen'||screen==='archive-screen')showScreen(returnScreen);else if(screen==='pause-screen')play();else if(screen==='result-screen')home();}
-const controllerMenu=new ControllerMenu({root:()=>screen?$(screen):null,back:controllerBack,resume:()=>{if(screen==='pause-screen')play();else controllerBack();}});
-const vr=new VRArcade({settings:()=>settings,onStatus:message=>{$('vr-status').textContent=message;for(const id of ['vr-btn','immersive-btn'])$(id).disabled=vr.pending||vr.active;},onStart:()=>{if(desktopFrame)cancelAnimationFrame(desktopFrame);desktopFrame=0;clearInput();if(game.mode==='playing')pause();setInputMode('vr');$('vr-session-tools').hidden=false;showScreen(screen||'pause-screen');},onPause:()=>{clearInput();pause();},onEnd:()=>{clearInput();pause();$('vr-session-tools').hidden=true;setInputMode('keyboard');lastFrame=performance.now();if(!desktopFrame)desktopFrame=requestAnimationFrame(frame);audio.pause(true);for(const id of ['vr-btn','immersive-btn'])$(id).disabled=false;showToast('VR SESSION ENDED / GAME PRESERVED');},onFrame:(now,pad,spatial)=>tick(now,pad,spatial),data:()=>({game,scene:canvas,screen,assets:renderer.assets,settings,map:mapOpen,immersive:vr.immersive,items:screen?controllerMenu.items():[],archive:archiveLedger,focused:document.activeElement,communications:communications.log,alert:alertTimer>0?alertText:'',dialogue:dialogueTimer<=0?'':$('dialogue-name').textContent+': '+$('dialogue-text').textContent,toast:toastTimer>0?$('toast').textContent:'',activate:vrAction})});
+function controllerBack(){if(screen==='bot-pause-screen'){resumeQuickBots();return;}if(screen==='trophy-screen'){showScreen(trophyReturnScreen);return;}if(screen==='gallery-result-screen'){home();return;}if(screen==='settings-screen'||screen==='help-screen'||screen==='archive-screen')showScreen(returnScreen);else if(screen==='pause-screen')play();else if(screen==='result-screen')home();}
+const controllerMenu=new ControllerMenu({root:()=>screen?$(screen):null,back:controllerBack,resume:()=>{if(screen==='bot-pause-screen')resumeQuickBots();else if(screen==='pause-screen')play();else controllerBack();}});
+let quickArena=null,quickReturnScreen='title-screen',quickLoading=false;
+const vr=new VRArcade({settings:()=>settings,onStatus:message=>{$('vr-status').textContent=message;for(const id of ['vr-btn','immersive-btn'])$(id).disabled=vr.pending||vr.active;},onStart:()=>{if(desktopFrame)cancelAnimationFrame(desktopFrame);desktopFrame=0;clearInput();if(game.mode==='playing')pause();setInputMode('vr');$('vr-session-tools').hidden=false;showScreen(screen||'pause-screen');},onPause:()=>{if(quickArena)pauseQuickBots();else{clearInput();pause();}},onEnd:()=>{if(quickArena){quickArena.close();quickArena=null;quickLoading=false;showScreen(quickReturnScreen);}clearInput();pause();$('vr-session-tools').hidden=true;setInputMode('keyboard');lastFrame=performance.now();if(!desktopFrame)desktopFrame=requestAnimationFrame(frame);audio.pause(true);for(const id of ['vr-btn','immersive-btn'])$(id).disabled=false;showToast('VR SESSION ENDED / GAME PRESERVED');},onFrame:(now,pad,spatial)=>tick(now,pad,spatial),data:()=>({game:quickArena?.game||game,quickBots:true,quickBotsActive:!!quickArena,scene:canvas,screen,assets:renderer.assets,settings,map:mapOpen,immersive:vr.immersive,items:screen?controllerMenu.items():[],archive:archiveLedger,focused:document.activeElement,communications:communications.log,alert:alertTimer>0?alertText:'',dialogue:dialogueTimer<=0?'':$('dialogue-name').textContent+': '+$('dialogue-text').textContent,toast:toastTimer>0?$('toast').textContent:'',activate:vrAction})});
 function vrAction(action,element){
+ if(action==='bots'){void startQuickBots();return;}
+ if(action==='returnSolo'){closeQuickBots();return;}
+ if(quickArena){
+  if(action==='focus'){controllerMenu.focus(element);return;}
+  if(action==='recenter'){vr.recenter();return;}
+  if(action==='pause'){pauseQuickBots();return;}
+  if(action==='genewrist-travel'){showToast('RETURN TO SOLO BEFORE TRAVEL');return;}
+  const bot=quickArena.game;
+  if(!bot.inputEnabled)return;
+  if(action==='weapon')bot.selectWeapon(element);
+  else if(action==='map')mapOpen=!mapOpen;
+  else if(action==='reload')bot.reload();
+  else if(action==='ori')bot.oriAbility();
+  else if(action==='dodge')bot.dodge();
+  else if(action==='vision')bot.vision();
+  else if(action==='bass')bot.bassDrop();
+  else if(action==='jump')bot.jump();
+  return;
+ }
  if(action==='genewrist-travel'){
   const destination=destinationFor(element);
   if(!destination){showToast('GEN.E / DESTINATION UNAVAILABLE');return;}
@@ -112,7 +133,7 @@ function showDialogue(text,speaker='ORI',priority=1){communications.record(text,
 function showScreen(id){
   communications.cancel();controllerMenu.clear();clearInput();
   screen=id;if(id&&vr.active)$(id).append($('vr-session-tools'));$('overlay').hidden=!id;$('overlay').classList.toggle('title-overlay',id==='title-screen');
-  for(const n of ['title-screen','pause-screen','result-screen','gallery-result-screen','settings-screen','help-screen','archive-screen','trophy-screen'])$(n).hidden=n!==id;
+  for(const n of ['title-screen','pause-screen','bot-pause-screen','result-screen','gallery-result-screen','settings-screen','help-screen','archive-screen','trophy-screen'])$(n).hidden=n!==id;
   $('view-top').hidden=!!id;$('touch-controls').hidden=!!id||!touch||inputMode!=='keyboard';$('onboarding').hidden=!!id||!!game.gallery||game.campaign==='pit'||game.levelIndex!==0||game.lesson>=3;
   document.body.classList.toggle('playing',!id);$('app').dataset.screen=id||'playing';
   if(id){capture.release();if(document.pointerLockElement)document.exitPointerLock();if(inputMode!=='keyboard')controllerMenu.focus(controllerMenu.items()[0]);}
@@ -498,6 +519,7 @@ for(const b of document.querySelectorAll('[data-key]')){b.addEventListener('poin
 $('touch-fire').addEventListener('pointerdown',e=>{e.preventDefault();fire=true;game.requestFire();e.target.setPointerCapture(e.pointerId);});for(const event of ['pointerup','pointercancel','lostpointercapture'])$('touch-fire').addEventListener(event,()=>fire=false);
 $('touch-use').addEventListener('click',()=>game.interact());$('touch-ori').addEventListener('click',()=>game.oriAbility());$('touch-turn').addEventListener('pointerdown',e=>{keys.add('ArrowRight');e.target.setPointerCapture(e.pointerId);});for(const event of ['pointerup','pointercancel','lostpointercapture'])$('touch-turn').addEventListener(event,()=>keys.delete('ArrowRight'));$('touch-pause').addEventListener('click',pause);
 function tick(now,externalPad,spatial){
+  if(quickArena){tickQuickBots(now,externalPad,spatial);return;}
   if(alertTimer>0)alertTimer-=Math.min(.05,(now-lastFrame)/1000);
   const realDt=Math.max(.001,(now-lastFrame)/1000),dt=Math.min(.05,realDt);lastFrame=now;communications.tick(realDt);
   const pad=pollController(dt,externalPad,!!spatial);
@@ -524,11 +546,115 @@ mountSoundtrackControls({audio,settings,apply:applySettings,save:storeSettings})
 applySettings();showScreen('title-screen');if(location.hash==='#trophy-room'){openTrophyRoom();history.replaceState(null,'',location.pathname+location.search);}updateHUD();desktopFrame=requestAnimationFrame(frame);
 if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').then(()=>navigator.serviceWorker.ready).then(()=>{$('offline-status').textContent='OFFLINE READY';}).catch(()=>{$('offline-status').textContent='ONLINE';$('offline-status').title='Offline caching unavailable here. Keep the source download for local play.';});else $('offline-status').textContent='LOCAL BUILD';
 
+// Direct, uninterrupted Quest/Arcade VR bot arena. The same worker and
+// NetworkView from BBS are driven by the existing XR session and renderer.
+// This is intentionally only offline quickplay; real online rooms still need
+// an authoritative WebSocket node and the dedicated BBS lobby.
+function quickBotStatus(message){if(quickArena&&screen==='bot-pause-screen')$('bot-status').textContent=message;}
+function pauseQuickBots(){
+ if(!quickArena)return;
+ quickArena.pause();
+ $('bot-resume-btn').disabled=!quickArena.ready;
+ $('bot-resume-btn').textContent=quickArena.matchEnded?'REMATCH / LOCAL':'RESUME BOT ARENA';
+ $('bot-status').textContent=quickArena.matchEnded?'MATCH COMPLETE / REMATCH OR RETURN TO SOLO':'LOCAL BOTS FROZEN / YOUR SOLO RUN IS PRESERVED';
+ showScreen('bot-pause-screen');
+}
+function resumeQuickBots(){
+ if(!quickArena||quickLoading)return;
+ if(quickArena.matchEnded){
+  quickLoading=true;$('bot-status').textContent='RESTARTING LOCAL BOT PILOTS';
+  $('bot-resume-btn').disabled=true;
+  if(!quickArena.replay()){quickLoading=false;showToast('BOT RESTART FAILED');}
+  return;
+ }
+ if(quickArena.resume()){showScreen('');audio.start();audio.pause(false);vr.recenter();}
+}
+function closeQuickBots(){
+ if(!quickArena)return;
+ const arena=quickArena;quickArena=null;quickLoading=false;
+ arena.close();mapOpen=false;
+ showScreen(quickReturnScreen);
+ if(vr.active)vr.recenter();
+ audio.pause(game.mode!=='playing');
+}
+async function startQuickBots(){
+ if(!vr.active||quickArena||quickLoading)return;
+ quickReturnScreen=screen||'pause-screen';
+ if(game.mode==='playing')pause();
+ quickLoading=true;
+ const arena=new QuickBotArena({
+  onStatus:quickBotStatus,
+  onReady:()=>{
+   if(quickArena!==arena)return;
+   quickLoading=false;mapOpen=false;
+   $('bot-resume-btn').disabled=false;
+   $('bot-resume-btn').textContent='ENTER BOT ARENA / READY';
+   $('bot-status').textContent='ARENA READY / 3 LOCAL BOTS / PRESS ENTER WHEN READY';
+   // Stay in a VR-readable setup panel with the worker held. The player
+   // decides when bots begin shooting, after both controllers are ready.
+   showScreen('bot-pause-screen');vr.recenter();
+  },
+  onFinished:()=>{
+   if(quickArena!==arena)return;
+   quickLoading=false;pauseQuickBots();
+  },
+  onError:error=>{
+   if(quickArena!==arena)return;
+   closeQuickBots();showToast('BOT ENGINE / '+error.message);
+  }
+ });
+ quickArena=arena;
+ $('bot-status').textContent='BOOTING LOCAL BOT PILOTS / NO SERVER REQUIRED';
+ $('bot-resume-btn').textContent='RESUME BOT ARENA';
+ $('bot-resume-btn').disabled=true;
+ showScreen('bot-pause-screen');
+ try{await arena.start();}
+ catch(error){if(quickArena===arena){closeQuickBots();showToast('BOT ENGINE / '+error.message);}}
+}
+function tickQuickBots(now,pad,spatial){
+ const arena=quickArena;if(!arena)return;
+ const realDt=Math.max(.001,(now-lastFrame)/1000),dt=Math.min(.05,realDt);
+ lastFrame=now;const bot=arena.game;
+ if(screen){
+  if(pad?.ready){
+   if(pad.actions?.includes('pause'))resumeQuickBots();
+   else controllerMenu.handle(pad.menu);
+  }
+  bot.advanceVisual(dt);
+  if(!spatial)renderer.draw(bot,dt,settings,{map:mapOpen});
+  return;
+ }
+ if(pad?.actions?.includes('pause')){pauseQuickBots();return;}
+ if(spatial){
+  // Exactly the same tracked-eye/aim/turn physics used by the separate
+  // BBS VR document, now on the host's already-active XRSession.
+  bot.useHeld=!!pad?.interactHeld;
+  const result=stepImmersive(bot,spatial,pad,settings,dt,{map:()=>mapOpen=!mapOpen,reset:()=>vr.input.reset()});
+  if(result.uiCaptured){bot.useHeld=false;bot.useUntil=0;bot.cancelCombat();bot.net.intent.use=false;}
+  if(result.trackingLost){pauseQuickBots();return;}
+  audio.listener(spatial.rig);
+ }else{
+  if(pad?.ready)controllerActions(bot,pad,{map:()=>mapOpen=!mapOpen});
+  bot.update(dt,gameplayInput(keys,pad||undefined,fire,settings.controllerSensitivity));
+  renderer.draw(bot,dt,settings,{map:mapOpen});
+ }
+ for(const event of bot.events.splice(0)){
+  renderer.event(event);vr.event(event,bot);
+  if(event.type==='sound')audio.play(event.name,event.weapon);
+  if(event.type==='toast')showToast(event.text);
+  if(event.type==='dialogue')showDialogue(event.text,event.speaker,event.priority);
+ }
+}
+$('bot-resume-btn').addEventListener('click',resumeQuickBots);
+$('bot-return-btn').addEventListener('click',closeQuickBots);
+
 // In-game BBS scene: keep the solo page (and separate campaign checkpoints)
 // mounted. The embedded network document owns its own controls and sockets.
 let bbsReturnButton=null,bbsOpening=false;
 const bbsPortal=$('bbs-portal'),bbsFrame=$('bbs-portal-frame');
 async function openBbsPortal(bots=false,button=null){
+ // In an active headset, reuse its existing XR session and renderer.
+ if(bots&&vr.active){void startQuickBots();return;}
  if(!bbsPortal.hidden||bbsOpening)return;
  bbsOpening=true;
  try{

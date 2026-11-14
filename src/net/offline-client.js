@@ -63,6 +63,9 @@ export class OfflineBotClient{
    this.bytesOut+=data.length;this.worker.postMessage(message);return true;
   }catch(error){this.onMessage({type:'error',message:error.message});return false;}
  }
+ // Local-only simulation freeze: prevent bots attacking while the player is
+ // navigating VR menus. Never sent to any network or WebSocket host.
+ hold(enabled){if(!this.worker||!this.connected)return false;this.worker.postMessage({type:'local-hold',hold:!!enabled});return true;}
  action(action){if(this.actions.size<8)this.actions.add(action);}
  flush(){
   if(!this.connected||!this.id)return;
