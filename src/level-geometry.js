@@ -5,10 +5,28 @@ export const MATERIALS=[...Array.from({length:6},(_,i)=>'wall'+(i+1)),'floor','c
 const slots=new Map(MATERIALS.map((name,i)=>[name,i]));
 export const materialUV=name=>{const i=slots.get(name)??slots.get('white'),x=i%16*64,y=Math.floor(i/16)*64;return [(x+2)/1024,(y+2)/1024,(x+62)/1024,(y+62)/1024];};
 export function pushQuad(vertices,points,material='white',color=[1,1,1,1]){const uv=materialUV(material),coords=[[uv[0],uv[3]],[uv[2],uv[3]],[uv[2],uv[1]],[uv[0],uv[1]]];for(const i of [0,1,2,0,2,3])vertices.push(...points[i],...coords[i],...color);}
+// Slice tall walls into original-height texture bands, with a cropped final
+// band. Sampling stays inside the existing atlas slot, never a neighbor.
+// Standard 1.7-height maps retain their exact previous mesh and texture.
+export function pushTiledWall(vertices,points,material='white',color=[1,1,1,1],tileHeight=WALL_HEIGHT*WORLD_SCALE,upperMaterial=material){
+ const height=Math.abs(points[3][1]-points[0][1]);
+ if(height<=tileHeight+.000001){pushQuad(vertices,points,material,color);return;}
+ for(let offset=0;offset<height-.000001;offset+=tileHeight){
+  // Keep one authored wall screen at eye level, not one per floor-height.
+  const uv=materialUV(offset<.000001?material:upperMaterial);
+  const length=Math.min(tileHeight,height-offset),start=offset/height,end=(offset+length)/height;
+  const at=(low,high,t)=>low.map((v,i)=>v+(high[i]-v)*t);
+  const corners=[at(points[0],points[3],start),at(points[1],points[2],start),
+   at(points[1],points[2],end),at(points[0],points[3],end)];
+  const topV=uv[3]-(uv[3]-uv[1])*length/tileHeight;
+  const coords=[[uv[0],uv[3]],[uv[2],uv[3]],[uv[2],topV],[uv[0],topV]];
+  for(const i of [0,1,2,0,2,3])vertices.push(...corners[i],...coords[i],...color);
+ }
+}
 export function pushBox(vertices,center,size,material='white',color=[1,1,1,1]){const [x,y,z]=center,[w,h,d]=size.map(v=>v/2),p=[[x-w,y-h,z-d],[x+w,y-h,z-d],[x+w,y+h,z-d],[x-w,y+h,z-d],[x-w,y-h,z+d],[x+w,y-h,z+d],[x+w,y+h,z+d],[x-w,y+h,z+d]];for(const face of [[4,5,6,7],[1,0,3,2],[0,4,7,3],[5,1,2,6],[3,7,6,2],[0,1,5,4]])pushQuad(vertices,face.map(i=>p[i]),material,color);}
 const walkable=(level,x,y)=>level.cells[y]?.[x]===0||!!level.doors[x+','+y];
 export function doorAxis(level,d){const ns=walkable(level,d.x,d.y-1)&&walkable(level,d.x,d.y+1),ew=walkable(level,d.x-1,d.y)&&walkable(level,d.x+1,d.y);return ns&&!ew?'z':'x';}
-export function doorGeometry(level,d){const s=WORLD_SCALE,h=WALL_HEIGHT*s,axis=doorAxis(level,d);return {center:[(d.x+.5)*s,h*(.5+d.open),(d.y+.5)*s],size:axis==='x'?[.12,h,s]:[s,h,.12],material:doorSurfaceMaterial(d.type),axis,solid:d.open<.84};}
+export function doorGeometry(level,d){const s=WORLD_SCALE,h=(level.vertical?.ceiling??WALL_HEIGHT)*s,axis=doorAxis(level,d);return {center:[(d.x+.5)*s,h*(.5+d.open),(d.y+.5)*s],size:axis==='x'?[.12,h,s]:[s,h,.12],material:doorSurfaceMaterial(d.type),axis,solid:d.open<.84};}
 export function buildLevelGeometry(level){
  const chunks=new Map(),s=WORLD_SCALE,h=(level.vertical?.ceiling??WALL_HEIGHT)*s,signs=new Map((level.signs||[]).map((o,i)=>[o.x+','+o.y,'sign:'+i]));
  const get=(x,y)=>{const key=Math.floor(x/8)+','+Math.floor(y/8);if(!chunks.has(key))chunks.set(key,{key,vertices:[],bounds:{min:[Math.floor(x/8)*8*s,0,Math.floor(y/8)*8*s],max:[(Math.floor(x/8)+1)*8*s,h,(Math.floor(y/8)+1)*8*s]}});return chunks.get(key).vertices;};
@@ -16,10 +34,10 @@ export function buildLevelGeometry(level){
   const v=get(x,y),x0=x*s,x1=(x+1)*s,z0=y*s,z1=(y+1)*s;
   if(walkable(level,x,y)){pushQuad(v,[[x0,0,z1],[x1,0,z1],[x1,0,z0],[x0,0,z0]],'floor',[.9,.95,.9,1]);pushQuad(v,[[x0,h,z0],[x1,h,z0],[x1,h,z1],[x0,h,z1]],'ceiling',[.6,.68,.66,1]);continue;}
   const material=signs.get(x+','+y)||'wall'+level.cells[y][x];
-  if(walkable(level,x,y-1))pushQuad(v,[[x1,0,z0],[x0,0,z0],[x0,h,z0],[x1,h,z0]],material,[.94,.96,.94,1]);
-  if(walkable(level,x,y+1))pushQuad(v,[[x0,0,z1],[x1,0,z1],[x1,h,z1],[x0,h,z1]],material,[.8,.86,.82,1]);
-  if(walkable(level,x-1,y))pushQuad(v,[[x0,0,z0],[x0,0,z1],[x0,h,z1],[x0,h,z0]],material,[.72,.8,.75,1]);
-  if(walkable(level,x+1,y))pushQuad(v,[[x1,0,z1],[x1,0,z0],[x1,h,z0],[x1,h,z1]],material,[.85,.9,.86,1]);
+  if(walkable(level,x,y-1))pushTiledWall(v,[[x1,0,z0],[x0,0,z0],[x0,h,z0],[x1,h,z0]],material,[.94,.96,.94,1],WALL_HEIGHT*s,'wall'+level.cells[y][x]);
+  if(walkable(level,x,y+1))pushTiledWall(v,[[x0,0,z1],[x1,0,z1],[x1,h,z1],[x0,h,z1]],material,[.8,.86,.82,1],WALL_HEIGHT*s,'wall'+level.cells[y][x]);
+  if(walkable(level,x-1,y))pushTiledWall(v,[[x0,0,z0],[x0,0,z1],[x0,h,z1],[x0,h,z0]],material,[.72,.8,.75,1],WALL_HEIGHT*s,'wall'+level.cells[y][x]);
+  if(walkable(level,x+1,y))pushTiledWall(v,[[x1,0,z1],[x1,0,z0],[x1,h,z0],[x1,h,z1]],material,[.85,.9,.86,1],WALL_HEIGHT*s,'wall'+level.cells[y][x]);
  }
  if(level.vertical?.schema==='btm.vertical-prototype/1'){
   const {upper,ramp}=level.vertical,H=upper.height*s;
