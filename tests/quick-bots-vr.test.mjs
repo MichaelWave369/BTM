@@ -6,6 +6,7 @@ import {QuickBotArena,DEFAULT_QUICK_BOTS} from '../src/net/quick-bots.js';
 import {createOfflineArena,localFrameAllowed,LOCAL_FRAME_STALE_MS,LOCAL_FRAME_PULSE_MS} from '../src/net/offline-bots.js';
 import {neutralInput,TICK_RATE,INPUT_RATE} from '../src/net/protocol.js';
 import {OfflineBotClient} from '../src/net/offline-client.js';
+import {blendedRemotePose} from '../src/net/client.js';
 
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 
@@ -152,4 +153,58 @@ test('headset stall guard never touches bot rules, LAN protocol, or campaign clo
  assert(quick.includes('inputRate:TICK_RATE'));
  assert(renderer.includes('this.maxTextureSize=('),'cache the WebGL driver capability query');
  assert(!renderer.includes('g.getParameter?g.getParameter(g.MAX_TEXTURE_SIZE):2048'));
+});
+
+test('remote bot presentation interpolates the short angle arc and never glides through teleports',()=>{
+ const previous={id:'bot',status:'alive',x:1,y:2,a:Math.PI-0.04};
+ const next={id:'bot',status:'alive',x:2,y:2,a:-Math.PI+0.04};
+ const start=blendedRemotePose(previous,next,0);
+ const half=blendedRemotePose(previous,next,.5);
+ const finish=blendedRemotePose(previous,next,1);
+ assert.equal(start.x,1);assert.equal(half.x,1.5);assert.equal(finish.x,2);
+ assert(Math.abs(Math.abs(half.a)-Math.PI)<.001,'crossing -PI/+PI must not turn the long way');
+ assert.equal(blendedRemotePose(previous,{...next,x:7},.5).x,7,'teleports snap immediately');
+ assert.equal(blendedRemotePose(previous,{...next,status:'downed'},.5).x,2,'death is immediate');
+ assert.equal(blendedRemotePose(null,next,.5).x,2,'new bots have no stale position');
+});
+
+test('early worker snapshots anchor to the last displayed bot pose, not previous authority position',async()=>{
+ const arena=new QuickBotArena({makeClient:mockClient});
+ await arena.start();
+ const game=arena.game,first=game.remotePlayers.find(a=>a.status==='alive');
+ assert(first,'real solo arena has a living bot actor');
+ const originalX=first.x,originalY=first.y;
+ first.renderX=originalX-.2;first.renderY=originalY+.1;
+ first.renderA=.4;
+ const snap=arena.net.room.snapshot(arena.net.player);
+ const revised={...snap,players:snap.players.map(p=>p.id===first.id?{...p,x:originalX+.5,y:originalY,a:1}:p)};
+ game.accept(revised);
+ const displayed=game.remotePlayers.find(p=>p.id===first.id);
+ assert.equal(displayed.x,originalX+.5,'authoritative bot position remains untouched');
+ assert.equal(displayed.renderX,originalX-.2,'first render after new snapshot must not jump backward');
+ assert.equal(displayed.renderY,originalY+.1);
+ assert.equal(displayed.renderA,.4,'heading also begins from the last displayed frame');
+ game.remoteStamp=performance.now()-50;
+ game.advanceVisual(.016);
+ assert(displayed.renderX>originalX-.2&&displayed.renderX<originalX+.5);
+ assert(displayed.renderA>.4&&displayed.renderA<1);
+ const again={...revised,players:revised.players.map(p=>p.id===first.id?{...p,x:originalX+.8,a:1.2}:p)};
+ const onScreenX=displayed.renderX;
+ game.accept(again);
+ assert.equal(game.remotePlayers.find(p=>p.id===first.id).renderX,onScreenX,'back-to-back snapshots remain visually continuous');
+ arena.close();
+});
+
+test('remote presentation is kept separate from actor authority in both Classic and immersive VR',()=>{
+ const native=read('src/world-scene.js'),classic=read('src/renderer.js'),
+  client=read('src/net/client.js');
+ assert(client.includes('const displayedById=new Map(this.remotePlayers.map('));
+ assert(client.includes('x:old.renderX??old.x,y:old.renderY??old.y,a:old.renderA??old.a'));
+ assert(client.includes('this.previousRemote=[];this.netState=null;this.needsRecenter=true;return;'),
+  'new world revisions must reset old interpolation anchors');
+ assert(native.includes('heading=a.renderA??a.a'));
+ assert(native.includes('Math.cos(heading)')&&native.includes('Math.sin(heading)'));
+ assert(classic.includes('x:a.renderX??a.x,y:a.renderY??a.y'));
+ assert(!read('src/net/offline-bots-worker.js').includes('blendedRemotePose'),
+  'smoothing must never change the bot simulation');
 });
