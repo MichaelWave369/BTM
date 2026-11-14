@@ -46,4 +46,10 @@ Physical test sequence:
 
 Software tests validate the worker freshness predicate, quickplay opt-in, pause behavior and transport rate. The actual 3D latency and frame pacing remain **unverified** until physical Quest testing.
 
+## Remote bot pose continuity: Quest field check
+
+After frame-stall fairness was merged in PR #96, the next presentation fix preserves the previously **displayed** remote bot pose whenever a 10 Hz local snapshot arrives before its prior 100 ms visual blend finishes. The older renderer restarted each transition from the prior *authoritative snapshot* coordinate, producing a visible backward hop during jitter or early messages. Both Canvas and immersive WebGL now share smoothly interpolated X/Y coordinates, and immersive avatars also blend their heading by the shortest angle. Newly spawned, downed or teleported actors snap immediately; no collision, shot position, bot accuracy or game clock is interpolated.
+
+**Acceptance:** In the same Solo Bot Arena, strafe around three bots and compare their onscreen movement under Balanced/Performance VR quality. Look specifically for abrupt sideways or backward jumps, spinning the long way across a 180° heading, and the correctness of immediate death/respawn. Repeat after opening/closing the wrist, switching back to the two-story campaign, and re-entering the arena. Confirm health, ammunition, head movement and hit confirmation remain responsive. Because this smoothing is renderer-only, measure physical headset frame times separately; perceptual smoothness is not proof of GPU FPS gains.
+
 **Multiplayer is intentionally separate for now.** BBS LAN CLAN still uses its independent browser lobby and a genuine Node/WebSocket server, and may need a fresh XR permission after switching documents. That should not be represented as continuous-XR multiplayer until a host-owned integrated network-room UI and transport have passed actual headset checks.
