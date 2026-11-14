@@ -157,10 +157,29 @@ test('VR and Classic interfaces announce Outbreak; no networking or disk persist
  assert(main.includes('if(game.gallery||game.phiwadCustom||game.player.health<=0)return'));
  assert(main.includes("if(!game.gallery&&(game.mode==='playing'||game.mode==='paused')){if(!game.outbreak)"));
  assert(main.includes("game.outbreak?'ANTIΦ-ATOGEN / ROUND"));
- assert(wrist.includes("game.outbreak?'ROUND '+game.outbreak.round"));
+ assert(wrist.includes("game.outbreak.phase==='rest'?'NEXT ROUND '"));
  assert(world.includes("e.outbreak?[.52,1.27,.48,1]"));
  assert(classic.includes("if(o.e?.outbreak)"));
  for(const p of ['scripts/build.mjs','scripts/verify-offline.mjs'])assert(source(p).includes("'./src/outbreak.js'"));
  const module=source('src/outbreak.js');
  assert(!/WebSocket|fetch\(|XMLHttpRequest|localStorage|sessionStorage/.test(module));
+});
+
+test('Outbreak presentation hides campaign UI and preserves transparent sprite pixels',()=>{
+ const main=source('src/main.js'),html=source('index.html'),classic=source('src/renderer.js'),
+  wrist=source('src/world-ui.js'),core=source('src/core.js');
+ assert(main.includes("outbreak?'WAVE CLEARED':'LIBERATION'"),'outbreak should get wave progress, not liberation');
+ assert(main.includes("'CONTAINMENT ZONE / ENDLESS'"),'the round header must not say Sector 01');
+ assert(main.includes("!!outbreak||game.campaign==='pit'"),'campaign quick-start must never reappear in Outbreak');
+ assert(main.includes("'NEAREST INFECTED / '"),'objective bearing should never fall back to WARDEN in Outbreak');
+ assert(main.includes("'INFECTED '+infectedLeft+' LEFT'"),'wave status should replace empty relay/rescue/key tasks');
+ assert(html.includes('id="radar-legend-objective"')&&html.includes('id="radar-legend-key"'));
+ assert(classic.includes("const infectedSpriteCache=new WeakMap()"),'cache alpha-correct sprites once');
+ assert(classic.includes("g.globalCompositeOperation='source-atop'"),'tint opaque pixels only');
+ assert(classic.includes('if(o.e?.outbreak)sprite=tintedInfectedSprite(sprite)'));
+ assert(!classic.includes("g.fillRect(xx+tell,y+lean,1,height-lean)"),'no full-height green rectangles around zombies');
+ assert(classic.includes("if(game.outbreak){"),'radar has outbreak-specific markers');
+ assert(wrist.includes("for(const mark of (game.outbreak?[]:soloWayfinder(game)))"),'do not show campaign routes on wrist');
+ assert(wrist.includes("if(game.outbreak)for(const e of l.enemies.filter"),'show discovered infected on wrist map');
+ assert(core.includes("if(!this.outbreak&&distance(p,l.exit)<1.8"),'no extraction interaction or hint in endless mode');
 });
