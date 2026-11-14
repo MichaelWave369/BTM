@@ -56,5 +56,6 @@ test('only opted-in VR diagnostics display XR and local bot delivery timing',()=
  assert(app.includes('botTiming:quickArena?.telemetry()'));
  assert(build.includes("'./src/vr-frame-meter.js'"));
  assert(offline.includes("'./src/vr-frame-meter.js'"));
- assert(!source('src/vr-frame-meter.js').match(/WebSocket|fetch\\(|localStorage|sessionStorage|worker\\.postMessage/));
+ for(const banned of ['WebSocket','fetch(','localStorage','sessionStorage','postMessage'])
+  assert(!source('src/vr-frame-meter.js').includes(banned),'telemetry must be offline and side-effect free: '+banned);
 });
