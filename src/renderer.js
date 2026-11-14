@@ -11,6 +11,24 @@ import {textureSignature,textureStyleFor,TEXTURE_PACKS,paintPackSurface,AUTHORED
 import {UI,UI_FONT} from './arcade-ui.js';
 import {makeAssets,makeSign} from './assets.js';
 import {doorKind,paintDoorSurface} from './door-visibility.js';
+// Keep alpha outside the infected sprite untouched. The original full-column
+// overlay turned every transparent sprite cell into a giant green rectangle.
+const infectedSpriteCache=new WeakMap();
+function tintedInfectedSprite(sprite){
+ let tinted=infectedSpriteCache.get(sprite);
+ if(tinted)return tinted;
+ tinted=document.createElement('canvas');
+ tinted.width=sprite.width;tinted.height=sprite.height;
+ const g=tinted.getContext('2d');
+ g.imageSmoothingEnabled=false;
+ g.drawImage(sprite,0,0);
+ g.globalCompositeOperation='source-atop';
+ g.fillStyle='rgba(98,255,102,.37)';
+ g.fillRect(0,0,tinted.width,tinted.height);
+ g.globalCompositeOperation='source-over';
+ infectedSpriteCache.set(sprite,tinted);
+ return tinted;
+}
 export class Renderer {
   constructor(canvas){this.canvas=canvas;this.g=canvas.getContext('2d',{alpha:false});this.assets=makeAssets();this.setResolution(640);this.particles=[];this.beams=[];this.ghosts=[];this.hitMarker=0;this.finisher=0;this.bassFlash=0;this.damageFlash=0;this.lastTime=0;this.signTextures=new Map();this.packCache=new Map();this.packPending=new Map();this.activePackStyle=null;this.packImages=null;this.packRevision=0;}
   setResolution(width){this.canvas.width=width;this.canvas.height=Math.round(width*9/16);this.depth=new Float32Array(width);this.g.imageSmoothingEnabled=false;}
@@ -236,9 +254,9 @@ export class Renderer {
       return;
     }
     if(o.type==='projectile'){if(s.depth<this.depth[clamp(Math.floor(s.x),0,w-1)]){g.fillStyle=o.color;g.fillRect(s.x-width/2,horizon-height/2,width,height);g.fillStyle='#fff9d5';g.fillRect(s.x-width/6,horizon-height/6,width/3,height/3);}return;}
-    let sprite=o.e?.raidRole?finaleSprite(o.e.raidRole,o.e.exposed>0):o.remote?(o.remote.role==='beast'?(o.remote.archetype==='repeater'?repeaterBeastSprite():o.remote.archetype==='plugged'?pluggedBeastSprite():o.remote.archetype==='warden'?wardenBeastSprite():crawlerBeastSprite()):playerSprite(o.remote.team,o.remote.status==='downed')):o.e?.pitBoss?pitBossSprite(o.e.pitBoss,o.e.exposed>0):o.e?.pain>0?this.assets.pain[o.type]:this.assets.sprites[o.type];if(Array.isArray(sprite))sprite=sprite[o.frame??0];if(!sprite)return;
+    let sprite=o.e?.raidRole?finaleSprite(o.e.raidRole,o.e.exposed>0):o.remote?(o.remote.role==='beast'?(o.remote.archetype==='repeater'?repeaterBeastSprite():o.remote.archetype==='plugged'?pluggedBeastSprite():o.remote.archetype==='warden'?wardenBeastSprite():crawlerBeastSprite()):playerSprite(o.remote.team,o.remote.status==='downed')):o.e?.pitBoss?pitBossSprite(o.e.pitBoss,o.e.exposed>0):o.e?.pain>0?this.assets.pain[o.type]:this.assets.sprites[o.type];if(Array.isArray(sprite))sprite=sprite[o.frame??0];if(!sprite)return;if(o.e?.outbreak)sprite=tintedInfectedSprite(sprite);
     const recoil=this.reducedMotion?0:o.e?.recoil||0,lean=recoil*height*.3,tell=!this.reducedMotion&&o.e?.tell>0?Math.sin(this.lastTime*20)*height*.015:0;
-    for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++)if(s.depth<this.depth[xx]){const tx=clamp(Math.floor((xx-x)/width*sprite.width),0,sprite.width-1);g.drawImage(sprite,tx,0,1,sprite.height,xx+tell,y+lean,1,height-lean);if(o.e?.outbreak){g.fillStyle='rgba(89,255,95,.22)';g.fillRect(xx+tell,y+lean,1,height-lean);}}
+    for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++)if(s.depth<this.depth[xx]){const tx=clamp(Math.floor((xx-x)/width*sprite.width),0,sprite.width-1);g.drawImage(sprite,tx,0,1,sprite.height,xx+tell,y+lean,1,height-lean);}
     // Telegraphs and health bars are drawn only when their world position is visible.
     const center=clamp(Math.floor(s.x),0,w-1);if(o.remote&&s.depth<this.depth[center]){g.fillStyle=o.remote.team==='pink'?'#ff718e':'#80e8d4';g.font=`${clamp(height*.12,7,12)}px monospace`;g.textAlign='center';g.fillText(o.remote.nickname.slice(0,20)+' / '+Math.ceil(o.remote.health),s.x,y-8);g.textAlign='left';if(o.remote.shotAnim>0){const size=clamp(height*.1,2,9);g.fillStyle=WEAPONS[o.remote.weapon].color;g.fillRect(s.x+width*.37,y+height*.61,size,size);}}if(o.e&&s.depth<this.depth[center]+.4){if(o.e.upperGuard){g.fillStyle=o.e.upperGuardRole==='breacher'?'#ff8e79':o.e.upperGuardRole==='marksman'?'#79dcff':'#c5a6ff';g.font=`bold ${clamp(height*.1,7,13)}px monospace`;g.textAlign='center';g.fillText(o.e.upperGuardRole.toUpperCase()+(o.e.upperGuardRole==='bulwark'&&o.e.coverReady?' / COVER':''),s.x,y-20);g.textAlign='left';}if(o.e.tell>0){g.fillStyle='#ffac7b';g.font=`bold ${clamp(height*.18,8,38)}px monospace`;g.textAlign='center';g.fillText('!',s.x,y-4);g.textAlign='left';}if(o.e.stun>0){g.fillStyle='#5df6ec';g.fillRect(s.x-7,y-6,14,2);}if(o.e.hp<o.e.maxHp&&s.depth<10){const bw=Math.min(40,height*.7);g.fillStyle='#17171a';g.fillRect(s.x-bw/2,y-12,bw,3);g.fillStyle=o.type==='warden'?'#ffb86b':'#b9ff53';g.fillRect(s.x-bw/2,y-12,bw*o.e.hp/o.e.maxHp,3);}if(o.e.flash>0){g.globalAlpha=.15;g.fillStyle='#e9ffc7';g.fillRect(s.x-width*.2,y+height*.2,width*.4,height*.5);g.globalAlpha=1;}}
   }
@@ -348,8 +366,14 @@ export class Renderer {
     }
     for(const mark of soloAccessMarkers(game))dot(mark,CACHE_COLORS[mark.color],mark.kind==='trail'?.55:1.25);
     for(const node of soloSweepMarkers(l,game.time))dot(node,SOLO_SWEEP_COLORS[node.phase],.83);
-    l.items.filter(i=>!i.taken&&i.type?.startsWith('key:')).forEach(i=>dot(i,({'key:red':'#ff6878','key:blue':'#65b8ff','key:green':'#81e6a0'})[i.type]||UI.gold,1.1));l.items.filter(i=>i.upperFragment&&!i.taken).forEach(i=>dot(i,UI.violet,1.05));l.enemies.filter(e=>e.upperGuard&&!e.dead).forEach(e=>dot(e,UI.red,1.05));l.relays.filter(r=>!r.active).forEach(r=>dot(r,UI.pink,1.4));l.captives.filter(c=>!c.freed).forEach(c=>dot(c,UI.cyan));if(!p.key)dot(l.key,UI.gold);dot(l.exit,game.exitReady?UI.cyan:UI.violet,1.5);if(game.shift)l.enemies.filter(e=>!e.dead).forEach(e=>dot(e,UI.red));
+    if(game.outbreak){
+      // Draw only discovered live infected. Campaign extraction markers do not
+      // belong on the containment radar, and undiscovered enemies stay hidden.
+      l.enemies.filter(e=>e.outbreak&&!e.dead).forEach(e=>dot(e,UI.red,1.1));
+    }else{
+      l.items.filter(i=>!i.taken&&i.type?.startsWith('key:')).forEach(i=>dot(i,({'key:red':'#ff6878','key:blue':'#65b8ff','key:green':'#81e6a0'})[i.type]||UI.gold,1.1));l.items.filter(i=>i.upperFragment&&!i.taken).forEach(i=>dot(i,UI.violet,1.05));l.enemies.filter(e=>e.upperGuard&&!e.dead).forEach(e=>dot(e,UI.red,1.05));l.relays.filter(r=>!r.active).forEach(r=>dot(r,UI.pink,1.4));l.captives.filter(c=>!c.freed).forEach(c=>dot(c,UI.cyan));if(!p.key)dot(l.key,UI.gold);dot(l.exit,game.exitReady?UI.cyan:UI.violet,1.5);if(game.shift)l.enemies.filter(e=>!e.dead).forEach(e=>dot(e,UI.red));
+    }
     g.save();g.translate(x0+p.x*size,y0+p.y*size);g.rotate(p.a);g.fillStyle=UI.cyan;g.strokeStyle=UI.text;g.lineWidth=.8;g.beginPath();g.moveTo(size*1.3,0);g.lineTo(-size,-size*.75);g.lineTo(-size*.5,0);g.lineTo(-size,size*.75);g.closePath();g.fill();g.stroke();g.restore();
-    if(!external){g.font=`600 ${full?Math.max(9,w/64):6}px ${UI_FONT}`;g.textAlign=full?'center':'left';g.fillStyle=UI.cyan;g.fillText(full?'SECTOR SCAN / '+game.objective:'MAP / TAB',full?w/2:x0,y0-8);if(full){g.fillStyle=UI.muted;g.font=`${Math.max(8,w/80)}px ${UI_FONT}`;g.fillText('CYAN: CAPTIVES   PINK: RELAYS   GOLD: KEY   [ TAB ] CLOSE',w/2,y0+mh+23);}g.textAlign='left';}if(external)g.restore();
+    if(!external){g.font=`600 ${full?Math.max(9,w/64):6}px ${UI_FONT}`;g.textAlign=full?'center':'left';g.fillStyle=UI.cyan;g.fillText(full?(game.outbreak?'OUTBREAK SCAN / ':'SECTOR SCAN / ')+game.objective:'MAP / TAB',full?w/2:x0,y0-8);if(full){g.fillStyle=UI.muted;g.font=`${Math.max(8,w/80)}px ${UI_FONT}`;g.fillText(game.outbreak?'CYAN: YOU   RED: VISIBLE INFECTED   [ TAB ] CLOSE':'CYAN: CAPTIVES   PINK: RELAYS   GOLD: KEY   [ TAB ] CLOSE',w/2,y0+mh+23);}g.textAlign='left';}if(external)g.restore();
   }
 }
