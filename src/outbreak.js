@@ -10,6 +10,20 @@ export const OUTBREAK_FIRST_SECONDS=5;
 export const outbreakRoundSize=round=>Math.min(OUTBREAK_MAX_ROUND_ENEMIES,6+Math.max(0,Math.floor(round)-1)*3);
 export const outbreakSpawnInterval=round=>Math.max(.38,1.45-Math.max(0,round-1)*.055);
 const ALARM='#c1ff68';
+// Pure, deterministic mutation schedule: players learn which wave introduces
+// each new threat, and tests can replay it without random timing surprises.
+export const OUTBREAK_VARIANTS=Object.freeze({
+ shambler:Object.freeze({label:'SHAMBLER',color:'#b9ff65',hp:1,speed:1,damage:1,delay:1}),
+ runner:Object.freeze({label:'RUNNER',color:'#ff698c',hp:.72,speed:1.36,damage:.8,delay:.88}),
+ brute:Object.freeze({label:'BRUTE',color:'#ffc36d',hp:1.8,speed:.72,damage:1.4,delay:1.3})
+});
+export function outbreakVariantFor(round,spawnIndex){
+ const r=Math.max(1,Math.floor(Number.isFinite(round)?round:1));
+ const i=Math.max(0,Math.floor(Number.isFinite(spawnIndex)?spawnIndex:0));
+ if(r>=5&&i%7===6)return 'brute';
+ if(r>=3&&i%4===3)return 'runner';
+ return 'shambler';
+}
 
 export function initializeOutbreak(game){
  const level=game.level;
@@ -55,16 +69,20 @@ export function spawnOutbreakInfected(game){
  const selection=pool.length?pool:choices;
  if(!selection.length)return null; // retry later: never spawn in a solid wall.
  const spot=selection[Math.floor(game.random()*selection.length)];
- const round=state.round,maxHp=Math.min(220,50+round*7);
- const enemy={id:state.nextId++,type:'plugged',outbreak:true,
+ const round=state.round,variant=outbreakVariantFor(round,state.spawned),
+  profile=OUTBREAK_VARIANTS[variant],baseHp=Math.min(220,50+round*7),
+  baseSpeed=Math.min(1.65,.71+round*.035),
+  baseDamage=Math.min(21,7+round*.65),baseDelay=Math.max(.65,1.15-round*.014),
+  maxHp=Math.min(360,Math.max(1,Math.round(baseHp*profile.hp)));
+ const enemy={id:state.nextId++,type:'plugged',outbreak:true,outbreakVariant:variant,
   x:spot.x,y:spot.y,homeX:spot.x,homeY:spot.y,
-  hp:maxHp,maxHp,speed:Math.min(1.65,.71+round*.035),
-  damage:Math.min(21,7+round*.65),range:1.05,delay:Math.max(.65,1.15-round*.014),
+  hp:maxHp,maxHp,speed:Math.min(1.9,baseSpeed*profile.speed),
+  damage:Math.min(30,baseDamage*profile.damage),range:1.05,delay:baseDelay*profile.delay,
   human:false,state:'pursue',cooldown:.7,tell:0,stun:0,flash:0,
   dead:false,phase:1,walk:0,pathTimer:0};
  game.level.enemies.push(enemy);
  state.spawned++;state.remaining--;state.spawnClock=outbreakSpawnInterval(round);
- game.emit('burst',{x:enemy.x,y:enemy.y,height:.55,color:ALARM,count:9});
+ game.emit('burst',{x:enemy.x,y:enemy.y,height:.55,color:profile.color,count:9});
  return enemy;
 }
 export function beginOutbreakRound(game){
@@ -75,6 +93,8 @@ export function beginOutbreakRound(game){
  game.emit('toast',{text:'ANTIΦ-ATOGEN / ROUND '+state.round+' / '+state.remaining+' INBOUND'});
  game.emit('sound',{name:'alarm'});
  game.say(state.round===1?'Outbreak confirmed. Hold the line, but never stop moving.':
+  state.round===3?'New mutation: runners are faster, but less durable. Keep strafing.':
+  state.round===5?'Heavy mutation: brutes are tougher. Time your dodges.':
   'Round '+state.round+'. More infected signatures. Keep your route open.','ORI',2);
 }
 export function outbreakAlive(game){return game.level.enemies.filter(e=>e.outbreak&&!e.dead).length;}
