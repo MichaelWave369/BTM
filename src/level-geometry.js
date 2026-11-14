@@ -78,4 +78,24 @@ export function buildLevelGeometry(level){
  const result=[...chunks.values()].filter(c=>c.vertices.length).map(c=>({...c,vertices:new Float32Array(c.vertices),vertexCount:c.vertices.length/9}));
  return {schemaVersion:LEVEL_SCHEMA,scale:s,wallHeight:h,chunks:result,vertexCount:result.reduce((n,c)=>n+c.vertexCount,0),doorCount:Object.keys(level.doors).length};
 }
+// Pack immutable static map chunks into one WebGL vertex buffer while
+// preserving individual chunk bounds and draw ranges for stereo frustum culling.
+// Only called on level changes; runtime world/AI/hitboxes are untouched.
+export function packStaticChunkGeometry(chunks){
+ let length=0;
+ for(const chunk of chunks){
+  if(!(chunk.vertices instanceof Float32Array)||chunk.vertices.length%9!==0||
+    chunk.vertexCount!==chunk.vertices.length/9)
+   throw Error('Invalid static geometry chunk');
+  length+=chunk.vertices.length;
+ }
+ const vertices=new Float32Array(length),ranges=[];
+ let offset=0;
+ for(const chunk of chunks){
+  vertices.set(chunk.vertices,offset);
+  ranges.push({key:chunk.key,bounds:chunk.bounds,firstVertex:offset/9,vertexCount:chunk.vertexCount});
+  offset+=chunk.vertices.length;
+ }
+ return {vertices,chunks:ranges};
+}
 export function exportLevelIR(level,definition){return {schemaVersion:LEVEL_SCHEMA,sector:level.index+1,name:definition.name,units:{tileMeters:WORLD_SCALE,wallHeightTiles:WALL_HEIGHT,coordinateSystem:'game x/y -> world X/Z; height -> Y'},grid:{width:level.w,height:level.h,cells:level.cells.map(r=>r.slice())},surfaces:MATERIALS.map(id=>({id,source:'owned-procedural:'+id})),collision:{model:'shared core grid',playerRadiusTiles:.2,doorPassThreshold:.84},spawn:{...definition.spawn},rooms:definition.rooms.map(r=>r.slice()),corridors:definition.halls.map(r=>r.slice()),regions:level.regions.map(r=>({...r,bounds:r.bounds.slice()})),doors:Object.values(level.doors).map(d=>({id:d.x+','+d.y,x:d.x,y:d.y,type:d.type,axis:doorAxis(level,d),material:'wall'+d.type})),entities:{enemies:definition.enemies.map(([type,x,y],id)=>({id,type,x,y})),items:definition.items.map(([type,x,y],id)=>({id,type,x,y})),captives:definition.captives.map(([x,y],id)=>({id,x,y})),props:level.props.map(p=>({...p}))},objectives:{relays:level.relays.map(r=>({id:r.id,x:r.x,y:r.y})),key:{x:level.key.x,y:level.key.y},extraction:{...level.exit}},secrets:{doors:Object.values(level.doors).filter(d=>d.type===6).map(d=>d.x+','+d.y)}};}
