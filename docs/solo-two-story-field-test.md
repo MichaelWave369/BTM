@@ -109,3 +109,15 @@ The opt-in twelve-sector **TWO-STORY FIELD TEST** includes a fuel-limited aerial
 - **Not multiplayer flight:** community Tag/.phiwadvr and LAN replication need separate authority, synchronization, and comfort tests.
 
 **Physical test:** jump off the Sector 01 deck, hold left-stick click for a short burn while strafing, release and land. Observe hang time and whether aiming and firing work throughout. Verify JUMP alone feels unchanged, held sprint on the ground doesn't lift the player, and sustained thrust drains fuel. Wait on the floor to refuel, then try a compact late-sector deck. Boost directly underneath the slab: the character must never pass through its underside. Check normal campaign, Pit and BBS to ensure no fuel UI or altered movement. Compare two Quest 3 headsets, seated/standing modes, turning options, comfort, aim, FPS and wrist readability.
+
+## Quest 3 controller shortcuts (review candidate)
+
+The native **IMMERSIVE VR** input mapping now provides distinct face-button edges:
+- **Left X:** toggle the **actual map view on the left-arm Gen.E.Wrist**. Press X again to close, even while the map has captured combat buttons. The physical menu remains anchored to left-controller tracking. Lowering the arm moves the map out of view but does not silently dismiss the explicit X request; raising it reveals the same map. The standard watch-face RIGHT TRIGGER menu still works independently.
+- **Left Y:** trigger the existing vertical JUMP action, including from the ground or upper deck when the optional two-story mode is active. No auto-repeat when held. The standard flat campaign has no jump.
+- **Right B:** the existing directional DODGE / DASH BASH control; **right A or grip:** INTERACT / USE.
+- **Left grip:** Ori, **left stick click:** sprint / optional airborne jetpack, **left trigger:** charge, **right trigger:** fire and UI select. Quest reload and vision remain on the wrist tools.
+- Xbox gamepad and desktop mappings are unchanged, including Xbox X reload, Y Ori, View map, and right-stick Help; no camera/aim changes.
+- No new save data or network messages. The headset input adapter owns the Quest face conversion; X/Y are not mapped to two actions simultaneously.
+
+**Check on real Quest 3:** Press X at rest: the map should be mounted on your left arm when you raise it, not floating at your face. Press X a second time to close (without a ghost shot). Open X again, then use right trigger to activate CLOSE MAP. Confirm Y jumps once, B dashes with left-stick direction, left grip still calls Ori, A and right grip still interact, right trigger still shoots when the map is closed, and left-stick-click sprint/jetpack remains available. Repeat in seated and standing modes, both headsets and all menus. A software-emulated XR controller test does not replace this physical check.

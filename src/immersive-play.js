@@ -11,7 +11,11 @@ function wristInputsNeutral(pad) {
 export function stepImmersive(game, spatial, pad, settings, dt, {map = () => {}, reset = () => {}} = {}) {
  const {rig, pose} = spatial, playing = game.mode === 'playing';
  let target = null, captured = false;
- const input = rig.prepare(game, pose, pad, settings, dt, playing, () => {
+ // X is a deliberate map shortcut. Keep left-stick locomotion but suppress
+ // turn/fire/thrust on the opening or closing frame before rig preparation.
+ const mapShortcut=playing&&pad?.actions?.includes('map')&&!!spatial.toggleWristMap;
+ const movementPad=mapShortcut?{...pad,turn:0,sprint:false,fire:false,firePressed:false,pointerPressed:false,alternate:null,charge:0,actions:[]}:pad;
+ const input = rig.prepare(game, pose, movementPad, settings, dt, playing, () => {
   target = playing ? spatial.pointerTarget?.(pad) : null;
   captured = !!target || !!rig.uiWristOpen || (!!rig.uiCaptured && !wristInputsNeutral(pad));
   rig.uiCaptured = captured;
@@ -19,6 +23,14 @@ export function stepImmersive(game, spatial, pad, settings, dt, {map = () => {},
  });
  if (rig.trackingJump) { game.clearCombatPose(); return {trackingLost: true, updated: false}; }
  if (!playing) return {updated: false};
+ // Handle the dedicated Quest X map edge BEFORE normal wrist capture
+ // suppresses combat buttons, so the same X closes the panel reliably.
+ if (mapShortcut) {
+  spatial.toggleWristMap();
+  captured = true; rig.uiCaptured = true;
+  input.jetpack = false;
+  pad = {...pad,fire:false,firePressed:false,pointerPressed:false,alternate:null,actions:[]};
+ }
  if (captured) {
   game.bufferedFire = null; game.charge = 0;
   if (target && pad?.pointerPressed) target.action();
