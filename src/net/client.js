@@ -4,6 +4,18 @@ import {isVertical,requestVerticalJump,advanceVerticalBody} from './vertical-are
 import {Game,WEAPONS,moveBody,angleDiff,clamp,distance} from '../core.js';
 import{PROTOCOL,INPUT_RATE,neutralInput,validateMessage,endpoint}from'./protocol.js';
 const now=()=>performance.now();
+// Client-side presentation only: smoothing never changes the authoritative
+// actor position used for shots, collision, scoring or worker simulation.
+export function blendedRemotePose(previous,actor,alpha){
+ if(!previous||previous.status!==actor.status||distance(previous,actor)>=3)
+  return {x:actor.x,y:actor.y,a:actor.a};
+ const t=clamp(alpha,0,1);
+ return {
+  x:previous.x+(actor.x-previous.x)*t,
+  y:previous.y+(actor.y-previous.y)*t,
+  a:angleDiff(previous.a+angleDiff(actor.a,previous.a)*t,0)
+ };
+}
 export class NetworkClient{
  constructor({onMessage=()=>{},onStatus=()=>{},socket=url=>new WebSocket(url)}={}){Object.assign(this,{onMessage,onStatus,makeSocket:socket});this.ws=null;this.seq=0;this.id=null;this.code=null;this.token=null;this.bytesIn=0;this.bytesOut=0;this.lastSnapshot=0;this.intent=neutralInput();this.actions=new Set();this.connected=false;this.rtt=null;}
  connect(address){this.disconnect();this.address=endpoint(address,globalThis.location?.protocol==='https:');this.onStatus('DIALING '+this.address);return new Promise((resolve,reject)=>{
@@ -30,20 +42,39 @@ export class NetworkView extends Game{
  accept(m){
   if(m.type==='world'){
    if(!m.level||m.level.w!==29||m.level.h!==25||m.level.cells?.length!==25||m.level.cells.some(r=>r.length!==29)||!Array.isArray(m.level.enemies)||m.level.enemies.length>128||!m.definition)throw Error('Invalid world dimensions');
-   this.level=structuredClone(m.level);this.netDefinition=m.definition;this.networkCompetitive=m.competitive;this.levelIndex=m.level.index;this.campaign=m.level.campaign==='pit'?'pit':'original';this.revision=m.revision;this.beastRole=false;this.beastArchetype=null;this.projectiles=[];this.remotePlayers=[];this.netState=null;this.needsRecenter=true;return;
+   this.level=structuredClone(m.level);this.netDefinition=m.definition;this.networkCompetitive=m.competitive;this.levelIndex=m.level.index;this.campaign=m.level.campaign==='pit'?'pit':'original';this.revision=m.revision;this.beastRole=false;this.beastArchetype=null;this.projectiles=[];this.remotePlayers=[];this.previousRemote=[];this.netState=null;this.needsRecenter=true;return;
   }
   if(m.type!=='snapshot'||m.revision!==this.revision)return;
   if(!Array.isArray(m.players)||m.players.length>(this.net.offlineBots?12:8)||!m.world||!Array.isArray(m.events)||m.events.length>96||m.world.enemies?.length>128||m.world.projectiles?.length>128)throw Error('Invalid snapshot');
   const mine=m.players.find(p=>p.id===this.net.id);this.netState=m;this.beastRole=!!(m.beast&&m.beast.beastId===this.net.id);this.beastArchetype=this.beastRole?m.beast.archetype:null;if(this.beastRole)this.selectedWeapon=0;this.oriCorrupted=m.raid?.phase===3&&m.raid.state!=='escape';this.time=m.time;this.netObjective=m.beast?'INVERSION / '+Math.ceil(m.beast.remaining)+'s · '+(this.beastRole?(this.beastArchetype==='repeater'?'REPEATER PULSE + EVADE / HUNT THE SURVIVORS':this.beastArchetype==='plugged'?'PLUGGED ARC + GROUND / HUNT THE SURVIVORS':this.beastArchetype==='warden'?'WARDEN CRUSH + FIELD / HUNT THE SURVIVORS':'CRAWLER CLAW + LUNGE / HUNT THE SURVIVORS'):'SURVIVE OR DEFEAT THE BEAST'):m.control?'CONTROL / '+(m.control.contested?'CONTESTED':m.control.holder?.toUpperCase()||'NEUTRAL')+' · CYAN '+m.teamScore.cyan+' / PINK '+m.teamScore.pink:this.networkCompetitive?'FRAG LIMIT '+m.limit+' / '+m.state.toUpperCase():m.world.objective;this.netLiberation=m.world.liberation;this.netExitReady=m.world.exitReady;
   const w=m.world;applyWorld(this.level,w);
   this.ori={...w.ori};this.projectiles=structuredClone(w.projectiles);this.bassCharge=w.bassCharge;this.totalFreed=w.totalFreed;this.totalArtifacts=w.totalArtifacts;
-  this.previousRemote=this.remotePlayers;this.remotePlayers=m.players.filter(p=>p.id!==this.net.id).map(p=>({...p}));this.remoteStamp=now();
+  // The earlier interpolation blended from the last *server* position, even
+  // when the last 100ms transition was unfinished. That visibly snapped bots
+  // backwards on an early snapshot. Anchor to their last *displayed* pose.
+  const displayedById=new Map(this.remotePlayers.map(p=>[p.id,p]));
+  this.remotePlayers=m.players.filter(p=>p.id!==this.net.id).map(p=>({...p}));
+  this.previousRemote=this.remotePlayers.flatMap(p=>{
+   const old=displayedById.get(p.id);
+   if(!old)return [];
+   const visible={id:p.id,status:old.status,
+    x:old.renderX??old.x,y:old.renderY??old.y,a:old.renderA??old.a};
+   // Respawn, teleport or team/status transitions must not glide through walls.
+   if(visible.status!==p.status||distance(visible,p)>=3)return [];
+   p.renderX=visible.x;p.renderY=visible.y;p.renderA=visible.a;
+   return [visible];
+  });this.remoteStamp=now();
   if(mine){const old=this.player,first=this.serverDriven||!this.inputEnabled||this.needsRecenter||!this.hasBody||mine.status!=='alive'||distance(old,mine)>1;this.player={...mine,x:first?mine.x:old.x+(mine.x-old.x)*.45,y:first?mine.y:old.y+(mine.y-old.y)*.45,a:first?mine.a:old.a};this.hasBody=true;this.vent=mine.vent;this.shieldTime=mine.shield;this.shieldCharge=mine.shieldCharge;this.shotAnim=mine.shotAnim;this.muzzle=mine.shotAnim;if(this.serverDriven)this.selectedWeapon=mine.weapon;this.weapon=this.selectedWeapon;this.status=mine.status;this.damageDirection=mine.damageDirection;this.stats=mine.stats||this.stats;for(const k of ['cooldown','recharge','oriCooldown','dodgeCooldown','hurt','hitPulse','assistTime','scanTime'])this[k]=mine[k]||0;}
   for(const e of m.events)if(e.id>this.lastEvent){this.lastEvent=e.id;if(e.type==='sound'&&e.name==='fire'&&e.actorId===this.net.id)this.flashUntil=now()+90;if(e.actorId&&e.actorId!==this.net.id&&['playerHurt','hit','dryFire'].includes(e.type))continue;this.events.push(e);}
   if(this.events.length>128)this.events.splice(0,this.events.length-128);
  }
  advanceVisual(dt){
-  const t=clamp((now()-this.remoteStamp)/100,0,1);for(const p of this.remotePlayers){const old=this.previousRemote.find(a=>a.id===p.id);if(old&&distance(old,p)<3){p.renderX=old.x+(p.x-old.x)*t;p.renderY=old.y+(p.y-old.y)*t;}else{p.renderX=p.x;p.renderY=p.y;}}
+  const t=clamp((now()-this.remoteStamp)/100,0,1);
+  for(const p of this.remotePlayers){
+   const old=this.previousRemote.find(a=>a.id===p.id);
+   const pose=blendedRemotePose(old,p,t);
+   p.renderX=pose.x;p.renderY=pose.y;p.renderA=pose.a;
+  }
   for(const k of ['hurt','hitPulse','assistTime','scanTime'])this[k]=Math.max(0,this[k]-dt);this.muzzle=Math.max(0,(this.flashUntil-now())/90);this.shotAnim=Math.max(this.muzzle,this.shotAnim-dt*5);
  }
  update(dt,input={}){
