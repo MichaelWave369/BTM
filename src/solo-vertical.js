@@ -3,6 +3,7 @@
 // Standard/Pit/BBS checkpoint geometry and native controller actions stay intact.
 import {STACK_HEIGHT,STACK_CEILING,rampHeight} from './net/vertical-arena.js';
 import {authoredSoloUpperCover,coverIntersectsBody} from './solo-cover.js';
+import {validSoloJetpack} from './solo-jetpack.js';
 export const SOLO_MEZZANINE=Object.freeze({
  schema:'btm.vertical-prototype/1',soloPreview:true,ceiling:STACK_CEILING,
  upper:Object.freeze({x0:14,x1:18,y0:19,y1:23,height:STACK_HEIGHT}),
@@ -109,6 +110,7 @@ export function validSoloPreviewCheckpoint(level,player){
   typeof sentries[0].coverReady==='boolean'&&Number.isFinite(sentries[0].coverRecharge)&&sentries[0].coverRecharge>=0&&sentries[0].coverRecharge<=6&&
   typeof sentries[0].dead==='boolean'&&typeof level.upperGuardCleared==='boolean'&&
   level.upperGuardCleared===sentries[0].dead&&
+  validSoloJetpack(player)&&
   [player.height,player.vz,player.jumpBuffer,player.coyote].every(Number.isFinite)&&
   player.height>=0&&player.height<=STACK_CEILING-1.1+.01&&
   Math.abs(player.vz)<=18.01&&typeof player.grounded==='boolean'&&

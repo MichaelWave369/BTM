@@ -122,7 +122,13 @@ try{
  assert.equal(await page.locator('#pause-screen').isVisible(),true);
  after=await page.evaluate(ks=>ks.map(k=>localStorage.getItem(k)),keys);
  assert.deepEqual(after,beforePause,'opening the trophy cabinet from pause must not save/restart');
- await page.locator('#resume-btn').click();
+ // Software-WebGL runners animate the pause layer during Playwright click
+ // stability checks. Focus + trusted Enter exercises the same real button
+ // without racing a visually moving canvas, as the Trophy back link does.
+ await page.locator('#resume-btn').focus();
+ assert.equal(await page.evaluate(()=>document.activeElement?.id),'resume-btn');
+ await page.keyboard.press('Enter');
+ await page.locator('#overlay').waitFor({state:'hidden',timeout:20000});
  assert.equal(await page.locator('#overlay').isHidden(),true);
  assert.deepEqual(errors,[],'no game page errors');
  const report={passed:true,medals:12,earned:3,wingCounts:true,privacyVerified:true,

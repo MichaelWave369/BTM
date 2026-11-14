@@ -2,6 +2,7 @@
 // campaign, old flat arenas or their checkpoint schemas.
 import {lineOfSight} from '../collision.js';
 import {traceEnvironment} from '../spatial.js';
+import {stepSoloJetpack} from '../solo-jetpack.js';
 
 export const STACK_HEIGHT=1.85;
 export const STACK_CEILING=3.9;
@@ -45,7 +46,7 @@ export function requestVerticalJump(level,body){
 // 60-120 Hz substeps keep travel stable even when browser frames are slow.
 // Existing 2D wall collision remains authoritative via Game.updatePlayer.
 // No packet contains height, vz, grounded, landing position or support id.
-export function advanceVerticalBody(level,body,dt,{oldX=body.x,oldY=body.y}={}){
+export function advanceVerticalBody(level,body,dt,{oldX=body.x,oldY=body.y,jetpack=false}={}){
  if(!isVertical(level))return false;
  if(!Number.isFinite(dt)||dt<=0||dt>.1)throw Error('Invalid vertical step');
  if(!Number.isFinite(body.height)||!Number.isFinite(body.vz))initVerticalBody(body);
@@ -58,6 +59,9 @@ export function advanceVerticalBody(level,body,dt,{oldX=body.x,oldY=body.y}={}){
   if(body.jumpBuffer>0&&(body.grounded||body.coyote>0)){
    body.vz=JUMP_IMPULSE;body.grounded=false;body.coyote=0;body.jumpBuffer=0;
   }
+  // Only opt-in solo avatars have jetFuel; BBS, guards and ordinary players
+  // retain the original gravity and landing path.
+  stepSoloJetpack(level,body,h,jetpack);
   // The platform edge has real side collision. A jumping player must clear
   // its top before moving horizontally over the deck, unless they arrived
   // along the authored ramp near its top.

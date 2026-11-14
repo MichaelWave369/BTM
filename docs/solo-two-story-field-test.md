@@ -97,3 +97,27 @@ Two non-solid scanner pads appear on the **center row of each optional upstairs 
 The Classic renderer, native stereo/WebXR world and both maps derive the identical yellow/red/cyan pad state from the game clock. No new action binding, physics collider, mandatory objective, score gate, engine, runtime package, network data, or save format is added. The pulse-hit deduplication is ephemeral and resets on a preview retry or level change; no repeated damage in a single active window.
 
 **Quest 3 field test:** in optional Sector 01, walk onto the upstairs middle-left pad while amber (no damage yet), then stay for red (one hit only), then jump to clear the next pulse. Repeat while standing underneath the same X/Y coordinate on the ground floor (zero hits). Verify the other staggered pad is not simultaneously red and that the center walking lane always stays navigable. Repeat across sectors with compact 3x3 mezzanines; check Classic, map indicators, VR comfort and performance. This is not hardware-accepted until tested on physical headsets.
+
+## Solo Thruster Jetpack (review candidate)
+
+The opt-in twelve-sector **TWO-STORY FIELD TEST** includes a fuel-limited aerial assist. First use the existing **JUMP** action (desktop `J`, Gen.E.Wrist JUMP). While airborne, **hold the existing SPRINT action** (Quest 3 **left stick click**, Xbox **left stick click**, desktop **Shift**) to ignite the jetpack. Releasing sprint restores unchanged gravity and preserves airborne strafing and mid-air shooting. It cannot launch a grounded player by itself; a jump or ledge fall begins flight.
+
+- Fuel capacity **100**, burn **48 per second** while thrusting, recharge **32 per second** when grounded. No recharge in flight; exhausted fuel cannot sustain indefinite hovering.
+- Jetpack boosts upward to **4.4 max cruise speed**, but the original **7.2 initial jump velocity** is never truncated. Existing **3.9 ceiling**, platform undersides, collision, guard targeting, air strafing and safe landings remain authoritative.
+- Classic HUD has a **JET %** bar; Gen.E.Wrist shows fuel; native stereo adds cyan exhaust near the player's feet. Thrust stops on landing, at the ceiling or when sprint is released. Captured wrist-menu interactions do not trigger thrust.
+- Fuel/thrust state lives only on opt-in solo preview player snapshots. Existing campaign/Pit/BBS players, bots, ΦWADs, physics, and disk checkpoints remain unchanged. Older temporary previews missing fuel fields can restore with full fuel.
+- **Not multiplayer flight:** community Tag/.phiwadvr and LAN replication need separate authority, synchronization, and comfort tests.
+
+**Physical test:** jump off the Sector 01 deck, hold left-stick click for a short burn while strafing, release and land. Observe hang time and whether aiming and firing work throughout. Verify JUMP alone feels unchanged, held sprint on the ground doesn't lift the player, and sustained thrust drains fuel. Wait on the floor to refuel, then try a compact late-sector deck. Boost directly underneath the slab: the character must never pass through its underside. Check normal campaign, Pit and BBS to ensure no fuel UI or altered movement. Compare two Quest 3 headsets, seated/standing modes, turning options, comfort, aim, FPS and wrist readability.
+
+## Quest 3 controller shortcuts (review candidate)
+
+The native **IMMERSIVE VR** input mapping now provides distinct face-button edges:
+- **Left X:** toggle the **actual map view on the left-arm Gen.E.Wrist**. Press X again to close, even while the map has captured combat buttons. The physical menu remains anchored to left-controller tracking. Lowering the arm moves the map out of view but does not silently dismiss the explicit X request; raising it reveals the same map. The standard watch-face RIGHT TRIGGER menu still works independently.
+- **Left Y:** trigger the existing vertical JUMP action, including from the ground or upper deck when the optional two-story mode is active. No auto-repeat when held. The standard flat campaign has no jump.
+- **Right B:** the existing directional DODGE / DASH BASH control; **right A or grip:** INTERACT / USE.
+- **Left grip:** Ori, **left stick click:** sprint / optional airborne jetpack, **left trigger:** charge, **right trigger:** fire and UI select. Quest reload and vision remain on the wrist tools.
+- Xbox gamepad and desktop mappings are unchanged, including Xbox X reload, Y Ori, View map, and right-stick Help; no camera/aim changes.
+- No new save data or network messages. The headset input adapter owns the Quest face conversion; X/Y are not mapped to two actions simultaneously.
+
+**Check on real Quest 3:** Press X at rest: the map should be mounted on your left arm when you raise it, not floating at your face. Press X a second time to close (without a ghost shot). Open X again, then use right trigger to activate CLOSE MAP. Confirm Y jumps once, B dashes with left-stick direction, left grip still calls Ori, A and right grip still interact, right trigger still shoots when the map is closed, and left-stick-click sprint/jetpack remains available. Repeat in seated and standing modes, both headsets and all menus. A software-emulated XR controller test does not replace this physical check.

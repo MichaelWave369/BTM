@@ -70,6 +70,11 @@ export class WorldScene {
     'hazard:arc',colorRGB(SOLO_SWEEP_COLORS[node.phase]));
    this.counts.objects++;
   }
+  // Exhaust flares use actual player foot height; presentation only.
+  if(game.verticalPreview&&p.jetActive){
+   for(const offset of [-.16,.16])
+    b.billboard((p.x+offset)*s,(p.height-.22)*s,p.y*s,.16*s,.35*s,'marker',eye,[.38,.95,1.3,1]);
+  }
   for(const n of l.raidNodes||[])b.floor(n.x*s,.025,n.y*s,1.3*s,'hazard:arc',n.active?[.5,1.2,.9,1]:[1,.8,.35,1]);
   const field=game.netState?.beast?.field;
   if(field){

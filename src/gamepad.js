@@ -55,6 +55,7 @@ export function gameplayInput(keys,pad=idle(),fire=false,sensitivity=1){return {
   moveStrafe:clamp((keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0)+pad.moveStrafe,-1,1),
   turn:(keys.has('ArrowRight')?1:0)-(keys.has('ArrowLeft')?1:0)+pad.turn*controllerSettings({controllerSensitivity:sensitivity}).controllerSensitivity,
   sprint:keys.has('ShiftLeft')||keys.has('ShiftRight')||pad.sprint,
+  jetpack:keys.has('ShiftLeft')||keys.has('ShiftRight')||pad.sprint,
   fire:fire||keys.has('KeyZ')||keys.has('ControlLeft')||pad.fire
 };}
 export function controllerActions(game,pad,{map=()=>{},help=()=>{},fire=true,dodgeAngle}={}){
@@ -63,7 +64,7 @@ export function controllerActions(game,pad,{map=()=>{},help=()=>{},fire=true,dod
     if(action==='vision')game.vision();if(action==='bass')game.bassDrop();
     if(action==='dodge')game.dodge({left:pad.moveStrafe<-.25,right:pad.moveStrafe>.25,back:pad.moveForward<-.25,...(Number.isFinite(dodgeAngle)?{angle:dodgeAngle}:{})});
     if(action==='previous'||action==='next')game.selectWeapon((game.weapon+(action==='next'?1:game.unlocked-1))%game.unlocked);
-    if(action==='map')map();if(action==='help'){if(game.level?.vertical&&typeof game.jump==='function')game.jump();else help();}
+    if(action==='map')map();if(action==='jump')game.jump();if(action==='help'){if(game.level?.vertical&&typeof game.jump==='function')game.jump();else help();}
   }
   if(fire){if(pad.firePressed)game.requestFire();if(pad.alternate!==null)game.requestFire(true,pad.alternate);}
 }

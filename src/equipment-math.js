@@ -17,11 +17,19 @@ export class WristComputer{
  constructor(){
   this.status=equipmentPanel(.112,.049);this.panel=equipmentPanel();this.toEye=[0,0,0];
   this.open=0;this.pinned=false;this.last=-1;this.attentionSince=-1;this.lostSince=-1;
-  this.guardUntil=0;this.requested=false;this.guard=false;this.visible=false;this.statusVisible=false;
+  this.guardUntil=0;this.requested=false;this.mapRequested=false;this.guard=false;this.visible=false;this.statusVisible=false;
   this.suppressAutoUntilLower=false;this.watchFacing=0;this.watchGaze=0;this.watchDistance=0;
   this.watchRaised=false;this.watchReady=false;this.trackedWrist=[0,0,0];
  }
- // The physical watch-face button is the only menu summon. Wrist motion
+ // Wrist motion never summons a menu. The Quest X button is an additional
+ // explicit map-only summon, always anchored to the tracked left wrist.
+ toggleMap(){
+  this.mapRequested=!this.mapRequested;
+  this.pinned=false;this.lostSince=-1;
+  this.guardUntil=this.mapRequested?this.last+220:0;
+  return this.mapRequested;
+ }
+ // The physical watch-face button is the original menu summon. Wrist motion
  // never opens the menu or takes over the locomotion controls.
  togglePin(){
   this.pinned=!this.pinned;
@@ -35,7 +43,7 @@ export class WristComputer{
  }
  reset(){
   this.open=0;this.pinned=false;this.last=-1;
-  this.attentionSince=this.lostSince=-1;this.guardUntil=0;
+  this.attentionSince=this.lostSince=-1;this.guardUntil=0;this.mapRequested=false;
   this.requested=this.guard=this.visible=this.statusVisible=false;
   this.suppressAutoUntilLower=false;this.watchReady=this.watchRaised=false;
   this.watchFacing=this.watchGaze=this.watchDistance=0;
@@ -89,7 +97,7 @@ export class WristComputer{
    if(now-this.lostSince>280)this.pinned=false;
   }else this.lostSince=-1;
   const previous=this.requested;
-  this.requested=this.pinned&&holdReady;
+  this.requested=!!this.mapRequested||this.pinned&&holdReady;
   if(this.requested&&!previous)this.guardUntil=Math.max(this.guardUntil,now+220);
   this.guard=this.requested&&now<this.guardUntil;
   const motion=s.vrInterfaceMotion&&!settings.reducedMotion;

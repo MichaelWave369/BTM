@@ -26,6 +26,15 @@ export class VRWorldRenderer {
  setLevel(level,settings={},cacheKey=null,tileSize=null){const g=this.gl;if(this.level!==level){for(const c of this.staticBuffers)g.deleteBuffer(c.buffer);this.level=level;this.geometry=buildLevelGeometry(level);this.staticBuffers=this.geometry.chunks.map(c=>{const buffer=g.createBuffer();g.bindBuffer(g.ARRAY_BUFFER,buffer);g.bufferData(g.ARRAY_BUFFER,c.vertices,g.STATIC_DRAW);return {...c,buffer};});}this.atlasCanvas=createWorldAtlas(level,this.assets,settings,{tileSize:tileSize||textureTileSize(settings,2048),images:this.packImages});this.textureKey=cacheKey||textureSignature(level,settings);g.activeTexture(g.TEXTURE0);g.bindTexture(g.TEXTURE_2D,this.atlas);g.pixelStorei(g.UNPACK_FLIP_Y_WEBGL,false);g.texImage2D(g.TEXTURE_2D,0,g.RGBA,g.RGBA,g.UNSIGNED_BYTE,this.atlasCanvas);this.ui.lastPaint=-Infinity;}
  bind(buffer){const g=this.gl,a=this.attributes;g.bindBuffer(g.ARRAY_BUFFER,buffer);for(const [loc,size,offset]of [[a.p,3,0],[a.uv,2,12],[a.tint,4,20]]){g.enableVertexAttribArray(loc);g.vertexAttribPointer(loc,size,g.FLOAT,false,36,offset);}}
  event(event,game){this.scene.event(event,game);}
+ toggleWristMap(rig){
+  // An explicit left X press opens the actual left-wrist map, even if the
+  // arm is lowered or the watch-face button has not been aimed at.
+  if(!this.ui||!rig?.hasLeft||rig.settings?.vrHudVisible===false)return false;
+  const open=this.ui.wrist.toggleMap();
+  if(open){this.ui.logOpen=false;this.ui.archiveOpen=false;this.ui.field.close();}
+  this.ui.lastPaint=-Infinity;
+  return open;
+ }
  interfaceTarget(pose,rig,game,now=performance.now(),pad=null){
   const ui=this.ui;ui.cursor=null;rig.uiPointer=null;
   ui.placeWrist(rig,rig.settings||{},now);

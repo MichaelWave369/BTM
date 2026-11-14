@@ -127,6 +127,14 @@ export class Renderer {
     if(game.shift){g.fillStyle='rgba(134,76,220,.055)';g.fillRect(0,0,w,h);g.strokeStyle='#ad7ce2';g.lineWidth=2;g.strokeRect(6,6,w-12,h-12);}
     // In-canvas vignette keeps the scene readable under every UI overlay.
     const vignette=g.createRadialGradient(w/2,h/2,w*.1,w/2,h/2,w*.63);vignette.addColorStop(0,'rgba(0,0,0,0)');vignette.addColorStop(1,'rgba(0,0,0,.58)');g.fillStyle=vignette;g.fillRect(0,0,w,h);
+    if(game.verticalPreview&&!demo&&Number.isFinite(p.jetFuel)){
+      const x=w*.04,y=h*.83,bw=Math.max(84,w*.19),fuel=Math.max(0,Math.min(100,p.jetFuel));
+      g.fillStyle='rgba(4,18,32,.85)';g.fillRect(x-4,y-17,bw+8,33);
+      g.font=`bold ${Math.max(8,Math.floor(w/78))}px monospace`;
+      g.fillStyle=p.jetActive?'#9cf4ff':'#a1b9c7';g.fillText('JET '+Math.ceil(fuel)+'%',x,y-5);
+      g.fillStyle='#294b5d';g.fillRect(x,y,bw,5);
+      g.fillStyle=p.jetActive?'#67eaff':'#61bcd0';g.fillRect(x,y,bw*fuel/100,5);
+    }
     if(map)this.drawMap(game,true);
     else if(!demo&&!settings.externalMap)this.drawMap(game,false);
   }
