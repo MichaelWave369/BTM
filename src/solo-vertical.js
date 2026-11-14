@@ -7,7 +7,7 @@ import {validSoloJetpack} from './solo-jetpack.js';
 export const SOLO_MEZZANINE=Object.freeze({
  schema:'btm.vertical-prototype/1',soloPreview:true,ceiling:STACK_CEILING,
  upper:Object.freeze({x0:14,x1:18,y0:19,y1:23,height:STACK_HEIGHT}),
- ramp:Object.freeze({x0:10,x1:14,y0:21,y1:23})
+ ramp:Object.freeze({x0:11,x1:14,y0:21,y1:22})
 });
 const cell=(x,y)=>x+','+y;
 const cells=(rect)=>{const out=[];for(let y=rect.y0;y<rect.y1;y++)
@@ -18,6 +18,14 @@ const open=(level,x,y)=>level.cells[y]?.[x]===0&&!level.doors[cell(x,y)];
 export function rampDoorClearance(level,ramp){
  const doors=Object.values(level.doors||{});
  return cells(ramp).every(([x,y])=>doors.every(d=>Math.abs(d.x-x)>1||Math.abs(d.y-y)>1));
+}
+// A compact ramp needs an unobstructed approach, not a slope pushed flush
+// against the next wall. Avoid placing starting enemies in its footprint.
+export function rampFootClearance(level,ramp){
+ if(!rampDoorClearance(level,ramp))return false;
+ for(let y=ramp.y0;y<ramp.y1;y++)for(let x=ramp.x0-2;x<ramp.x0;x++)
+  if(!open(level,x,y))return false;
+ return !level.enemies.some(e=>cells(ramp).some(([x,y])=>Math.floor(e.homeX??e.x)===x&&Math.floor(e.homeY??e.y)===y));
 }
 export function isSoloPreview(level){return !!level?.vertical?.soloPreview;}
 function traversableFromEntry(level,spawn){
@@ -35,19 +43,19 @@ function traversableFromEntry(level,spawn){
 }
 const critical=(level,spawn)=>[spawn,level.key,level.exit,...level.relays,...level.captives];
 export function chooseSoloMezzanine(level,index,spawn){
- if(index===0){const layout=structuredClone(SOLO_MEZZANINE);if(!rampDoorClearance(level,layout.ramp))throw Error('Sector 01 ramp crowds a door');return layout;}
+ if(index===0){const layout=structuredClone(SOLO_MEZZANINE);if(!rampFootClearance(level,layout.ramp))throw Error('Sector 01 ramp crowds an approach');return layout;}
  const accessible=traversableFromEntry(level,spawn),must=critical(level,spawn);
  let best=null;
  // Real unobstructed room geometry, not a random platform pasted through
  // walls. Fall back to a compact 3x3 deck if a busy nightmare stage demands it.
- for(const [width,height,length] of [[4,4,5],[4,4,4],[4,3,4],[3,4,4],[4,3,3],[3,3,4],[3,3,3]]){
+ for(const [width,height,length] of [[4,4,3],[4,3,3],[3,4,3],[3,3,3]]){
   for(let y=2;y+height<level.h;y++)for(let x=2;x+width+length<level.w;x++){
    const upper={x0:x+length,x1:x+length+width,y0:y,y1:y+height,height:STACK_HEIGHT};
-   const ramp={x0:x,x1:x+length,y0:y+height-2,y1:y+height};
+   const ramp={x0:x,x1:x+length,y0:y+height-2,y1:y+height-1};
    const footprint=[...cells(upper),...cells(ramp)];
-   if(!footprint.every(([cx,cy])=>open(level,cx,cy))||!rampDoorClearance(level,ramp))continue;
+   if(!footprint.every(([cx,cy])=>open(level,cx,cy))||!rampFootClearance(level,ramp))continue;
    if(must.some(o=>cells(ramp).some(([rx,ry])=>Math.floor(o.x)===rx&&Math.floor(o.y)===ry)))continue;
-   const entry=cell(ramp.x0,ramp.y0),distance=accessible.get(entry);
+   const entry=cell(ramp.x0-1,ramp.y0),distance=accessible.get(entry);
    if(distance===undefined)continue;
    // Every upper tile can be walked; the whole ramp is accessible from the
    // original open corridor network without any GOLD or colored key.
@@ -69,7 +77,7 @@ export function upperFragmentPosition(layout){return {x:layout.upper.x1-.5,y:lay
 export function enableSoloMezzanine(level,index,spawn){
  const layout=chooseSoloMezzanine(level,index,spawn);
  const footprint=[...cells(layout.upper),...cells(layout.ramp)];
- if(!footprint.every(([x,y])=>open(level,x,y))||!rampDoorClearance(level,layout.ramp))
+ if(!footprint.every(([x,y])=>open(level,x,y))||!rampFootClearance(level,layout.ramp))
   throw Error('Unsafe mezzanine floor in sector '+(index+1));
  level.vertical=layout;
  level.upperCover=authoredSoloUpperCover(layout);

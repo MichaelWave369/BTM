@@ -21,17 +21,18 @@ export async function vrChecks(){
  ['Rays behind, parallel to, or pointing away from a panel do not select',()=>{const ray=identity(),p=panelPlacement(ray);ray[10]=-1;expect(hitPanel(ray,p)===null);ray[10]=0;expect(hitPanel(ray,p)===null);} ],
  ['Quest Touch thumbsticks map separately from Xbox navigator pads',()=>{const input=new TouchInput(),left=xrSource('left'),right=xrSource('right');input.poll([left,right],.025);left.gamepad.axes=[0,0,.6,-.8];right.gamepad.axes=[0,0,.7,0];const s=input.poll([left,right],.025);expect(s.ready&&s.moveForward>.5&&s.moveStrafe>0&&s.turn>0);} ],
  ['Quest triggers fire and charge; grip controls interact and Ori',()=>{const input=new TouchInput(),l=xrSource('left'),r=xrSource('right');input.poll([l,r],.025);r.gamepad.buttons[0].pressed=true;r.gamepad.buttons[1].pressed=true;l.gamepad.buttons[1].pressed=true;let s=input.poll([l,r],.025);expect(s.fire&&s.pointerPressed&&s.actions.includes('interact')&&s.actions.includes('ori'));expect(!input.poll([l,r],.025).pointerPressed);l.gamepad.buttons[0].pressed=true;for(let i=0;i<40;i++)input.poll([l,r],.025);l.gamepad.buttons[0].pressed=false;s=input.poll([l,r],.025);expect(s.alternate>.6);} ],
- ['Right grip and A report continuous use for BBS and a single press edge for solo',()=>{
+ ['Right grip remains a held USE action, independent of right A Dash',()=>{
   const input=new TouchInput(),r=xrSource('right');input.poll([r],.025);
-  for(const index of [1,4]){
-   r.gamepad.buttons[index].pressed=true;
-   const press=input.poll([r],.025),hold=input.poll([r],.025);
-   expect(press.interactHeld&&press.actions.includes('interact'));
-   expect(hold.interactHeld&&!hold.actions.includes('interact'));
-   r.gamepad.buttons[index].pressed=false;expect(!input.poll([r],.025).interactHeld);
-  }
+  r.gamepad.buttons[1].pressed=true;
+  let press=input.poll([r],.025),hold=input.poll([r],.025);
+  expect(press.interactHeld&&press.actions.includes('interact'));
+  expect(hold.interactHeld&&!hold.actions.includes('interact'));
+  r.gamepad.buttons[1].pressed=false;expect(!input.poll([r],.025).interactHeld);
+  r.gamepad.buttons[4].pressed=true;
+  press=input.poll([r],.025);
+  expect(press.actions.includes('dodge')&&!press.interactHeld&&!press.actions.includes('interact'));
  }],
- ['Quest face buttons and stick clicks expose the documented actions',()=>{for(const [hand,index,action] of [['right',4,'interact'],['right',5,'dodge'],['left',4,'map'],['left',5,'jump'],['right',3,'pause']]){const input=new TouchInput(),l=xrSource('left'),r=xrSource('right');input.poll([l,r],.025);(hand==='left'?l:r).gamepad.buttons[index].pressed=true;expect(input.poll([l,r],.025).actions.includes(action),action);}} ],
+ ['Quest face buttons expose the ergonomic map/reload/jump/dash layout',()=>{for(const [hand,index,action] of [['right',4,'dodge'],['right',5,'jump'],['left',4,'map'],['left',5,'reload']]){const input=new TouchInput(),l=xrSource('left'),r=xrSource('right');input.poll([l,r],.025);(hand==='left'?l:r).gamepad.buttons[index].pressed=true;expect(input.poll([l,r],.025).actions.includes(action),action);}} ],
  ['Generic xr-standard input keeps trigger/grip controls without guessing faces',()=>{const input=new TouchInput(),r=xrSource('right');r.profiles=['generic-trigger-squeeze-thumbstick'];input.poll([r],.025);r.gamepad.buttons[4].pressed=true;r.gamepad.buttons[0].pressed=true;const s=input.poll([r],.025);expect(s.fire&&!s.actions.includes('interact'));} ],
  ['Losing a Touch controller cancels held fire until neutral',()=>{const input=new TouchInput(),l=xrSource('left'),r=xrSource('right');input.poll([l,r],.025);r.gamepad.buttons[0].pressed=true;expect(input.poll([l,r],.025).fire);const s=input.poll([r],.025);expect(s.disconnected&&!s.fire);input.reset();expect(!input.poll([l,r],.025).fire);} ],
  ['Unavailable WebXR reports a fallback without requesting a session',async()=>{const vr=new VRArcade({xr:()=>null});expect(!await vr.probe());expect(!await vr.enter()&&!vr.active&&!vr.pending);} ],

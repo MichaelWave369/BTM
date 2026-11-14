@@ -5,7 +5,7 @@ import {createLevel,SECTORS,Game} from '../src/core.js';
 import {WALL_HEIGHT,WORLD_SCALE} from '../src/spatial.js';
 import {doorGeometry,buildLevelGeometry,materialUV,pushTiledWall} from '../src/level-geometry.js';
 import {doorSurfaceMaterial} from '../src/door-visibility.js';
-import {rampDoorClearance} from '../src/solo-vertical.js';
+import {rampDoorClearance,rampFootClearance,chooseSoloMezzanine} from '../src/solo-vertical.js';
 import {STACK_CEILING} from '../src/net/vertical-arena.js';
 
 test('original and Pit door shells keep old height; all solo two-story doors seal the full ceiling',()=>{
@@ -67,7 +67,7 @@ test('ramp footprints reserve a one-tile door apron for all twelve levels',()=>{
     assert(Math.abs(d.x-x)>1||Math.abs(d.y-y)>1,SECTORS[index].name+' door '+d.x+','+d.y);
   }
  }
- assert.equal(createLevel(0,'original',{verticalPreview:true}).vertical.ramp.x0,10);
+ assert.equal(createLevel(0,'original',{verticalPreview:true}).vertical.ramp.x0,11);
  const l=createLevel(0);
  assert.equal(rampDoorClearance(l,{x0:8,x1:10,y0:20,y1:21}),false,'test fixture directly crowds the known door');
 });
@@ -84,4 +84,33 @@ test('native VR door mesh and wall sealing share the same atlas and keep the sec
  assert(world.includes("bottom<.00001?doorSurfaceMaterial(d.type,game.shift):'wall'+d.type"),'door control glyph must appear only once');
  const geometry=readFileSync(new URL('../src/level-geometry.js',import.meta.url),'utf8');
  assert(geometry.includes('pushTiledWall(v,'));
+});
+
+test('ramp selection is tied to authored enemy spawn, never a live patrol position',()=>{
+ for(let index=1;index<12;index++){
+  const level=createLevel(index,'original',{verticalPreview:true}),r=level.vertical.ramp,
+   before=JSON.stringify(level.vertical);
+  const e=level.enemies.find(enemy=>!enemy.upperGuard);
+  assert(e&&Number.isFinite(e.homeX)&&Number.isFinite(e.homeY));
+  e.x=r.x0+.5;e.y=r.y0+.5;
+  const from=level.vertical.entry;
+  const candidate=chooseSoloMezzanine(level,index,from);
+  assert.equal(JSON.stringify(candidate),before,'a moving enemy must never change deterministic layout');
+ }
+});
+
+test('every compact ramp has clear front approaches and no initial enemy overlap',()=>{
+ for(let index=0;index<12;index++){
+  const level=createLevel(index,'original',{verticalPreview:true}),r=level.vertical.ramp;
+  assert.equal(r.x1-r.x0,3,SECTORS[index].name+' ramp does not overrun the corridor');
+  assert.equal(r.y1-r.y0,1,SECTORS[index].name+' leaves one full lane free');
+  assert(rampFootClearance(level,r),SECTORS[index].name+' front approach must stay open');
+  for(let y=r.y0;y<r.y1;y++)for(let x=r.x0-2;x<r.x0;x++)
+   assert.equal(level.cells[y][x],0,'two-tile ground approach in '+SECTORS[index].name);
+  for(const e of level.enemies){
+   const rx=Math.floor(e.x),ry=Math.floor(e.y);
+   assert(!(rx>=r.x0&&rx<r.x1&&ry>=r.y0&&ry<r.y1),SECTORS[index].name+' enemy trapped under slope');
+  }
+  assert.deepEqual(createLevel(index).doors,level.doors,'original door map unchanged');
+ }
 });
