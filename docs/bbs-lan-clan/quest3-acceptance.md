@@ -67,4 +67,12 @@ These are illustrative labels, **not observed measurements**. The on-device valu
 
 No physical Quest frame measurements are claimed here until this feature is merged and actually tested on the headset.
 
+## Static stereo buffer batching (performance candidate)
+
+A new immutable upload path concatenates each level's static floor, wall, ceiling, ramp and cover chunks into **one** WebGL vertex buffer at level load. The renderer keeps each original chunk's bounding box and exact vertex range, so left/right frustum culling, draw order, texture UVs, collision, door animations, dynamic enemies and XR tracking do not change. Each eye binds the static vertex stream once, then draws the visible chunk ranges with a nonzero first-vertex offset. The existing dynamic actor buffer is still separate and updated each frame.
+
+This targets WebGL state-change overhead, not fill rate or headset panel refresh. It does **not** claim a measured Quest FPS improvement. A typed-array copy happens once per map change, not each frame.
+
+Before approving, run native Quest 3 with **VR Diagnostics ON** in both campaign (including the two-story preview) and Solo Bot Arena. Compare CPU world-render time and XR callback peaks across the same camera path in Balanced quality, then in Performance after restarting the XR session if changing framebuffer scale. Inspect doorway, wall texture, upper ramp, occlusion and peripheral stereo edges. Verify head/aim tracking, reloading, jumping, bot kills and return-to-solo checkpoints remain unchanged. Automated checks confirm every static vertex value and per-chunk visibility bound for all 12 maps.
+
 **Multiplayer is intentionally separate for now.** BBS LAN CLAN still uses its independent browser lobby and a genuine Node/WebSocket server, and may need a fresh XR permission after switching documents. That should not be represented as continuous-XR multiplayer until a host-owned integrated network-room UI and transport have passed actual headset checks.
