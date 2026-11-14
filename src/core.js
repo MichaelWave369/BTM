@@ -162,10 +162,6 @@ export class Game {
       this.say('Upper signal recovered. Armor, Ori and reserves replenished.','ORI',2);
       this.saveCheckpoint();return;
     }
-    const captive=l.captives.find(c=>!c.freed&&close(c));
-    if(captive){captive.freed=true;this.freeHost(captive);this.banter('captive',[['ORI','One more mind, back in its own hands. That is the whole point.'],['WAVE','You pick your own frequency from here, bro.']]);return;}
-    const relay=l.relays.find(r=>!r.active&&close(r));
-    if(relay){relay.active=true;p.health=Math.min(100,p.health+15);if(!this.survival)p.energy=100;this.emit('sound',{name:'relay'});this.emit('burst',{x:relay.x,y:relay.y,color:'#b9ff53',count:28});this.say(l.relays.every(r=>r.active)?'Control signal is down. Grab the key and find our exit.':'One relay down. Bureaucracy is taking physical damage.');this.saveCheckpoint();return;}
     // Unlike passive wall plaques, these physical PCs require explicit USE.
     // Aiming at the actual terminal matters, so door controls behind one
     // don't accidentally steal a terminal press. One recharge per console,
@@ -186,6 +182,10 @@ export class Game {
         return;
       }
     }
+    const captive=l.captives.find(c=>!c.freed&&close(c));
+    if(captive){captive.freed=true;this.freeHost(captive);this.banter('captive',[['ORI','One more mind, back in its own hands. That is the whole point.'],['WAVE','You pick your own frequency from here, bro.']]);return;}
+    const relay=l.relays.find(r=>!r.active&&close(r));
+    if(relay){relay.active=true;p.health=Math.min(100,p.health+15);if(!this.survival)p.energy=100;this.emit('sound',{name:'relay'});this.emit('burst',{x:relay.x,y:relay.y,color:'#b9ff53',count:28});this.say(l.relays.every(r=>r.active)?'Control signal is down. Grab the key and find our exit.':'One relay down. Bureaucracy is taking physical damage.');this.saveCheckpoint();return;}
     // Interact with the first solid cell in the direction of the crosshair.
     const hit=aim?traceEnvironment(l,aim.origin,aim.direction,1.8):null,ray=aim?(hit.cell?{...hit.cell,distance:hit.distance}:{x:-1,y:-1,distance:Infinity}):castRay(l,p.x,p.y,Math.cos(p.a),Math.sin(p.a),1.8),d=l.doors[`${ray.x},${ray.y}`];
     if(d&&ray.distance<1.8&&(!this.verticalPreview||(p.height||0)<.65)){

@@ -4,7 +4,7 @@ import {weaponMesh,appendEquipment} from './equipment-meshes.js';
 import {SignalPresentation} from './signal-presentation.js';
 import {SIGNAL_QUALITY} from './neon-signal.js';
 import {DOOR_COLORS,doorFrameParts,doorSurfaceMaterial} from './door-visibility.js';
-import {WEAPONS,findRoute} from './core.js';import {materialUV,doorGeometry} from './level-geometry.js';import {WORLD_SCALE,entityHeight,traceEnvironment} from './spatial.js';import {transformPoint} from './immersive-math.js';
+import {WEAPONS,findRoute} from './core.js';import {materialUV,doorGeometry} from './level-geometry.js';import {WORLD_SCALE,WALL_HEIGHT,entityHeight,traceEnvironment} from './spatial.js';import {transformPoint} from './immersive-math.js';
 import {previewTrackedShot} from './aim-diagnostics.js';
 import {soloAccessMarkers,CACHE_COLORS} from './solo-access-hunt.js';
 import {soloSweepMarkers,SOLO_SWEEP_COLORS} from './solo-resonance-sweep.js';
@@ -34,7 +34,15 @@ export class WorldScene {
     for(const part of doorFrameParts(v,d.type,game.shift))b.box(part.center,part.size,'white',d.lockColor?DOOR_COLORS['locked-'+d.lockColor]:part.color);
     if(d.open>.995)continue;
     v.center[1]=v.size[1]*(.5+d.open);
-    b.box(v.center,v.size,doorSurfaceMaterial(d.type,game.shift),d.lockColor?DOOR_COLORS['locked-'+d.lockColor]:WHITE);
+    // Two-story doors must seal the same 3.9 tile ceiling as the walls.
+    // Separate original-height panels avoid vertical texture stretching.
+    const height=v.size[1],tile=WALL_HEIGHT*s;
+    for(let bottom=0;bottom<height-.00001;bottom+=tile){
+     const band=Math.min(tile,height-bottom);
+     b.box([v.center[0],v.center[1]-height/2+bottom+band/2,v.center[2]],
+      [v.size[0],band,v.size[2]],doorSurfaceMaterial(d.type,game.shift),
+      d.lockColor?DOOR_COLORS['locked-'+d.lockColor]:WHITE);
+    }
    }
   for(const e of l.enemies){if(e.dead||!visible(e.x,e.y))continue;const h=entityHeight(e.type)*s,frame=Math.floor(e.walk||0)%4;b.billboard(e.x*s,(e.floorHeight||0)*s,e.y*s,e.raidRole==='core'?6.4*s:h,h,e.raidRole?(e.raidRole==='core'?(e.exposed>0?'raid:open':'raid:core'):'raid:pylon'):e.pitBoss?'pitboss:'+e.pitBoss+(e.exposed>0?':open':''):(e.pain>0?'pain:':'enemy:')+e.type+':'+frame,eye,e.stun>0?STUN:e.upperGuard?(e.upperGuardRole==='breacher'?[1.15,.55,.48,1]:e.upperGuardRole==='marksman'?[.54,.95,1.3,1]:[1.04,.88,1.42,1]):WHITE);this.counts.enemies++;if(e.upperGuardRole==='bulwark'&&e.coverReady)b.billboard(e.x*s,(e.floorHeight+1.12)*s,e.y*s,.23,.23,'marker',eye,[.55,1.05,1.4,1]);if(e.tell>0)b.floor(e.x*s,(e.floorHeight||0)*s+.025,e.y*s,.7,'marker',TELL);}
   for(const i of l.items)if(!i.taken&&visible(i.x,i.y)){b.billboard(i.x*s,(i.floorHeight||0)*s+.04,i.y*s,.85,.85,'item:'+i.type,eye,i.upperFragment?[.85,.65,1.35,1]:WHITE);this.counts.objects++;}
