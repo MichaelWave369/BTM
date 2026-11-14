@@ -3,6 +3,7 @@
 // second document, WebXR session, audio engine, or persistent campaign save.
 import {OfflineBotClient} from './offline-client.js';
 import {NetworkView} from './client.js';
+import {TICK_RATE} from './protocol.js';
 
 export const DEFAULT_QUICK_BOTS=Object.freeze({
  nickname:'WAVE',mode:'deathmatch',arena:'no-carrier',
@@ -12,7 +13,7 @@ export const DEFAULT_QUICK_BOTS=Object.freeze({
 export class QuickBotArena {
  constructor({onReady=()=>{},onFinished=()=>{},onError=()=>{},onStatus=()=>{},makeClient=opts=>new OfflineBotClient(opts)}={}){
   this.onReady=onReady;this.onFinished=onFinished;this.onError=onError;this.onStatus=onStatus;
-  this.net=makeClient({onMessage:m=>this.receive(m),onStatus});
+  this.net=makeClient({onMessage:m=>this.receive(m),onStatus,inputRate:TICK_RATE});
   this.game=new NetworkView(this.net);
   this.config=null;this.ready=false;this.closed=false;this.matchEnded=false;
  }
@@ -21,6 +22,8 @@ export class QuickBotArena {
   this.config={...DEFAULT_QUICK_BOTS,...config};
   await this.net.connect();
   if(this.closed)return;
+  // Only the native same-session quick arena opts into XR-frame fairness.
+  this.net.enableFrameGuard?.(true);
   // Do not allow bots to deal damage behind the loading screen. The worker
   // resumes on receipt of its first authoritative snapshot.
   this.net.hold(true);
@@ -47,9 +50,14 @@ export class QuickBotArena {
  pause(){
   this.net.hold(true);this.game.suspend();
  }
+ framePulse(now=performance.now()){
+  if(this.closed||!this.ready||!this.game.inputEnabled)return false;
+  return this.net.framePulse?.(now)??false;
+ }
  resume(){
   if(this.closed||!this.ready||this.game.netState?.state!=='playing')return false;
-  this.game.resume();this.net.hold(false);return true;
+  this.game.resume();this.framePulse();
+  this.net.hold(false);return true;
  }
  replay(){
   if(this.closed||!this.ready||!this.config)return false;
