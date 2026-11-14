@@ -8,11 +8,12 @@ export function pushQuad(vertices,points,material='white',color=[1,1,1,1]){const
 // Slice tall walls into original-height texture bands, with a cropped final
 // band. Sampling stays inside the existing atlas slot, never a neighbor.
 // Standard 1.7-height maps retain their exact previous mesh and texture.
-export function pushTiledWall(vertices,points,material='white',color=[1,1,1,1],tileHeight=WALL_HEIGHT*WORLD_SCALE){
+export function pushTiledWall(vertices,points,material='white',color=[1,1,1,1],tileHeight=WALL_HEIGHT*WORLD_SCALE,upperMaterial=material){
  const height=Math.abs(points[3][1]-points[0][1]);
  if(height<=tileHeight+.000001){pushQuad(vertices,points,material,color);return;}
- const uv=materialUV(material);
  for(let offset=0;offset<height-.000001;offset+=tileHeight){
+  // Keep one authored wall screen at eye level, not one per floor-height.
+  const uv=materialUV(offset<.000001?material:upperMaterial);
   const length=Math.min(tileHeight,height-offset),start=offset/height,end=(offset+length)/height;
   const at=(low,high,t)=>low.map((v,i)=>v+(high[i]-v)*t);
   const corners=[at(points[0],points[3],start),at(points[1],points[2],start),
@@ -33,10 +34,10 @@ export function buildLevelGeometry(level){
   const v=get(x,y),x0=x*s,x1=(x+1)*s,z0=y*s,z1=(y+1)*s;
   if(walkable(level,x,y)){pushQuad(v,[[x0,0,z1],[x1,0,z1],[x1,0,z0],[x0,0,z0]],'floor',[.9,.95,.9,1]);pushQuad(v,[[x0,h,z0],[x1,h,z0],[x1,h,z1],[x0,h,z1]],'ceiling',[.6,.68,.66,1]);continue;}
   const material=signs.get(x+','+y)||'wall'+level.cells[y][x];
-  if(walkable(level,x,y-1))pushTiledWall(v,[[x1,0,z0],[x0,0,z0],[x0,h,z0],[x1,h,z0]],material,[.94,.96,.94,1]);
-  if(walkable(level,x,y+1))pushTiledWall(v,[[x0,0,z1],[x1,0,z1],[x1,h,z1],[x0,h,z1]],material,[.8,.86,.82,1]);
-  if(walkable(level,x-1,y))pushTiledWall(v,[[x0,0,z0],[x0,0,z1],[x0,h,z1],[x0,h,z0]],material,[.72,.8,.75,1]);
-  if(walkable(level,x+1,y))pushTiledWall(v,[[x1,0,z1],[x1,0,z0],[x1,h,z0],[x1,h,z1]],material,[.85,.9,.86,1]);
+  if(walkable(level,x,y-1))pushTiledWall(v,[[x1,0,z0],[x0,0,z0],[x0,h,z0],[x1,h,z0]],material,[.94,.96,.94,1],WALL_HEIGHT*s,'wall'+level.cells[y][x]);
+  if(walkable(level,x,y+1))pushTiledWall(v,[[x0,0,z1],[x1,0,z1],[x1,h,z1],[x0,h,z1]],material,[.8,.86,.82,1],WALL_HEIGHT*s,'wall'+level.cells[y][x]);
+  if(walkable(level,x-1,y))pushTiledWall(v,[[x0,0,z0],[x0,0,z1],[x0,h,z1],[x0,h,z0]],material,[.72,.8,.75,1],WALL_HEIGHT*s,'wall'+level.cells[y][x]);
+  if(walkable(level,x+1,y))pushTiledWall(v,[[x1,0,z1],[x1,0,z0],[x1,h,z0],[x1,h,z1]],material,[.85,.9,.86,1],WALL_HEIGHT*s,'wall'+level.cells[y][x]);
  }
  if(level.vertical?.schema==='btm.vertical-prototype/1'){
   const {upper,ramp}=level.vertical,H=upper.height*s;

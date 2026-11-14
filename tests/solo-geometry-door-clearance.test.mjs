@@ -45,6 +45,13 @@ test('tall wall texture bands repeat original texel density without bleeding bet
  }
  assert(Math.abs(Math.min(...bands[0].filter((_,i)=>i%9===1)))<1e-8);
  assert(Math.abs(Math.max(...bands[2].filter((_,i)=>i%9===1))-h)<1e-8);
+ // Authored signs and door controls should appear ONCE at reachable height,
+ // not repeat their glyphs in every vertical band.
+ const signage=[];pushTiledWall(signage,points,'sign:0',[1,1,1,1],step,'wall1');
+ assert.equal(signage.length,3*6*9);
+ assert.equal(signage[3],materialUV('sign:0')[0]);
+ assert.equal(signage[54+3],materialUV('wall1')[0]);
+ assert.equal(signage[108+3],materialUV('wall1')[0]);
  const flat=[];pushTiledWall(flat,[[0,0,0],[1,0,0],[1,step,0],[0,step,0]],'wall1');
  assert.equal(flat.length,54,'one tile map remains one quad');
  const preview=createLevel(0,'original',{verticalPreview:true}),ordinary=createLevel(0);
@@ -74,6 +81,7 @@ test('native VR door mesh and wall sealing share the same atlas and keep the sec
  const world=readFileSync(new URL('../src/world-scene.js',import.meta.url),'utf8');
  assert(world.includes('for(let bottom=0;bottom<height-.00001;bottom+=tile)'),'each tall door must be drawn in height bands');
  assert(world.includes('doorFrameParts(v,d.type,game.shift)'),'door jambs still remain stationary');
+ assert(world.includes("bottom<.00001?doorSurfaceMaterial(d.type,game.shift):'wall'+d.type"),'door control glyph must appear only once');
  const geometry=readFileSync(new URL('../src/level-geometry.js',import.meta.url),'utf8');
  assert(geometry.includes('pushTiledWall(v,'));
 });

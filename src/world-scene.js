@@ -40,7 +40,7 @@ export class WorldScene {
     for(let bottom=0;bottom<height-.00001;bottom+=tile){
      const band=Math.min(tile,height-bottom);
      b.box([v.center[0],v.center[1]-height/2+bottom+band/2,v.center[2]],
-      [v.size[0],band,v.size[2]],doorSurfaceMaterial(d.type,game.shift),
+      [v.size[0],band,v.size[2]],bottom<.00001?doorSurfaceMaterial(d.type,game.shift):'wall'+d.type,
       d.lockColor?DOOR_COLORS['locked-'+d.lockColor]:WHITE);
     }
    }
