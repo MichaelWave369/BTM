@@ -2,6 +2,7 @@ import {tileAt,solidAt,canOccupy,moveBody,castRay,lineOfSight,reachable,findRout
 export {tileAt,solidAt,canOccupy,moveBody,castRay,lineOfSight,reachable,findRoute} from './collision.js';
 import {validAim,traceEnvironment,traceTrackedShot,rayEntityDistance,entityHeight,WALL_HEIGHT} from './spatial.js';
 import {EXPANSION,decorateLevel} from './expansion.js';
+import {recoverConsole} from './console-recoveries.js';
 import {ACCESS_COLORS,addColoredAccess} from './key-access.js';
 import {claimAccessCache,accessCacheStatus} from './solo-access-hunt.js';
 import {applySoloSweep} from './solo-resonance-sweep.js';
@@ -165,6 +166,26 @@ export class Game {
     if(captive){captive.freed=true;this.freeHost(captive);this.banter('captive',[['ORI','One more mind, back in its own hands. That is the whole point.'],['WAVE','You pick your own frequency from here, bro.']]);return;}
     const relay=l.relays.find(r=>!r.active&&close(r));
     if(relay){relay.active=true;p.health=Math.min(100,p.health+15);if(!this.survival)p.energy=100;this.emit('sound',{name:'relay'});this.emit('burst',{x:relay.x,y:relay.y,color:'#b9ff53',count:28});this.say(l.relays.every(r=>r.active)?'Control signal is down. Grab the key and find our exit.':'One relay down. Bureaucracy is taking physical damage.');this.saveCheckpoint();return;}
+    // Unlike passive wall plaques, these physical PCs require explicit USE.
+    // Aiming at the actual terminal matters, so door controls behind one
+    // don't accidentally steal a terminal press. One recharge per console,
+    // but its report is always rereadable via the existing COMMS log.
+    const terminal=this.campaign==='original'&&!this.phiwadCustom&&!this.gallery&&l.props?.find(o=>o.type==='console'&&close(o,1.65)&&
+      (aim||Math.abs(angleDiff(Math.atan2(o.y-p.y,o.x-p.x),p.a))<.8));
+    if(terminal){
+      const found=recoverConsole(l,terminal);
+      if(found){
+        if(found.fresh){
+          p.ori=Math.min(100,p.ori+15);
+          this.emit('sound',{name:'relay',position:{x:terminal.x,y:terminal.y,height:.6}});
+          this.emit('burst',{x:terminal.x,y:terminal.y,height:.65,color:'#62e6ff',count:12});
+          this.emit('toast',{text:'TERMINAL RECOVERED / '+found.report.title+(found.secretMarked?' / SECRET ROUTE MARKED':'')});
+          this.saveCheckpoint();
+        }
+        this.say(found.report.title+': '+found.report.text,'ARCHIVE',2);
+        return;
+      }
+    }
     // Interact with the first solid cell in the direction of the crosshair.
     const hit=aim?traceEnvironment(l,aim.origin,aim.direction,1.8):null,ray=aim?(hit.cell?{...hit.cell,distance:hit.distance}:{x:-1,y:-1,distance:Infinity}):castRay(l,p.x,p.y,Math.cos(p.a),Math.sin(p.a),1.8),d=l.doors[`${ray.x},${ray.y}`];
     if(d&&ray.distance<1.8&&(!this.verticalPreview||(p.height||0)<.65)){
@@ -369,5 +390,8 @@ export class Game {
       const a=Math.atan2(ty-e.y,tx-e.x),speed=e.speed*(e.type==='warden'?1+e.phase*.16:1)*dt;moveBody(l,e,Math.cos(a)*speed,Math.sin(a)*speed,.23);
     }else if(e.state==='patrol'){const a=e.id*1.7+Math.floor(this.time/3)*Math.PI/2;moveBody(l,e,Math.cos(a)*e.speed*dt*.24,Math.sin(a)*e.speed*dt*.24,.23);}
   }
-  interactionHint(){const p=this.player,l=this.level,aim=this.combatPose?.aim,close=o=>distance(o,p)<1.55&&(!this.verticalPreview||Math.abs((o.floorHeight||0)-(p.height||0))<.65)&&lineOfSight(l,p,o)&&(!aim||rayEntityDistance(aim.origin,aim.direction,o,.1,2.2)!==null);if(l.upperUplink&&!l.upperUplink.active&&close(l.upperUplink))return '[ E ] SYNC UPPER SIGNAL';if(l.captives.some(c=>!c.freed&&close(c)))return '[ E ] FREE CAPTIVE';if(l.relays.some(r=>!r.active&&close(r)))return '[ E ] BREAK CONTROL RELAY';if(distance(p,l.exit)<1.8&&(!this.verticalPreview||(p.height||0)<.65))return this.exitReady?'[ E ] EXTRACT':'PORTAL LOCKED · '+this.objective;const hit=aim?traceEnvironment(l,aim.origin,aim.direction,1.8):null,ray=aim?(hit.cell?{...hit.cell,distance:hit.distance}:{x:-1,y:-1,distance:Infinity}):castRay(l,p.x,p.y,Math.cos(p.a),Math.sin(p.a),1.8),d=l.doors[`${ray.x},${ray.y}`];if(d&&d.open<.85&&ray.distance<1.8)return d.type===6?(this.shift?'[ E ] REVEAL SECRET WALL':''):d.lockColor&&!p.keys?.[d.lockColor]?d.lockColor.toUpperCase()+' KEY REQUIRED':d.type===5&&!p.key?'GOLD KEY REQUIRED':'[ E ] OPEN DOOR';if(ray.distance<1.8&&l.signs?.some(s=>s.x===ray.x&&s.y===ray.y))return '[ E ] READ ARCHIVE NOTE';return '';}
+  interactionHint(){const p=this.player,l=this.level,aim=this.combatPose?.aim,close=o=>distance(o,p)<1.55&&(!this.verticalPreview||Math.abs((o.floorHeight||0)-(p.height||0))<.65)&&lineOfSight(l,p,o)&&(!aim||rayEntityDistance(aim.origin,aim.direction,o,.1,2.2)!==null);if(l.upperUplink&&!l.upperUplink.active&&close(l.upperUplink))return '[ E ] SYNC UPPER SIGNAL';if(l.captives.some(c=>!c.freed&&close(c)))return '[ E ] FREE CAPTIVE';if(l.relays.some(r=>!r.active&&close(r)))return '[ E ] BREAK CONTROL RELAY';if(distance(p,l.exit)<1.8&&(!this.verticalPreview||(p.height||0)<.65))return this.exitReady?'[ E ] EXTRACT':'PORTAL LOCKED · '+this.objective;const hit=aim?traceEnvironment(l,aim.origin,aim.direction,1.8):null,ray=aim?(hit.cell?{...hit.cell,distance:hit.distance}:{x:-1,y:-1,distance:Infinity}):castRay(l,p.x,p.y,Math.cos(p.a),Math.sin(p.a),1.8),d=l.doors[`${ray.x},${ray.y}`];if(d&&d.open<.85&&ray.distance<1.8)return d.type===6?(this.shift?'[ E ] REVEAL SECRET WALL':''):d.lockColor&&!p.keys?.[d.lockColor]?d.lockColor.toUpperCase()+' KEY REQUIRED':d.type===5&&!p.key?'GOLD KEY REQUIRED':'[ E ] OPEN DOOR';if(this.campaign==='original'&&!this.phiwadCustom&&!this.gallery&&l.props?.some(o=>o.type==='console'&&close(o)&&
+  (!aim||Math.abs(angleDiff(Math.atan2(o.y-p.y,o.x-p.x),p.a))<.8)))
+  return '[ E ] '+(l.props.some(o=>o.type==='console'&&o.terminalUsed&&close(o))?'REREAD TERMINAL':'RECOVER TERMINAL');
+ if(ray.distance<1.8&&l.signs?.some(s=>s.x===ray.x&&s.y===ray.y))return '[ E ] READ ARCHIVE NOTE';return '';}
 }

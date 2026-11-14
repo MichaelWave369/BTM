@@ -7,12 +7,18 @@ import {validSoloJetpack} from './solo-jetpack.js';
 export const SOLO_MEZZANINE=Object.freeze({
  schema:'btm.vertical-prototype/1',soloPreview:true,ceiling:STACK_CEILING,
  upper:Object.freeze({x0:14,x1:18,y0:19,y1:23,height:STACK_HEIGHT}),
- ramp:Object.freeze({x0:9,x1:14,y0:21,y1:23})
+ ramp:Object.freeze({x0:10,x1:14,y0:21,y1:23})
 });
 const cell=(x,y)=>x+','+y;
 const cells=(rect)=>{const out=[];for(let y=rect.y0;y<rect.y1;y++)
  for(let x=rect.x0;x<rect.x1;x++)out.push([x,y]);return out;};
 const open=(level,x,y)=>level.cells[y]?.[x]===0&&!level.doors[cell(x,y)];
+// The ramp is a slope, not empty floor. Reserve a full approach apron around
+// every regular, locked and secret doorway so it never blocks player use.
+export function rampDoorClearance(level,ramp){
+ const doors=Object.values(level.doors||{});
+ return cells(ramp).every(([x,y])=>doors.every(d=>Math.abs(d.x-x)>1||Math.abs(d.y-y)>1));
+}
 export function isSoloPreview(level){return !!level?.vertical?.soloPreview;}
 function traversableFromEntry(level,spawn){
  const x=Math.floor(spawn.x),y=Math.floor(spawn.y),start=cell(x,y);
@@ -29,7 +35,7 @@ function traversableFromEntry(level,spawn){
 }
 const critical=(level,spawn)=>[spawn,level.key,level.exit,...level.relays,...level.captives];
 export function chooseSoloMezzanine(level,index,spawn){
- if(index===0)return structuredClone(SOLO_MEZZANINE);
+ if(index===0){const layout=structuredClone(SOLO_MEZZANINE);if(!rampDoorClearance(level,layout.ramp))throw Error('Sector 01 ramp crowds a door');return layout;}
  const accessible=traversableFromEntry(level,spawn),must=critical(level,spawn);
  let best=null;
  // Real unobstructed room geometry, not a random platform pasted through
@@ -39,7 +45,7 @@ export function chooseSoloMezzanine(level,index,spawn){
    const upper={x0:x+length,x1:x+length+width,y0:y,y1:y+height,height:STACK_HEIGHT};
    const ramp={x0:x,x1:x+length,y0:y+height-2,y1:y+height};
    const footprint=[...cells(upper),...cells(ramp)];
-   if(!footprint.every(([cx,cy])=>open(level,cx,cy)))continue;
+   if(!footprint.every(([cx,cy])=>open(level,cx,cy))||!rampDoorClearance(level,ramp))continue;
    if(must.some(o=>cells(ramp).some(([rx,ry])=>Math.floor(o.x)===rx&&Math.floor(o.y)===ry)))continue;
    const entry=cell(ramp.x0,ramp.y0),distance=accessible.get(entry);
    if(distance===undefined)continue;
@@ -63,7 +69,7 @@ export function upperFragmentPosition(layout){return {x:layout.upper.x1-.5,y:lay
 export function enableSoloMezzanine(level,index,spawn){
  const layout=chooseSoloMezzanine(level,index,spawn);
  const footprint=[...cells(layout.upper),...cells(layout.ramp)];
- if(!footprint.every(([x,y])=>open(level,x,y)))
+ if(!footprint.every(([x,y])=>open(level,x,y))||!rampDoorClearance(level,layout.ramp))
   throw Error('Unsafe mezzanine floor in sector '+(index+1));
  level.vertical=layout;
  level.upperCover=authoredSoloUpperCover(layout);

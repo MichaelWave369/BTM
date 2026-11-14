@@ -42,7 +42,14 @@ export class WorldScene {
   for(const r of l.relays){b.billboard(r.x*s,0,r.y*s,.9,1.15,r.active?'relay:on':'relay:off',eye);this.counts.objects++;}
    if(l.upperUplink&&visible(l.upperUplink.x,l.upperUplink.y)){const u=l.upperUplink;b.billboard(u.x*s,u.floorHeight*s,u.y*s,.95,1.2,u.active?'relay:on':'relay:off',eye,u.active?WHITE:[.7,.9,1.15,1]);this.counts.objects++;}
   for(const c of l.captives)if(!c.freed){b.billboard(c.x*s,0,c.y*s,1.3,1.65,'captive',eye);this.counts.objects++;}
-  for(const prop of l.props||[])if(visible(prop.x,prop.y)){const h=prop.height*s;b.billboard(prop.x*s,0,prop.y*s,h*.8,h,'prop:'+prop.type,eye);this.counts.objects++;}
+  for(const prop of l.props||[])if(visible(prop.x,prop.y)){
+    const h=prop.height*s,console=prop.type==='console';
+    b.billboard(prop.x*s,0,prop.y*s,h*.8,h,'prop:'+prop.type,eye,
+     console?(prop.terminalUsed?[.65,.85,.94,1]:[.74,1.1,1.16,1]):WHITE);
+    if(console&&!prop.terminalUsed)
+     b.billboard(prop.x*s,.89*s,prop.y*s,.18*s,.22*s,'marker',eye,[.48,1.15,1.15,1]);
+    this.counts.objects++;
+   }
   if(!game.networkCompetitive&&!game.gallery)b.billboard(l.exit.x*s,.05,l.exit.y*s,1.55,2.15,'portal',eye,game.exitReady?WHITE:[.35,.45,.55,1]);
   // Solo preview-only Ori wayfinder. Depth-tested native stereo quads and
   // floor discs never affect combat rays, player movement or snapshots.
