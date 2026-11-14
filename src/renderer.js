@@ -14,19 +14,42 @@ import {doorKind,paintDoorSurface} from './door-visibility.js';
 // Keep alpha outside the infected sprite untouched. The original full-column
 // overlay turned every transparent sprite cell into a giant green rectangle.
 const infectedSpriteCache=new WeakMap();
-function tintedInfectedSprite(sprite){
- let tinted=infectedSpriteCache.get(sprite);
- if(tinted)return tinted;
- tinted=document.createElement('canvas');
+function tintedInfectedSprite(sprite,variant='shambler'){
+ let cache=infectedSpriteCache.get(sprite);
+ if(!cache){cache=new Map();infectedSpriteCache.set(sprite,cache);}
+ if(cache.has(variant))return cache.get(variant);
+ const tinted=document.createElement('canvas');
  tinted.width=sprite.width;tinted.height=sprite.height;
  const g=tinted.getContext('2d');
  g.imageSmoothingEnabled=false;
  g.drawImage(sprite,0,0);
+ // Tint via existing alpha, never by filling each projected sprite column.
  g.globalCompositeOperation='source-atop';
- g.fillStyle='rgba(98,255,102,.37)';
+ g.fillStyle=variant==='runner'?'rgba(255,74,122,.48)':variant==='brute'?'rgba(255,172,62,.42)':'rgba(98,255,102,.37)';
  g.fillRect(0,0,tinted.width,tinted.height);
  g.globalCompositeOperation='source-over';
- infectedSpriteCache.set(sprite,tinted);
+ // Authored 64px silhouettes: all additions are discrete limbs, eyes or
+ // armor, never a square backing tile or licensed external sprite.
+ if(variant==='runner'){
+   g.fillStyle='#3b1b30';g.fillRect(20,22,24,3);
+   g.fillStyle='#ff9bac';g.fillRect(25,11,7,3);g.fillRect(35,11,7,3);
+   g.fillStyle='#ff5b8e';g.fillRect(10,25,8,5);g.fillRect(46,24,9,5);
+   g.fillRect(18,31,5,3);g.fillRect(42,28,5,3);
+   g.fillStyle='#ffe9ba';g.fillRect(28,31,9,3);g.fillRect(24,48,5,3);g.fillRect(38,49,6,3);
+ }else if(variant==='brute'){
+   g.fillStyle='#554136';g.fillRect(10,20,14,15);g.fillRect(41,20,14,15);
+   g.fillRect(18,23,28,9);g.fillRect(13,39,9,13);g.fillRect(45,39,9,13);
+   g.fillStyle='#ffc36d';g.fillRect(11,22,11,4);g.fillRect(43,22,11,4);
+   g.fillRect(25,11,7,4);g.fillRect(35,11,7,4);
+   g.fillStyle='#fff0ba';g.fillRect(27,29,12,5);g.fillRect(15,42,5,4);g.fillRect(47,42,5,4);
+   g.fillStyle='#332e29';g.fillRect(25,38,17,4);
+ }else{
+   g.fillStyle='#b8ff69';g.fillRect(25,11,6,4);g.fillRect(35,11,6,4);
+   g.fillStyle='#344c25';g.fillRect(26,31,5,6);g.fillRect(38,37,5,5);
+   g.fillStyle='#96d45e';g.fillRect(14,42,7,11);g.fillRect(46,42,6,10);
+   g.fillStyle='#15271a';g.fillRect(29,19,10,3);
+ }
+ cache.set(variant,tinted);
  return tinted;
 }
 export class Renderer {
@@ -254,7 +277,7 @@ export class Renderer {
       return;
     }
     if(o.type==='projectile'){if(s.depth<this.depth[clamp(Math.floor(s.x),0,w-1)]){g.fillStyle=o.color;g.fillRect(s.x-width/2,horizon-height/2,width,height);g.fillStyle='#fff9d5';g.fillRect(s.x-width/6,horizon-height/6,width/3,height/3);}return;}
-    let sprite=o.e?.raidRole?finaleSprite(o.e.raidRole,o.e.exposed>0):o.remote?(o.remote.role==='beast'?(o.remote.archetype==='repeater'?repeaterBeastSprite():o.remote.archetype==='plugged'?pluggedBeastSprite():o.remote.archetype==='warden'?wardenBeastSprite():crawlerBeastSprite()):playerSprite(o.remote.team,o.remote.status==='downed')):o.e?.pitBoss?pitBossSprite(o.e.pitBoss,o.e.exposed>0):o.e?.pain>0?this.assets.pain[o.type]:this.assets.sprites[o.type];if(Array.isArray(sprite))sprite=sprite[o.frame??0];if(!sprite)return;if(o.e?.outbreak)sprite=tintedInfectedSprite(sprite);
+    let sprite=o.e?.raidRole?finaleSprite(o.e.raidRole,o.e.exposed>0):o.remote?(o.remote.role==='beast'?(o.remote.archetype==='repeater'?repeaterBeastSprite():o.remote.archetype==='plugged'?pluggedBeastSprite():o.remote.archetype==='warden'?wardenBeastSprite():crawlerBeastSprite()):playerSprite(o.remote.team,o.remote.status==='downed')):o.e?.pitBoss?pitBossSprite(o.e.pitBoss,o.e.exposed>0):o.e?.pain>0?this.assets.pain[o.type]:this.assets.sprites[o.type];if(Array.isArray(sprite))sprite=sprite[o.frame??0];if(!sprite)return;if(o.e?.outbreak)sprite=tintedInfectedSprite(sprite,o.e.outbreakVariant);
     const recoil=this.reducedMotion?0:o.e?.recoil||0,lean=recoil*height*.3,tell=!this.reducedMotion&&o.e?.tell>0?Math.sin(this.lastTime*20)*height*.015:0;
     for(let xx=Math.max(0,x);xx<Math.min(w,x+width);xx++)if(s.depth<this.depth[xx]){const tx=clamp(Math.floor((xx-x)/width*sprite.width),0,sprite.width-1);g.drawImage(sprite,tx,0,1,sprite.height,xx+tell,y+lean,1,height-lean);}
     // Telegraphs and health bars are drawn only when their world position is visible.
