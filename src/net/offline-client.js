@@ -1,13 +1,13 @@
 // NetworkView-compatible transport for the local worker. No socket or host.
-import {INPUT_RATE,PROTOCOL,neutralInput,validateMessage} from './protocol.js';
-import {validateOfflineArena} from './offline-bots.js';
+import {INPUT_RATE,TICK_RATE,PROTOCOL,neutralInput,validateMessage} from './protocol.js';
+import {validateOfflineArena,LOCAL_FRAME_PULSE_MS} from './offline-bots.js';
 export class OfflineBotClient{
- constructor({onMessage=()=>{},onStatus=()=>{}}={}){
+ constructor({onMessage=()=>{},onStatus=()=>{},inputRate=INPUT_RATE}={}){
   this.onMessage=onMessage;this.onStatus=onStatus;this.offlineBots=true;
   this.worker=null;this.timer=null;this.seq=0;this.id=null;this.code=null;
   this.token=null;this.address='local://bot-arena';this.bytesIn=0;this.bytesOut=0;
   this.lastSnapshot=0;this.intent=neutralInput();this.actions=new Set();
-  this.connected=false;this.rtt=0;
+  this.connected=false;this.rtt=0;this.inputRate=inputRate===TICK_RATE?TICK_RATE:INPUT_RATE;this.frameGuardEnabled=false;this.lastFramePulse=-Infinity;
  }
  connect(){
   this.disconnect();
@@ -27,7 +27,7 @@ export class OfflineBotClient{
       if(m.protocol!==PROTOCOL)throw Error('Local bot engine protocol mismatch');
       ready=true;clearTimeout(deadline);this.connected=true;
       this.onStatus('LOCAL ENGINE READY / NO SERVER REQUIRED');
-      this.timer=setInterval(()=>this.flush(),1000/INPUT_RATE);
+      this.timer=setInterval(()=>this.flush(),1000/this.inputRate);
       resolve();return;
      }
      if(m.type==='welcome'){
@@ -63,6 +63,21 @@ export class OfflineBotClient{
    this.bytesOut+=data.length;this.worker.postMessage(message);return true;
   }catch(error){this.onMessage({type:'error',message:error.message});return false;}
  }
+ // Optional, render-aware guard for native Quest quickplay. Desktop BBS never
+ // enables it and continues to use the standard autonomous offline worker.
+ enableFrameGuard(enabled=true){
+  if(!this.worker||!this.connected)return false;
+  this.frameGuardEnabled=!!enabled;this.lastFramePulse=-Infinity;
+  this.worker.postMessage({type:'local-frame-guard',enabled:!!enabled});
+  return true;
+ }
+ framePulse(now=performance.now()){
+  if(!this.worker||!this.connected||!this.frameGuardEnabled)return false;
+  if(now-this.lastFramePulse<LOCAL_FRAME_PULSE_MS)return false;
+  this.lastFramePulse=now;
+  this.worker.postMessage({type:'local-frame-pulse'});
+  return true;
+ }
  // Local-only simulation freeze: prevent bots attacking while the player is
  // navigating VR menus. Never sent to any network or WebSocket host.
  hold(enabled){if(!this.worker||!this.connected)return false;this.worker.postMessage({type:'local-hold',hold:!!enabled});return true;}
@@ -76,6 +91,6 @@ export class OfflineBotClient{
  disconnect(){
   clearInterval(this.timer);this.timer=null;
   this.worker?.terminate();this.worker=null;this.connected=false;this.id=null;this.code=null;
-  this.actions.clear();this.intent=neutralInput();
+  this.actions.clear();this.intent=neutralInput();this.frameGuardEnabled=false;this.lastFramePulse=-Infinity;
  }
 }

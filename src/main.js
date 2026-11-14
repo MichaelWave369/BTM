@@ -654,6 +654,9 @@ function tickQuickBots(now,pad,spatial){
  const arena=quickArena;if(!arena)return;
  const realDt=Math.max(.001,(now-lastFrame)/1000),dt=Math.min(.05,realDt);
  lastFrame=now;const bot=arena.game;
+ // One cheap pulse per ~100ms when XR is actually presenting playable
+ // frames. The offline authority stops advancing during headset stalls.
+ if(!screen&&vr.active&&arena.ready)arena.framePulse(now);
  if(screen){
   if(pad?.ready){
    if(pad.actions?.includes('pause'))resumeQuickBots();

@@ -27,4 +27,23 @@ The existing `OfflineBotClient`, `NetworkView`, fixed-step worker, collision/gam
 
 **Headset acceptance still pending:** Verify starting from BTM's main VR menu and from the wrist mid-campaign, that the 3D view never exits XR, both Touch sticks and tracked aiming respond immediately, kills/respawns and hit detection are visible, and a paused worker does not reduce health. Capture before/after player health while paused. Return to the campaign and confirm its exact sector, keys, checkpoint, music/controls and headset pose are still available. Confirm no duplicate bot worker continues running after exit. Test both Quest 3s and both seated/standing presets.
 
+## Solo Bot Arena: frame-stall fairness and performance field test
+
+Player field feedback on 2026-11-14: the two-story campaign's Quest jump/reload/controls and native in-headset solo-bot handoff work well, but Solo Bot Arena stutters and gives the aggressive bots a practical advantage. The precise bottleneck is **not yet measured** on the physical Quest.
+
+This candidate patch protects **only BTM's same-session VR QuickBotArena**: the 30 Hz local worker is opted into a throttled (~10 Hz) headset-frame heartbeat. When playable XR frames stop arriving for more than 300 ms, bot authority freezes its clock, movement, damage, respawn and scoring instead of replaying old time. On return, the worker resumes from fresh time with no accumulated catch-up ticks. Starting/pausing/rematching still uses explicit local-hold, and headset-frame signals never affect ordinary standalone BBS offline or online LAN co-op.
+
+The native quickplay input sender is paced at the **30 Hz authority rate** rather than the standard BBS transport's 20 Hz; this reduces the local command interval but does not guarantee better Quest rendering performance. WebGL's maximum texture-size capability is cached once per renderer rather than queried every stereo frame. Bot accuracy, weapon damage, movement speed, count, frag limit and aim rules are unchanged.
+
+Physical test sequence:
+- Enter native Solo Bot Arena from a previously smooth Quest two-story campaign. Confirm XR remains active with no new browser/server and track *Quest frame times or refresh rate* before/after switching, not the desktop FPS indicator.
+- Run 3 bots for at least five minutes while turning, sprinting, aiming, firing, reloading, and opening the left-wrist map; record visible stutter, weapon response, bot animation and actual headset frame time if available.
+- Compare **Balanced** and **Performance** visual quality using the same arena and bot count. If Performance is markedly smoother, prioritise scene/GPU work. If bot positions jerk but head movement stays smooth, investigate snapshot/interpolation timing.
+- During a genuine XR frame stall or headset visibility interruption, verify local AI stops advancing until rendering resumes. The pause menu must always freeze all bot health, damage and match progress.
+- Test from **VR Arcade** as well as immersive World mode: both must deliver an active-frame heartbeat; neither may freeze 300 ms after pressing ENTER.
+- Test normal standalone BBS solo bots in `bbs.html` separately: its default worker must not require headset-frame pulses. Test LAN multiplayer host timers to confirm they remain unaffected.
+- Confirm RETURN SOLO restores the same campaign checkpoint, two-story jump and reload controls, plus no stray offline worker.
+
+Software tests validate the worker freshness predicate, quickplay opt-in, pause behavior and transport rate. The actual 3D latency and frame pacing remain **unverified** until physical Quest testing.
+
 **Multiplayer is intentionally separate for now.** BBS LAN CLAN still uses its independent browser lobby and a genuine Node/WebSocket server, and may need a fresh XR permission after switching documents. That should not be represented as continuous-XR multiplayer until a host-owned integrated network-room UI and transport have passed actual headset checks.

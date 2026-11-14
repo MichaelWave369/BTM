@@ -3,6 +3,15 @@ import {Room} from './simulation.js';
 import {MODES,ARENAS,nickname} from './protocol.js';
 
 export const MAX_SOLO_PARTICIPANTS=12;
+// The hosted WebXR quick arena alone opts into this safety clock. Standalone
+// BBS offline matches keep their existing autonomous simulation behavior.
+export const LOCAL_FRAME_PULSE_MS=100;
+export const LOCAL_FRAME_STALE_MS=300;
+export function localFrameAllowed(guardEnabled,lastPulse,now){
+ if(!guardEnabled)return true;
+ return Number.isFinite(lastPulse)&&Number.isFinite(now)&&
+  now>=lastPulse&&now-lastPulse<=LOCAL_FRAME_STALE_MS;
+}
 export const OFFLINE_ARENA_MODES=Object.freeze(MODES.filter(mode=>!['coop','extraction','beast'].includes(mode)));
 
 export function validateOfflineArena(config){
