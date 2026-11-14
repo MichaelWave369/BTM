@@ -25,7 +25,7 @@ export function rampFootClearance(level,ramp){
  if(!rampDoorClearance(level,ramp))return false;
  for(let y=ramp.y0;y<ramp.y1;y++)for(let x=ramp.x0-2;x<ramp.x0;x++)
   if(!open(level,x,y))return false;
- return !level.enemies.some(e=>cells(ramp).some(([x,y])=>Math.floor(e.x)===x&&Math.floor(e.y)===y));
+ return !level.enemies.some(e=>cells(ramp).some(([x,y])=>Math.floor(e.homeX??e.x)===x&&Math.floor(e.homeY??e.y)===y));
 }
 export function isSoloPreview(level){return !!level?.vertical?.soloPreview;}
 function traversableFromEntry(level,spawn){

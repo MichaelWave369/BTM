@@ -5,7 +5,7 @@ import {createLevel,SECTORS,Game} from '../src/core.js';
 import {WALL_HEIGHT,WORLD_SCALE} from '../src/spatial.js';
 import {doorGeometry,buildLevelGeometry,materialUV,pushTiledWall} from '../src/level-geometry.js';
 import {doorSurfaceMaterial} from '../src/door-visibility.js';
-import {rampDoorClearance,rampFootClearance} from '../src/solo-vertical.js';
+import {rampDoorClearance,rampFootClearance,chooseSoloMezzanine} from '../src/solo-vertical.js';
 import {STACK_CEILING} from '../src/net/vertical-arena.js';
 
 test('original and Pit door shells keep old height; all solo two-story doors seal the full ceiling',()=>{
@@ -84,6 +84,19 @@ test('native VR door mesh and wall sealing share the same atlas and keep the sec
  assert(world.includes("bottom<.00001?doorSurfaceMaterial(d.type,game.shift):'wall'+d.type"),'door control glyph must appear only once');
  const geometry=readFileSync(new URL('../src/level-geometry.js',import.meta.url),'utf8');
  assert(geometry.includes('pushTiledWall(v,'));
+});
+
+test('ramp selection is tied to authored enemy spawn, never a live patrol position',()=>{
+ for(let index=1;index<12;index++){
+  const level=createLevel(index,'original',{verticalPreview:true}),r=level.vertical.ramp,
+   before=JSON.stringify(level.vertical);
+  const e=level.enemies.find(enemy=>!enemy.upperGuard);
+  assert(e&&Number.isFinite(e.homeX)&&Number.isFinite(e.homeY));
+  e.x=r.x0+.5;e.y=r.y0+.5;
+  const from=level.vertical.entry;
+  const candidate=chooseSoloMezzanine(level,index,from);
+  assert.equal(JSON.stringify(candidate),before,'a moving enemy must never change deterministic layout');
+ }
 });
 
 test('every compact ramp has clear front approaches and no initial enemy overlap',()=>{
