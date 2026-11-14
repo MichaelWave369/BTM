@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {Game,canOccupy,reachable} from '../src/core.js';
 import {initializeOutbreak,advanceOutbreak,beginOutbreakRound,spawnOutbreakInfected,
- outbreakAlive,outbreakRemaining,outbreakSpawnCells,outbreakRoundSize,outbreakSpawnInterval,
+ outbreakAlive,outbreakRemaining,outbreakSpawnCells,outbreakRoundSize,outbreakSpawnInterval,OUTBREAK_VARIANTS,outbreakVariantFor,
  OUTBREAK_NAME,OUTBREAK_FIRST_SECONDS,OUTBREAK_REST_SECONDS,OUTBREAK_MAX_ACTIVE,
  OUTBREAK_MAX_ROUND_ENEMIES} from '../src/outbreak.js';
 
@@ -158,7 +158,7 @@ test('VR and Classic interfaces announce Outbreak; no networking or disk persist
  assert(main.includes("if(!game.gallery&&(game.mode==='playing'||game.mode==='paused')){if(!game.outbreak)"));
  assert(main.includes("game.outbreak?'ANTIΦ-ATOGEN / ROUND"));
  assert(wrist.includes("game.outbreak.phase==='rest'?'NEXT ROUND '"));
- assert(world.includes("e.outbreak?[.52,1.27,.48,1]"));
+ assert(world.includes("OUTBREAK_TINT[e.outbreakVariant]"));
  assert(classic.includes("if(o.e?.outbreak)"));
  for(const p of ['scripts/build.mjs','scripts/verify-offline.mjs'])assert(source(p).includes("'./src/outbreak.js'"));
  const module=source('src/outbreak.js');
@@ -176,10 +176,59 @@ test('Outbreak presentation hides campaign UI and preserves transparent sprite p
  assert(html.includes('id="radar-legend-objective"')&&html.includes('id="radar-legend-key"'));
  assert(classic.includes("const infectedSpriteCache=new WeakMap()"),'cache alpha-correct sprites once');
  assert(classic.includes("g.globalCompositeOperation='source-atop'"),'tint opaque pixels only');
- assert(classic.includes('if(o.e?.outbreak)sprite=tintedInfectedSprite(sprite)'));
+ assert(classic.includes('if(o.e?.outbreak)sprite=tintedInfectedSprite(sprite,o.e.outbreakVariant)'));
  assert(!classic.includes("g.fillRect(xx+tell,y+lean,1,height-lean)"),'no full-height green rectangles around zombies');
  assert(classic.includes("if(game.outbreak){"),'radar has outbreak-specific markers');
  assert(wrist.includes("for(const mark of (game.outbreak?[]:soloWayfinder(game)))"),'do not show campaign routes on wrist');
  assert(wrist.includes("if(game.outbreak)for(const e of l.enemies.filter"),'show discovered infected on wrist map');
  assert(core.includes("if(!this.outbreak&&distance(p,l.exit)<1.8"),'no extraction interaction or hint in endless mode');
+});
+
+test('mutations unlock predictably in later rounds without altering first-round enemies',()=>{
+ for(let i=0;i<54;i++)assert.equal(outbreakVariantFor(1,i),'shambler');
+ for(let i=0;i<54;i++)assert.equal(outbreakVariantFor(2,i),'shambler');
+ assert.equal(outbreakVariantFor(3,0),'shambler');
+ assert.equal(outbreakVariantFor(3,3),'runner');
+ assert.equal(outbreakVariantFor(4,6),'shambler');
+ assert.equal(outbreakVariantFor(5,3),'runner');
+ assert.equal(outbreakVariantFor(5,6),'brute');
+ assert.deepEqual(Object.keys(OUTBREAK_VARIANTS),['shambler','runner','brute']);
+ for(let round=1;round<=100;round++){
+  const available=new Set(Array.from({length:outbreakRoundSize(round)},(_,i)=>outbreakVariantFor(round,i)));
+  assert(available.has('shambler'));
+  assert.equal(available.has('runner'),round>=3);
+  assert.equal(available.has('brute'),round>=5);
+ }
+});
+
+test('runner trades armor for speed; brute trades speed for health and damage',()=>{
+ const game=outbreak(),state=game.outbreak;
+ state.round=5;state.phase='active';state.remaining=outbreakRoundSize(5);
+ const wave=Array.from({length:7},()=>spawnOutbreakInfected(game));
+ assert(wave.every(Boolean),'seven real reachable spawn cells exist');
+ const shambler=wave[0],runner=wave[3],brute=wave[6];
+ assert.equal(shambler.outbreakVariant,'shambler');
+ assert.equal(runner.outbreakVariant,'runner');
+ assert.equal(brute.outbreakVariant,'brute');
+ assert(shambler.speed<runner.speed&&brute.speed<shambler.speed);
+ assert(runner.hp<shambler.hp&&brute.hp>shambler.hp);
+ assert(runner.damage<shambler.damage&&brute.damage>shambler.damage);
+ assert(brute.delay>shambler.delay,'brute still telegraphs rather than instantly hitting');
+ assert(wave.every(e=>e.type==='plugged'&&e.range===1.05&&!e.human));
+ assert.equal(state.remaining,outbreakRoundSize(5)-7);
+ assert(outbreakAlive(game)<=OUTBREAK_MAX_ACTIVE);
+ for(const e of wave)game.damageEnemy(e,e.maxHp+10,0,'weapon');
+ assert.equal(state.totalKills,7,'mutations count as ordinary outbreak kills');
+});
+
+test('all three infected visual classes remain offline-only and distinct across Classic and Quest',()=>{
+ const classic=source('src/renderer.js'),immersive=source('src/world-scene.js'),outbreak=source('src/outbreak.js');
+ assert(classic.includes("variant==='runner'")&&classic.includes("variant==='brute'"));
+ assert(classic.includes("g.globalCompositeOperation='source-atop'"));
+ assert(classic.includes('cache.set(variant,tinted)'));
+ assert(immersive.includes('shambler:[.52,1.27,.48,1]'));
+ assert(immersive.includes('runner:[1.45,.52,.69,1]'));
+ assert(immersive.includes('brute:[1.48,1.03,.48,1]'));
+ assert(immersive.includes("e.outbreakVariant!=='shambler'"));
+ assert(!/WebSocket|fetch\(|XMLHttpRequest|localStorage|sessionStorage/.test(outbreak));
 });
