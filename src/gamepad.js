@@ -55,6 +55,7 @@ export function gameplayInput(keys,pad=idle(),fire=false,sensitivity=1){return {
   moveStrafe:clamp((keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0)+pad.moveStrafe,-1,1),
   turn:(keys.has('ArrowRight')?1:0)-(keys.has('ArrowLeft')?1:0)+pad.turn*controllerSettings({controllerSensitivity:sensitivity}).controllerSensitivity,
   sprint:keys.has('ShiftLeft')||keys.has('ShiftRight')||pad.sprint,
+  jetpack:keys.has('ShiftLeft')||keys.has('ShiftRight')||pad.sprint,
   fire:fire||keys.has('KeyZ')||keys.has('ControlLeft')||pad.fire
 };}
 export function controllerActions(game,pad,{map=()=>{},help=()=>{},fire=true,dodgeAngle}={}){

@@ -36,10 +36,10 @@ export class ImmersiveRig {
   if(playing&&settings.vrTurnMode==='snap'&&Math.abs(turn)>.65&&this.snapReady){const delta=Math.sign(turn)*settings.vrSnapAngle*Math.PI/180;game.player.a+=delta;this.yaw-=delta;this.snapReady=false;this.fade=.045;}
   if(playing&&settings.vrTurnMode==='smooth'){const delta=turn*dt*1.9*settings.vrTurnSpeed;game.player.a+=delta;this.yaw-=delta;}
   const reference=settings.vrMoveReference==='controller'&&pose.leftRay?pose.leftRay:pose.head,a=directionAngle(reference,this.yaw)-game.player.a,f=playing&&pad?.ready?pad.moveForward||0:0,r=playing&&pad?.ready?pad.moveStrafe||0:0;
-  this.moveAngle=game.player.a+a;this.input.moveForward=(Math.cos(a)*f-Math.sin(a)*r)*settings.vrMoveSpeed;this.input.moveStrafe=(Math.sin(a)*f+Math.cos(a)*r)*settings.vrMoveSpeed;this.input.sprint=playing&&!!pad?.sprint;this.input.fire=false;this.input.deferFire=true;
+  this.moveAngle=game.player.a+a;this.input.moveForward=(Math.cos(a)*f-Math.sin(a)*r)*settings.vrMoveSpeed;this.input.moveStrafe=(Math.sin(a)*f+Math.cos(a)*r)*settings.vrMoveSpeed;this.input.sprint=playing&&!!pad?.sprint;this.input.jetpack=playing&&!captured&&!!pad?.sprint;this.input.fire=false;this.input.deferFire=true;
   this.finish(game,pose,playing);return this.input;
  }
- zeroInput(){this.input.moveForward=this.input.moveStrafe=0;this.input.sprint=this.input.fire=false;return this.input;}
+ zeroInput(){this.input.moveForward=this.input.moveStrafe=0;this.input.sprint=this.input.jetpack=this.input.fire=false;return this.input;}
  clipGrip(game,m){
   const safe=safeTrackedAim(game.level,this.head,{origin:{x:m[12]/WORLD_SCALE,y:m[14]/WORLD_SCALE,height:m[13]/WORLD_SCALE},direction:{x:0,y:1,z:0}});
   if(safe){m[12]=safe.origin.x*WORLD_SCALE;m[13]=safe.origin.height*WORLD_SCALE;m[14]=safe.origin.y*WORLD_SCALE;}
