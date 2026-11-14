@@ -109,7 +109,7 @@ export class WorldScene {
     b.billboard((field.x+Math.cos(a)*field.radius)*s,.035,(field.y+Math.sin(a)*field.radius)*s,.12,.12,'marker',eye,color);}
   }
   for(const a of game.remotePlayers||[]){
-   const x=a.renderX??a.x,y=a.renderY??a.y;if(!['alive','downed'].includes(a.status)||!visible(x,y))continue;
+   const x=a.renderX??a.x,y=a.renderY??a.y,heading=a.renderA??a.a;if(!['alive','downed'].includes(a.status)||!visible(x,y))continue;
    if(a.status==='downed'){b.billboard(x*s,0,y*s,.85*s,.4*s,'net:downed',eye);continue;}
    if(a.role==='beast'&&a.archetype==='warden'){
     const iron=[.16,.2,.27,1],plate=[.39,.43,.53,1],furnace=[1,.42,.28,1];
@@ -118,7 +118,7 @@ export class WorldScene {
     b.box([x*s,1.03*s,y*s],[.71*s,.72*s,.66*s],'white',plate);
     b.box([x*s,1.09*s,y*s],[.37*s,.3*s,.7*s],'white',furnace);
     b.box([x*s,1.58*s,y*s],[.46*s,.35*s,.45*s],'white',iron);
-    const c=Math.cos(a.a),sn=Math.sin(a.a);
+    const c=Math.cos(heading),sn=Math.sin(heading);
     b.box([(x+c*.25)*s,1.61*s,(y+sn*.25)*s],[.36*s,.12*s,.11*s],'white',furnace);
     for(const side of [-1,1]){
      const ax=(x+side*(-sn*.63))*s,az=(y+side*c*.63)*s;
@@ -136,7 +136,7 @@ export class WorldScene {
     b.box([x*s,.74*s,y*s],[.48*s,.43*s,.49*s],'white',copper);
     b.box([x*s,.77*s,y*s],[.28*s,.28*s,.51*s],'white',grounded?[1,1,.68,1]:arc);
     b.box([x*s,1.23*s,y*s],[.31*s,.31*s,.32*s],'white',shell);
-    const c=Math.cos(a.a),sn=Math.sin(a.a);
+    const c=Math.cos(heading),sn=Math.sin(heading);
     for(const side of [-1,1]){
      const arm=[(x+side*(-sn*.52))*s,.75*s,(y+side*c*.52)*s];
      b.line([x*s,.9*s,y*s],arm,.19*s,eye,copper);
@@ -152,7 +152,7 @@ export class WorldScene {
     b.box([x*s,.6*s,y*s],[.39*s,.91*s,.28*s],'white',frame);
     b.box([x*s,1.12*s,y*s],[.31*s,.25*s,.27*s],'white',frame);
     b.box([x*s,1.15*s,y*s],[.26*s,.08*s,.29*s],'white',bright);
-    const c=Math.cos(a.a),sn=Math.sin(a.a);
+    const c=Math.cos(heading),sn=Math.sin(heading);
     for(const side of [-1,1]){
      const sx=side*(-sn*.25),sy=side*(c*.25);
      const shoulder=[(x+sx)*s,.88*s,(y+sy)*s],emitter=[(x+c*.28+sx)*s,.63*s,(y+sn*.28+sy)*s];
@@ -169,7 +169,7 @@ export class WorldScene {
     b.box([x*s,.42*s,y*s],[.72*s,.36*s,.54*s],'white',shell);
     b.box([x*s,.58*s,y*s],[.45*s,.31*s,.39*s],'white',lit);
     b.box([x*s,.69*s,y*s],[.36*s,.21*s,.37*s],'white',shell);
-    const c=Math.cos(a.a),sn=Math.sin(a.a);
+    const c=Math.cos(heading),sn=Math.sin(heading);
     b.box([(x+c*.24-sn*.13)*s,.72*s,(y+sn*.24+c*.13)*s],[.075*s,.07*s,.07*s],'white',eyeGlow);
     b.box([(x+c*.24+sn*.13)*s,.72*s,(y+sn*.24-c*.13)*s],[.075*s,.07*s,.07*s],'white',eyeGlow);
     for(const side of [-1,1]){
@@ -181,7 +181,7 @@ export class WorldScene {
    }
    const color=a.team==='pink'?[1,.44,.56,1]:[.5,.91,.83,1],base=(a.height||0)*s,
     eyeHeight=a.pose?.eye?(a.pose.eye-(a.height||0)):1.03,
-    c=Math.cos(a.a),sn=Math.sin(a.a),right=a.pose?.right;
+    c=Math.cos(heading),sn=Math.sin(heading),right=a.pose?.right;
    const hand=right?[(x+right.x)*s,right.height*s,(y+right.y)*s]:[(x+c*.28-sn*.2)*s,base+eyeHeight*.65*s,(y+sn*.28+c*.2)*s];
    const left=[(x+c*.15+sn*.2)*s,base+eyeHeight*.6*s,(y+sn*.15-c*.2)*s],shoulder=[x*s,base+eyeHeight*.65*s,y*s];
    b.box([x*s,base+eyeHeight*.5*s,y*s],[.35*s,eyeHeight*.52*s,.25*s],'white',[.16,.24,.33,1]);
