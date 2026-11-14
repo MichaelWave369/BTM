@@ -116,6 +116,11 @@ test('source wiring keeps the standard Xbox controller, UI pointer and offline s
  const controls=read('tests/controller-checks.js');
  assert(controls.includes("[2,'reload']")&&controls.includes("[3,'ori']"),'Xbox X reload and Y Ori stay unchanged');
  assert(read('scripts/build.mjs').includes("'./src/solo-jetpack.js'"));
+ const manual=read('index.html');
+ assert(manual.includes('R3 TAP')&&manual.includes('R3 HOLD'));
+ assert(manual.includes('Right grip uses nearby targets')&&manual.includes('left Y reloads'));
+ assert(!manual.includes('B dashes/bashes, X reloads, Y reveals secrets'));
+
 });
 
 test('Quest R3 quick tap cycles weapons exactly once; long hold pauses without cycling',()=>{
