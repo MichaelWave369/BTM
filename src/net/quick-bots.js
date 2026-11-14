@@ -16,6 +16,7 @@ export class QuickBotArena {
   this.net=makeClient({onMessage:m=>this.receive(m),onStatus,inputRate:TICK_RATE});
   this.game=new NetworkView(this.net);
   this.config=null;this.ready=false;this.closed=false;this.matchEnded=false;
+  this.snapshotLast=null;this.snapshotGapMs=0;this.snapshotPeakMs=0;
  }
  async start(config=DEFAULT_QUICK_BOTS){
   if(this.closed)throw Error('Arena is closed');
@@ -37,6 +38,7 @@ export class QuickBotArena {
   }
   if(message.type==='left'){this.game.suspend();this.ready=false;return;}
   if(message.type==='world'||message.type==='snapshot'){
+   if(message.type==='snapshot')this.recordSnapshot(performance.now());
    this.game.accept(message);
    if(message.type!=='snapshot')return;
    if(message.state==='playing'&&!this.ready){
@@ -46,6 +48,25 @@ export class QuickBotArena {
     this.matchEnded=true;this.pause();this.onFinished(this);
    }
   }
+ }
+ // These are delivery intervals, not server ping or Quest GPU frame times.
+ recordSnapshot(at){
+  if(!Number.isFinite(at))return;
+  if(this.snapshotLast!==null){
+   const gap=at-this.snapshotLast;
+   if(gap>0&&gap<3000){
+    this.snapshotGapMs=this.snapshotGapMs?this.snapshotGapMs*.8+gap*.2:gap;
+    this.snapshotPeakMs=Math.max(gap,this.snapshotPeakMs*.97);
+   }
+  }
+  this.snapshotLast=at;
+ }
+ telemetry(at=performance.now()){
+  return {
+   gapMs:Math.round(this.snapshotGapMs),
+   peakMs:Math.round(this.snapshotPeakMs),
+   ageMs:this.snapshotLast===null?0:Math.round(Math.max(0,at-this.snapshotLast))
+  };
  }
  pause(){
   this.net.hold(true);this.game.suspend();
@@ -62,6 +83,7 @@ export class QuickBotArena {
  replay(){
   if(this.closed||!this.ready||!this.config)return false;
   this.pause();this.ready=false;this.matchEnded=false;
+  this.snapshotLast=null;this.snapshotGapMs=this.snapshotPeakMs=0;
   this.net.send({type:'leave'});
   this.net.hold(true);
   return this.net.send({type:'create',...this.config});
