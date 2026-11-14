@@ -21,7 +21,7 @@ test('all 12 opt-in two-story sectors get fuel without affecting original worlds
   assert.equal(createLevel(i).vertical,undefined);
   assert.equal(createLevel(i,'pit',{verticalPreview:true}).vertical,undefined);
  }
- const original=new Game();original.start(),pit=new Game();pit.startPit();
+ const original=new Game();original.start();const pit=new Game();pit.startPit();
  assert.equal('jetFuel' in original.player,false);
  assert.equal('jetFuel' in pit.player,false);
  assert.equal('jetActive' in original.player,false);
