@@ -22,7 +22,7 @@ test('all 12 standard stages have a real optional two-story layout with ground m
   const {upper,ramp}=l.vertical;
   assert((upper.x1-upper.x0)*(upper.y1-upper.y0)>=9);
   assert(ramp.x1===upper.x0&&ramp.y0>=upper.y0&&ramp.y1<=upper.y1);
-  assert((ramp.x1-ramp.x0)>=3&&ramp.y1-ramp.y0===2);
+  assert((ramp.x1-ramp.x0)===3&&ramp.y1-ramp.y0===1,'compact single-lane three-tile ramp');
   for(const area of [upper,ramp])for(let y=area.y0;y<area.y1;y++)
    for(let x=area.x0;x<area.x1;x++)assert.equal(l.cells[y][x],0,SECTORS[index].name+' blocked at '+x+','+y);
   assert(l.items.some(i=>i.bonusUpper&&i.floorHeight===STACK_HEIGHT));

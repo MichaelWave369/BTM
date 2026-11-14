@@ -8,8 +8,9 @@ import {wristPose} from './equipment-checks.js';
 import {fixture} from './immersive-checks.js';
 import {stepImmersive} from '../src/immersive-play.js';
 import {controllerActions} from '../src/gamepad.js';
+import {Game} from '../src/core.js';
 
-test('Quest X/Y/B/A produce unique map/jump/dash/use edges and preserve grips/triggers',()=>{
+test('Quest X/Y/B/A map/reload/jump/dash preserve grip interaction, fire and airborne sprint',()=>{
  const input=new TouchInput(),l=xrSource('left'),r=xrSource('right'),sources=[l,r];
  input.poll(sources,.025);
  const tap=(hand,index,action)=>{
@@ -23,10 +24,12 @@ test('Quest X/Y/B/A produce unique map/jump/dash/use edges and preserve grips/tr
  };
  const x=tap('left',4,'map');
  assert(!x.actions.includes('reload')&&!x.actions.includes('vision'));
- const y=tap('left',5,'jump');
- assert(!y.actions.includes('vision')&&!y.actions.includes('help'));
- tap('right',5,'dodge');
- tap('right',4,'interact');
+ const y=tap('left',5,'reload');
+ assert(!y.actions.includes('jump')&&!y.actions.includes('vision'));
+ const b=tap('right',5,'jump');
+ assert(!b.actions.includes('dodge')&&!b.actions.includes('help'));
+ const a=tap('right',4,'dodge');
+ assert(!a.actions.includes('interact'));
  tap('right',1,'interact');
  tap('left',1,'ori');
  r.gamepad.buttons[0].pressed=true;
@@ -34,7 +37,8 @@ test('Quest X/Y/B/A produce unique map/jump/dash/use edges and preserve grips/tr
  r.gamepad.buttons[0].pressed=false;input.poll(sources,.025);
  l.gamepad.buttons[3].pressed=true;
  assert.equal(input.poll(sources,.025).sprint,true,'L3 held sprint / aerial thrust');
- assert(VR_CONTROLS.some(([input,action])=>input==='A / B / X / Y'&&action.includes('WRIST MAP / JUMP')));
+ assert(VR_CONTROLS.some(([input,action])=>input==='A / B / X / Y'&&action==='DASH / JUMP / WRIST MAP / RELOAD'));
+ assert(VR_CONTROLS.some(([input,action])=>input==='RIGHT STICK CLICK'&&action.includes('NEXT WEAPON')));
 });
 
 test('X opens a tracked left wrist map without a watch-gaze click and closes on second press',()=>{
@@ -82,12 +86,12 @@ test('map X toggles even under wrist capture, consumes simultaneous fire and doe
  assert.equal(toggles,2,'no repeat when X is released');
 });
 
-test('Quest Y calls existing one-shot jump and B calls directional dash during gameplay',()=>{
+test('Quest B calls one-shot jump and A calls directional dash during gameplay',()=>{
  const f=fixture();f.g.start({verticalPreview:true});
  const s={rig:f.rig,pose:f.pose,pointerTarget:()=>null};
  f.pad.actions=['jump'];f.pad.fire=false;
  stepImmersive(f.g,s,f.pad,{},.025);
- assert(f.g.player.jumpBuffer>0,'Y produces an actual jump request');
+ assert(f.g.player.jumpBuffer>0,'right B produces an actual jump request');
  const originalFuel=f.g.player.jetFuel;
  f.pad.actions=[];f.pad.sprint=true;
  stepImmersive(f.g,s,f.pad,{},.025);
@@ -95,13 +99,15 @@ test('Quest Y calls existing one-shot jump and B calls directional dash during g
  f.pad.actions=['dodge'];f.pad.sprint=false;f.pad.moveStrafe=1;
  const oldCooldown=f.g.dodgeCooldown;
  stepImmersive(f.g,s,f.pad,{},.025);
- assert(f.g.dodgeCooldown>oldCooldown,'right B activates the existing dash');
+ assert(f.g.dodgeCooldown>oldCooldown,'right A activates the existing dash');
 });
 
 test('source wiring keeps the standard Xbox controller, UI pointer and offline shell intact',()=>{
  const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
  assert(read('src/vr-input.js').includes('buttons[8]=face(left,4)'));
- assert(read('src/vr-input.js').includes('buttons[11]=face(left,5)'));
+ assert(read('src/vr-input.js').includes('buttons[11]=face(right,5)'));
+ assert(read('src/vr-input.js').includes('buttons[2]=face(left,5)'));
+ assert(read('src/vr-input.js').includes('buttons[1]=face(right,4)'));
  assert(read('src/vr-world-renderer.js').includes('toggleWristMap(rig)'));
  assert(read('src/vr.js').includes('toggleWristMap:()=>this.presenter.toggleWristMap'));
  assert(read('src/world-ui.js').includes('data.map||this.wrist.mapRequested'));
@@ -110,4 +116,48 @@ test('source wiring keeps the standard Xbox controller, UI pointer and offline s
  const controls=read('tests/controller-checks.js');
  assert(controls.includes("[2,'reload']")&&controls.includes("[3,'ori']"),'Xbox X reload and Y Ori stay unchanged');
  assert(read('scripts/build.mjs').includes("'./src/solo-jetpack.js'"));
+});
+
+test('Quest R3 quick tap cycles weapons exactly once; long hold pauses without cycling',()=>{
+ const input=new TouchInput(),l=xrSource('left'),r=xrSource('right'),sources=[l,r];
+ input.poll(sources,.025);const stick=r.gamepad.buttons[3];
+ // No weapon cycling from a stick turn or diagonal aim.
+ r.gamepad.axes[2]=1;r.gamepad.axes[3]=-1;
+ for(let i=0;i<8;i++)assert(!input.poll(sources,.025).actions.includes('next'));
+ r.gamepad.axes[2]=r.gamepad.axes[3]=0;
+ stick.pressed=true;
+ for(let i=0;i<5;i++)assert(!input.poll(sources,.025).actions.includes('next'));
+ stick.pressed=false;
+ const next=input.poll(sources,.025);
+ assert(next.actions.includes('next')&&!next.actions.includes('pause'));
+ assert(!input.poll(sources,.025).actions.includes('next'),'release cannot repeat');
+ stick.pressed=true;let pauses=0,cycles=0;
+ for(let i=0;i<30;i++){
+  const pad=input.poll(sources,.025);
+  pauses+=pad.actions.includes('pause')?1:0;cycles+=pad.actions.includes('next')?1:0;
+ }
+ assert.equal(pauses,1,'long hold causes one pause edge');
+ assert.equal(cycles,0);
+ stick.pressed=false;
+ const after=input.poll(sources,.025);
+ assert(!after.actions.includes('next'),'releasing long hold cannot change weapons');
+ input.reset();
+ const fresh=input.poll(sources,.025);
+ assert(!fresh.actions.includes('pause')&&!fresh.actions.includes('next'),'reset discards pending tap');
+});
+
+test('Quest button map triggers real reload and weapon cycling without affecting Xbox',()=>{
+ const game=new Game();game.start({verticalPreview:true});
+ const g=game;
+ g.selectWeapon(1);
+ g.player.energy=100;g.player.reserve=100;
+ g.player.energy=30;
+ controllerActions(g,{actions:['reload']},{fire:false});
+ assert(g.recharge>0||g.player.energy>30,'Y reload uses the original game recharge path');
+ const before=g.weapon;
+ controllerActions(g,{actions:['next']},{fire:false});
+ assert.equal(g.weapon,(before+1)%g.unlocked);
+ const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+ assert(read('src/gamepad.js').includes("reload:[2]"));
+ assert(read('src/gamepad.js').includes("next:[5,15]"));
 });
