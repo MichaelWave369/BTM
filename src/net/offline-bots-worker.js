@@ -1,8 +1,8 @@
 // Deterministic fixed-step arena authority inside a dedicated local Web Worker.
 // Never creates WebSockets, user accounts, localStorage saves or competitive receipts.
-import {createOfflineArena} from './offline-bots.js';
+import {createOfflineArena,localFrameAllowed} from './offline-bots.js';
 import {PROTOCOL,TICK_RATE,SNAPSHOT_RATE,validateMessage} from './protocol.js';
-let room=null,player=null,revision=-1,acc=0,last=performance.now(),snapshotTicks=0,held=false;
+let room=null,player=null,revision=-1,acc=0,last=performance.now(),snapshotTicks=0,held=false,frameGuard=false,lastFramePulse=-Infinity;
 const post=message=>self.postMessage(message);
 function publish(){
  if(!room||!player)return;
@@ -11,15 +11,24 @@ function publish(){
 }
 function command(message){
  if(!message||typeof message!=='object')throw Error('Invalid local command');
+ if(message.type==='local-frame-guard'){
+  if(typeof message.enabled!=='boolean')throw Error('Invalid local frame guard');
+  frameGuard=message.enabled;lastFramePulse=performance.now();
+  acc=0;last=performance.now();return;
+ }
+ if(message.type==='local-frame-pulse'){
+  if(frameGuard)lastFramePulse=performance.now();
+  return;
+ }
  if(message.type==='local-hold'){
   if(typeof message.hold!=='boolean')throw Error('Invalid local hold state');
-  held=message.hold;acc=0;last=performance.now();
+  held=message.hold;acc=0;last=performance.now();if(!held)lastFramePulse=last;
   return;
  }
  if(message.type==='create'){
   if(room)throw Error('Return to setup before starting another match');
   const started=createOfflineArena(message);
-  room=started.room;player=started.player;revision=-1;acc=0;
+  room=started.room;player=started.player;revision=-1;acc=0;lastFramePulse=performance.now();
   post({type:'welcome',protocol:PROTOCOL,id:player.id,code:room.code,token:null,seq:0});
   publish();return;
  }
@@ -41,7 +50,11 @@ function command(message){
 self.onmessage=event=>{try{command(event.data);}catch(error){post({type:'error',message:String(error.message).slice(0,160)});}};
 setInterval(()=>{
  const now=performance.now();acc+=Math.min(.25,Math.max(0,(now-last)/1000));last=now;
- if(!room||held){acc=0;return;}
+ if(!room||held||!localFrameAllowed(frameGuard,lastFramePulse,now)){
+  // Never run catch-up attacks while the XR player has no rendered frames.
+  // Reset accumulated time rather than replaying it when the headset wakes.
+  acc=0;return;
+ }
  try{
   let steps=0;
   while(acc>=1/TICK_RATE&&steps++<6){
