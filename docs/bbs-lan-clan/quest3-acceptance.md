@@ -52,4 +52,19 @@ After frame-stall fairness was merged in PR #96, the next presentation fix prese
 
 **Acceptance:** In the same Solo Bot Arena, strafe around three bots and compare their onscreen movement under Balanced/Performance VR quality. Look specifically for abrupt sideways or backward jumps, spinning the long way across a 180° heading, and the correctness of immediate death/respawn. Repeat after opening/closing the wrist, switching back to the two-story campaign, and re-entering the arena. Confirm health, ammunition, head movement and hit confirmation remain responsive. Because this smoothing is renderer-only, measure physical headset frame times separately; perceptual smoothness is not proof of GPU FPS gains.
 
+## Quest native Solo Bot Arena telemetry: diagnostic rung
+
+The merged snapshot-continuity and stall-fairness fixes improve presentation and guard against catch-up damage, but **do not prove the source of actual Quest headset lag**. This diagnostic-only rung uses the existing Settings → **VR Diagnostics** switch and adds a short line on the **open Gen.E.Wrist panel** during the native Solo Bot Arena:
+
+`XR CALLBACK 72Hz / 13.9ms / PEAK 24.0ms | CPU 7.0ms | BOT GAP 100ms / AGE 25ms`
+
+These are illustrative labels, **not observed measurements**. The on-device values mean:
+- **XR callback Hz / average / peak**: observed `XRSession.requestAnimationFrame` intervals across a capped rolling window, not GPU execution time or an authoritative display refresh-rate measurement. Large peaks indicate interrupted application callbacks.
+- **CPU milliseconds**: the existing synchronous world-renderer call duration. It excludes hidden GPU scheduling and completion time, so a low number does **not** rule out GPU bottlenecks.
+- **BOT GAP**: smoothed time between delivered local worker snapshots (10 Hz is nominal, roughly 100 ms); **AGE**: time since the last delivered snapshot. Larger gaps/ages alongside smooth XR callbacks point toward worker scheduling or delivery latency.
+
+**How to test**: In BTM Settings enable VR Diagnostics, enter **IMMERSIVE VR**, launch **SOLO BOTS**, then raise/open Gen.E.Wrist and note the numbers. Play about two minutes in Balanced quality and repeat in Performance quality. Compare while idle, turning, shooting, and standing near all three bots. Also try VR Arcade to check whether stereo world geometry is a contributor. Note if head tracking itself stutters or only the bots move unevenly. The diagnostics are local and ephemeral, make no storage/network requests, add no GPU readback and never adjust combat or frame timing.
+
+No physical Quest frame measurements are claimed here until this feature is merged and actually tested on the headset.
+
 **Multiplayer is intentionally separate for now.** BBS LAN CLAN still uses its independent browser lobby and a genuine Node/WebSocket server, and may need a fresh XR permission after switching documents. That should not be represented as continuous-XR multiplayer until a host-owned integrated network-room UI and transport have passed actual headset checks.
