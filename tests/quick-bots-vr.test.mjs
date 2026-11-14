@@ -80,6 +80,10 @@ test('active Quest bot quickplay reuses the original XR renderer instead of moun
  assert(app.includes('game:quickArena?.game||game'),'XR data must render arena or solo through same renderer');
  assert(app.includes('if(quickArena){tickQuickBots(now,externalPad,spatial);return;}'));
  assert(app.includes('stepImmersive(bot,spatial,pad,settings,dt'));
+ assert(app.includes('function clearQuickWrist()'),'handoff clears wrist UI capture');
+ assert(app.includes('ui.wrist.reset();ui.field.close()'));
+ assert(app.includes('arena.close();mapOpen=false;clearQuickWrist();'));
+
  assert(app.includes('onEnd:()=>{if(quickArena){quickArena.close()'));
  const start=app.slice(app.indexOf('async function startQuickBots()'),app.indexOf('function tickQuickBots('));
  assert(start.includes('new QuickBotArena('));

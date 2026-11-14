@@ -546,6 +546,13 @@ mountSoundtrackControls({audio,settings,apply:applySettings,save:storeSettings})
 applySettings();showScreen('title-screen');if(location.hash==='#trophy-room'){openTrophyRoom();history.replaceState(null,'',location.pathname+location.search);}updateHUD();desktopFrame=requestAnimationFrame(frame);
 if('serviceWorker'in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js').then(()=>navigator.serviceWorker.ready).then(()=>{$('offline-status').textContent='OFFLINE READY';}).catch(()=>{$('offline-status').textContent='ONLINE';$('offline-status').title='Offline caching unavailable here. Keep the source download for local play.';});else $('offline-status').textContent='LOCAL BUILD';
 
+// Release only the UI capture state on a world handoff, never the real XR
+// session. Otherwise a wrist opened in the campaign can block arena controls.
+function clearQuickWrist(){
+ const ui=vr.presenter?.ui;
+ if(ui){ui.wrist.reset();ui.field.close();ui.logOpen=false;ui.archiveOpen=false;ui.lastPaint=-Infinity;}
+ if(vr.rig){vr.rig.uiWristOpen=false;vr.rig.uiCaptured=false;}
+}
 // Direct, uninterrupted Quest/Arcade VR bot arena. The same worker and
 // NetworkView from BBS are driven by the existing XR session and renderer.
 // This is intentionally only offline quickplay; real online rooms still need
@@ -567,12 +574,12 @@ function resumeQuickBots(){
   if(!quickArena.replay()){quickLoading=false;showToast('BOT RESTART FAILED');}
   return;
  }
- if(quickArena.resume()){showScreen('');audio.start();audio.pause(false);vr.recenter();}
+ if(quickArena.resume()){clearQuickWrist();showScreen('');audio.start();audio.pause(false);vr.recenter();}
 }
 function closeQuickBots(){
  if(!quickArena)return;
  const arena=quickArena;quickArena=null;quickLoading=false;
- arena.close();mapOpen=false;
+ arena.close();mapOpen=false;clearQuickWrist();
  showScreen(quickReturnScreen);
  if(vr.active)vr.recenter();
  audio.pause(game.mode!=='playing');
@@ -603,7 +610,7 @@ async function startQuickBots(){
    closeQuickBots();showToast('BOT ENGINE / '+error.message);
   }
  });
- quickArena=arena;
+ quickArena=arena;clearQuickWrist();
  $('bot-status').textContent='BOOTING LOCAL BOT PILOTS / NO SERVER REQUIRED';
  $('bot-resume-btn').textContent='RESUME BOT ARENA';
  $('bot-resume-btn').disabled=true;
