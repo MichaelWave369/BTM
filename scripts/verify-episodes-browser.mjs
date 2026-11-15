@@ -5,15 +5,18 @@ import {mkdir, writeFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import {ORIGINAL_SAVE_KEY, PIT_SAVE_KEY} from '../src/campaign-storage.js';
 import {episodeSaveKey} from '../src/episodes/registry.js';
+import {EPISODES} from '../src/episodes/index.js';
 
 const require = createRequire(import.meta.url);
 const {chromium} = require(process.env.BTM_PLAYWRIGHT_MODULE || 'playwright');
 const output = process.env.BTM_EPISODE_OUTPUT || 'docs/equipment/ci/episodes';
 const port = '5196', base = 'http://127.0.0.1:' + port + '/';
-const episodeId = process.env.BTM_EPISODE_ID === 'synthetic-city' ? 'synthetic-city' : 'buried-network';
-const episodeTitle = episodeId === 'synthetic-city' ? 'Synthetic City' : 'The Buried Network';
-const firstStage = episodeId === 'synthetic-city' ? 'arrival-curfew' : 'cable-mouth';
-const lastStage = episodeId === 'synthetic-city' ? 'crown-broadcast' : 'last-carrier';
+const episodeId = process.env.BTM_EPISODE_ID || 'buried-network';
+const episode = EPISODES.get(episodeId);
+assert(episode, 'Unknown installed episode for browser test: ' + episodeId);
+const episodeTitle = episode.title;
+const firstStage = episode.stages[0].id;
+const lastStage = episode.stages.at(-1).id;
 const slot = episodeSaveKey(episodeId), bbs = 'mwave-bbs-settings-v1';
 const oldSlots = [ORIGINAL_SAVE_KEY, PIT_SAVE_KEY, bbs];
 await mkdir(output, {recursive: true});
@@ -59,7 +62,7 @@ try {
     try {
       // The simulation caps its time step. Wait for an actual room transition
       // so a slow software-rendered runner has time to cross the intake.
-      if (episodeId === 'synthetic-city') await page.waitForTimeout(5000);
+      if (episodeId !== 'buried-network') await page.waitForTimeout(5000);
       else await page.waitForFunction(() => document.querySelector('#room-label').textContent === 'ACCESS CORRIDOR',
         undefined, {polling: 100, timeout: 60000});
     } finally {
@@ -241,7 +244,7 @@ try {
   await page.locator('#episodes-btn').click();
   await choose('CONTINUE');
   await page.waitForFunction(() => document.querySelector('#result-title').textContent === 'EPISODE COMPLETE');
-  assert.match(await page.locator('#result-copy').textContent(), episodeId === 'synthetic-city' ? /Crown Broadcast/ : /Carrier Warden/);
+  assert((await page.locator('#result-copy').textContent()).includes(episode.ending.slice(0, 20)), 'Episode finale must display its authored ending');
   await page.locator('#result-screen').screenshot({path: output + '/offline-ending.png'});
   await page.locator('#result-btn').click();
   await choose('NEW RUN');
