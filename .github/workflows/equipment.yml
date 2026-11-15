@@ -74,6 +74,12 @@ jobs:
           BTM_SOFTWARE_WEBGL: '1'
           BTM_PIT_OUTPUT: docs/equipment/ci/pit
         run: node scripts/verify-pit-browser.mjs
+      - name: Buried Network nine-stage Classic, tracked, stereo and offline proof
+        env:
+          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
+          BTM_SOFTWARE_WEBGL: '1'
+          BTM_EPISODE_OUTPUT: docs/equipment/ci/episodes
+        run: node scripts/verify-episodes-browser.mjs
       - name: Preserve reports and full-resolution captures
         if: always()
         uses: actions/upload-artifact@v4
