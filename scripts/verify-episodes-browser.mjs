@@ -121,6 +121,10 @@ try {
   const before = await Promise.all(oldSlots.map(read));
   assert(before.every(Boolean));
   await page.locator('#episodes-btn').click();
+  const atlas = page.locator('#episode-list .episode-card[data-episode-id="'+episodeId+'"]');
+  assert.equal(await page.locator('#episode-list .episode-card').count(), EPISODES.list.length);
+  assert.equal(await atlas.locator('.episode-progress-step').count(), episode.stages.length);
+  assert.equal(await atlas.locator('.episode-progress-status').textContent(),'NEW EPISODE');
   await page.locator('#episodes-screen').screenshot({path: output + '/episode-picker.png'});
   await choose('NEW RUN');
   await page.waitForFunction(() => document.querySelector('#header-sector').textContent.includes('STAGE 1 OF 9'));
@@ -129,6 +133,13 @@ try {
   await walkOutOfIntake();
   const walked = JSON.parse(await read(slot));
   assert(Math.hypot(walked.player.x - initial.player.x, walked.player.y - initial.player.y) > 1, 'Production keyboard input must move the episode player');
+  await page.locator('#episodes-btn').click();
+  const playedAtlas=page.locator('#episode-list .episode-card[data-episode-id="'+episodeId+'"]');
+  assert.equal(await playedAtlas.locator('.episode-progress-status').textContent(),'STAGE 01 IN PROGRESS');
+  assert.equal(await playedAtlas.locator('.episode-progress-count').textContent(),'0 / 9 CLEARED');
+  assert.equal(await playedAtlas.locator('.episode-progress-step[aria-current="step"]').count(),1);
+  assert.equal(await playedAtlas.locator('.episode-progress-step[data-state="locked"]').count(),8);
+  await page.locator('#episodes-back').click();
   assert.deepEqual(await Promise.all(oldSlots.map(read)), before);
   console.log('Production keyboard movement and independent save slots verified.');
 
