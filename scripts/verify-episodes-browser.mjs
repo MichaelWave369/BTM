@@ -203,6 +203,9 @@ try {
   await choose('CONTINUE');
   await page.waitForFunction(() => document.querySelector('#header-sector').textContent.includes('STAGE 1 OF 9'));
   assert.deepEqual(JSON.parse(await read(slot)), walked);
+  // Close the active run before installing the finale. Reloading from live or
+  // paused gameplay intentionally writes that run's checkpoint on pagehide.
+  await home();
   // Both the episode module and the actual played finale restore while disconnected.
   await page.evaluate(async ({snapshot, slot}) => {
     const [{Game}, {EPISODES}, {writeCampaignCheckpoint}] = await Promise.all([
@@ -213,7 +216,9 @@ try {
     writeCampaignCheckpoint(localStorage, game);
     if (!localStorage.getItem(slot)) throw Error('Episode checkpoint was not written');
   }, {snapshot: played.finalSave, slot});
+  assert.equal(JSON.parse(await read(slot)).stageId, 'last-carrier');
   await page.reload();
+  assert.equal(JSON.parse(await read(slot)).episodeCleared, true);
   await page.locator('#episodes-btn').click();
   await choose('CONTINUE');
   await page.waitForFunction(() => document.querySelector('#result-title').textContent === 'EPISODE COMPLETE');
