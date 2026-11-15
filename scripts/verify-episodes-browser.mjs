@@ -71,6 +71,49 @@ try {
     await home();
   }
   const choose = label => page.getByRole('button', {name: label + ' / ' + episodeTitle, exact: true}).click();
+
+  // The software WebGL renderer can advance very few physics ticks during
+  // six seconds of wall time. Keep ONE real offline run alive while sending
+  // keyboard input, and measure its actual saved displacement after each
+  // in-game Pause → Save. Never reset between attempts or fabricate movement.
+  async function proveOfflineNewRunMovement(spawn) {
+    const requiredDistance = 1;
+    const maxAttempts = 8;
+    let lastDistance = 0;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      await page.bringToFront();
+      await page.locator('#app[data-screen="playing"]').waitFor();
+      await page.locator('#game').focus();
+      await page.keyboard.down('KeyW');
+      try {
+        // The real frame loop caps dt to .05s, so time spent rendering does
+        // not count as movement. Preserve cumulative progress across bursts.
+        await page.waitForTimeout(6000);
+      } finally {
+        await page.keyboard.up('KeyW');
+      }
+      await page.keyboard.press('Escape');
+      await page.locator('#pause-screen:not([hidden])').waitFor();
+      await page.locator('#save-btn').click();
+      const saved = JSON.parse(await read(slot));
+      assert.equal(saved.stageId, firstStage, 'Offline replay must stay on the first authored stage');
+      lastDistance = Math.hypot(saved.player.x - spawn.player.x, saved.player.y - spawn.player.y);
+      console.log(`Offline movement: ${episodeId} burst ${attempt}/${maxAttempts}, saved displacement ${lastDistance.toFixed(3)}m`);
+      if (lastDistance > requiredDistance) {
+        await page.locator('#quit-btn').click();
+        return saved;
+      }
+      // ESC resumes the same paused episode, retaining its genuine movement.
+      await page.keyboard.press('Escape');
+      await page.locator('#app[data-screen="playing"]').waitFor();
+    }
+    // If the acceptance check fails, pause the same run before leaving.
+    await page.keyboard.press('Escape');
+    await page.locator('#pause-screen:not([hidden])').waitFor();
+    await page.locator('#quit-btn').click();
+    assert.fail(`Offline ${episodeId} movement remained ${lastDistance.toFixed(3)}m after ${maxAttempts} cumulative real W-key bursts`);
+  }
+
   await enter('#start-btn', 'SECTOR 01');
   await home();
   await enter('#pit-btn', 'TRIAL 1');
@@ -249,8 +292,7 @@ try {
   await page.locator('#result-btn').click();
   await choose('NEW RUN');
   await page.waitForFunction(() => document.querySelector('#header-sector').textContent.includes('STAGE 1 OF 9'));
-  await walkOutOfIntake();
-  assert(Math.hypot(JSON.parse(await read(slot)).player.x - initial.player.x, JSON.parse(await read(slot)).player.y - initial.player.y) > 1, 'New episode run moves offline');
+  await proveOfflineNewRunMovement(initial);
   assert.deepEqual(await Promise.all(oldSlots.map(read)), before);
   assert.deepEqual(errors, []);
 

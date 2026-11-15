@@ -10,7 +10,8 @@ const ID='black-frequency';
 test('The Black Frequency registers nine distinct themed maps without modifying other episode saves', () => {
   const episode=EPISODES.get(ID);
   assert(episode, 'Episode must be in installed registry');
-  assert.equal(EPISODES.list.length,3);
+  assert(EPISODES.get('buried-network') && EPISODES.get('synthetic-city'), 'Earlier episodes must remain installed');
+  assert(EPISODES.list.length >= 3, 'Registry may grow without invalidating Black Frequency');
   assert.equal(episode.stages.length,9);
   assert.equal(episode.secretCount,9);
   assert.equal(new Set(episode.stages.map(s=>s.map.join('\n'))).size,9);
