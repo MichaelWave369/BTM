@@ -72,38 +72,44 @@ try {
   }
   const choose = label => page.getByRole('button', {name: label + ' / ' + episodeTitle, exact: true}).click();
 
-  // A fixed five-second W press can hit a wall or receive few frames under
-  // software WebGL on a busy CI runner. Verify *saved actual player movement*
-  // with bounded attempts along multiple valid, player-controlled directions.
-  // This does not inject player coordinates, bypass collision, or weaken >1m.
+  // The software WebGL renderer can advance very few physics ticks during
+  // six seconds of wall time. Keep ONE real offline run alive while sending
+  // keyboard input, and measure its actual saved displacement after each
+  // in-game Pause → Save. Never reset between attempts or fabricate movement.
   async function proveOfflineNewRunMovement(spawn) {
-    const attempts = ['KeyD', 'KeyW', 'KeyS'];
-    let finalDistance = 0;
-    for (const [index, direction] of attempts.entries()) {
-      if (index) {
-        await page.locator('#episodes-btn').click();
-        await choose('CONTINUE');
-        await page.locator('#app[data-screen="playing"]').waitFor();
-      }
+    const requiredDistance = 1;
+    const maxAttempts = 8;
+    let lastDistance = 0;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       await page.bringToFront();
       await page.locator('#app[data-screen="playing"]').waitFor();
       await page.locator('#game').focus();
-      await page.keyboard.down(direction);
+      await page.keyboard.down('KeyW');
       try {
-        // The game caps delta time at 50ms. Give slow software-rendered frames
-        // time to integrate, then inspect the genuine persisted checkpoint.
+        // The real frame loop caps dt to .05s, so time spent rendering does
+        // not count as movement. Preserve cumulative progress across bursts.
         await page.waitForTimeout(6000);
       } finally {
-        await page.keyboard.up(direction);
+        await page.keyboard.up('KeyW');
       }
-      await home();
+      await page.keyboard.press('Escape');
+      await page.locator('#pause-screen:not([hidden])').waitFor();
+      await page.locator('#save-btn').click();
       const saved = JSON.parse(await read(slot));
       assert.equal(saved.stageId, firstStage, 'Offline replay must stay on the first authored stage');
-      finalDistance = Math.hypot(saved.player.x - spawn.player.x, saved.player.y - spawn.player.y);
-      console.log(`Offline input proof: ${episodeId}, attempt ${index+1}, ${direction}, displacement ${finalDistance.toFixed(3)}m`);
-      if (finalDistance > 1) return saved;
+      lastDistance = Math.hypot(saved.player.x - spawn.player.x, saved.player.y - spawn.player.y);
+      console.log(`Offline movement: ${episodeId} burst ${attempt}/${maxAttempts}, saved displacement ${lastDistance.toFixed(3)}m`);
+      if (lastDistance > requiredDistance) {
+        await page.locator('#quit-btn').click();
+        return saved;
+      }
+      // ESC resumes the same paused episode, retaining its genuine movement.
+      await page.keyboard.press('Escape');
+      await page.locator('#app[data-screen="playing"]').waitFor();
     }
-    assert.fail(`Offline ${episodeId} keyboard movement was not saved after ${attempts.length} real input attempts (last displacement ${finalDistance.toFixed(3)}m)`);
+    // Return through the real game menu even if the acceptance check fails.
+    await page.locator('#quit-btn').click();
+    assert.fail(`Offline ${episodeId} movement remained ${lastDistance.toFixed(3)}m after ${maxAttempts} cumulative real W-key bursts`);
   }
 
   await enter('#start-btn', 'SECTOR 01');
