@@ -13,11 +13,12 @@ const BBS_PREFS_KEY = 'mwave-bbs-settings-v1';
 export const createEpisodeGame = immersive => new (immersive ? TrackedGame : Game)({episodes: EPISODES});
 
 export class EpisodeDriver extends CampaignDriver {
-  constructor({immersive = false, onEvent} = {}) {
+  constructor({immersive = false, onEvent, episodeId = BURIED_ID} = {}) {
     const game = createEpisodeGame(immersive);
-    game.startEpisode(BURIED_ID);
+    game.startEpisode(episodeId);
     super({game, resume: true, sectors: game.stageCount, secrets: true, onEvent});
     this.immersive = immersive;
+    this.episodeId = episodeId;
     this.slots = new Map([[ORIGINAL_SAVE_KEY, 'original'], [PIT_SAVE_KEY, 'pit'], [BBS_PREFS_KEY, 'bbs']]);
     this.legacy = [...this.slots];
     this.flatLayouts = new WeakMap();
@@ -78,9 +79,9 @@ export class EpisodeDriver extends CampaignDriver {
     const storage = {setItem: (key, value) => this.slots.set(key, value)};
     writeCampaignCheckpoint(storage, g);
     if (this.legacy.some(([key, value]) => this.slots.get(key) !== value)) throw Error('Legacy slot changed');
-    const snapshot = JSON.parse(this.slots.get(episodeSaveKey(BURIED_ID)));
+    const snapshot = JSON.parse(this.slots.get(episodeSaveKey(this.episodeId)));
     const restored = createEpisodeGame(this.immersive);
-    restored.restore(snapshot, {campaign: 'episode', episodeId: BURIED_ID});
+    restored.restore(snapshot, {campaign: 'episode', episodeId: this.episodeId});
     if (restored.mode !== g.mode || restored.definition.id !== g.definition.id ||
       restored.player.energy !== g.player.energy || restored.player.reserve !== g.player.reserve)
       throw Error('Episode checkpoint did not conserve progress or resources');
