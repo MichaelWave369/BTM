@@ -69,3 +69,24 @@ The nine designed topologies progress from deserted intake crypts through archiv
 | 9 | Zero Transmission | Three source relays and the Black Warden finale |
 
 The episode reuses BTM-owned retro, Industrial, Cyberpunk, Horror, Corporate and Matrix Facility material systems with original procedural fallback. No paid dependencies, new network protocols, or existing campaign/save mutations. Test requirements: nine distinct worlds, all secrets and upper artifacts, Classic and simulated tracked completion and boss phases, production stereo browser capture, offline restart/finale, and existing BBS/Pit regressions. **Actual Quest 3 movement feel, aiming and sustained frame rate remain field acceptance tasks**.
+
+
+## Episode IV: The Last Relay (9 stages)
+
+The fourth expansion completes the original **60 solo campaign/trial stage** roadmap: 12 original sectors, 12 Pit trials, 9 Buried Network, 9 Synthetic City, 9 Black Frequency and 9 Last Relay. On desktop or Quest, choose **Episodes → NEW RUN / The Last Relay**, or **CONTINUE / The Last Relay**. The independent checkpoint key is `mwave-ori-episode-last-relay-checkpoint-v1`. All original/Pit/BBS progression and saves remain isolated.
+
+Nine distinct authored layouts take the player from the destroyed relay graveyards through exposed surveillance plazas, lifts, vaults, cooling structures, a downed satellite array and interlocked tracks to the last active relay. The gameplay preserves finite charge, original BTM combat rules, ground-reachable relay/key/exit objectives and the familiar resonance secret system. Every level has a hidden cache and a gold-locked exit, and named locations and wall messages help distinguish stages. An **optional** upper artifact/supply route appears on stages 3, 6 and 8, while stages 4 and 7 add blue/red side-badge routes. Stage 9 ends in a three-phase **Final Warden** battle.
+
+| Stage | Level | Main route |
+| --- | --- | --- |
+| 1 | Relay Graveyard | Fallen antenna field and buried uplinks |
+| 2 | Glass Frontier | Surveillance plaza with exposed corridors |
+| 3 | Signal Lift | Hanging shaft and optional upper supply deck |
+| 4 | Cipher Vault | Three vault chambers and blue service annex |
+| 5 | Iron Horizon | Interlocked cooling channels and bridges |
+| 6 | Orbitfall Array | Fallen satellite with upper maintenance gallery |
+| 7 | Midnight Junction | Track crossings and red-key bypass |
+| 8 | Human Frequency | Restoration halls and optional observation deck |
+| 9 | The Last Relay | Three final feeds and the Final Warden |
+
+No paid dependencies, copyrighted shooter assets or new external services. CI requires input-driven 9-stage Classic and simulated tracked-VR completion, full secret and optional deck collection, independent checkpoint restoration, world geometry and material validation, both-eye WebGL production browser captures, and offline restart/end-game checks. **Physical Quest 3 testing remains necessary for comfort and sustained rendering performance.**
