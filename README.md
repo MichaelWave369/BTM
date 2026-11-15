@@ -84,7 +84,7 @@ Open **http://localhost:5173/**. The ZIP contains a prebuilt `dist/`, so `npm ru
 
 ## Additional standalone episodes
 
-Choose **Episodes** to play the nine-stage **The Buried Network**, nine-stage **Synthetic City**, nine-stage **The Black Frequency**, or nine-stage **The Last Relay**. Each episode has its own checkpoint, secrets and finale, with the original twelve sectors, Pit trials, and BBS LAN CLAN saves isolated. See [episode routes, authoring, and Quest field checks](docs/episodes.md).
+Choose **Episodes** to play the nine-stage **The Buried Network**, nine-stage **Synthetic City**, nine-stage **The Black Frequency**, or nine-stage **The Last Relay**. Each episode has its own checkpoint, secrets and finale, with the original twelve sectors, Pit trials, and BBS LAN CLAN saves isolated. The **episode progress atlas** shows nine numbered stage markers for each episode, cleared stages, the next or current level and per-episode resume status. It reads the existing validated checkpoint and never writes a separate tracking save. See [episode routes, authoring, and Quest field checks](docs/episodes.md).
 
 ## Twelve-sector campaign
 

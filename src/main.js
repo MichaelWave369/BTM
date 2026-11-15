@@ -2,6 +2,7 @@ import {ORIGINAL_SAVE_KEY,PIT_SAVE_KEY,writeCampaignCheckpoint} from './campaign
 import {PIT_ACTS} from './pit.js';
 import {EPISODES} from './episodes/index.js';
 import {episodeSaveKey} from './episodes/registry.js';
+import {episodeProgress} from './episodes/progress-view.js';
 import {EQUIPMENT_DEFAULTS,equipmentSettings} from './equipment-math.js';
 import {destinationFor} from './genewrist-bridge.js';
 import {Game,SECTORS,WEAPONS,CAMPAIGN_HOSTS,clamp,angleDiff} from './core.js';
@@ -147,11 +148,37 @@ function showEpisodes(){
       try{episodeSaves.set(episode.id,JSON.parse(localStorage.getItem(episodeSaveKey(episode.id))));}
       catch{episodeSaves.set(episode.id,null);}
     }
+    const progress=episodeProgress(episode,episodeSaves.get(episode.id));
     const card=document.createElement('section'),heading=document.createElement('h3'),summary=document.createElement('p');
     card.className='episode-card';
+    card.dataset.episodeId=episode.id;
     heading.textContent=episode.title;
     summary.textContent=episode.stages.length+' stages · '+episode.summary;
     card.append(heading,summary);
+    const position=document.createElement('div'),state=document.createElement('strong'),count=document.createElement('span');
+    position.className='episode-progress-meta';
+    state.className='episode-progress-status';
+    state.textContent=progress.status;
+    count.className='episode-progress-count';
+    count.textContent=progress.completed+' / '+progress.total+' CLEARED';
+    position.append(state,count);
+    const route=document.createElement('ol');
+    route.className='episode-progress-route';
+    route.setAttribute('aria-label','Stage progression for '+episode.title);
+    for(const marker of progress.markers){
+      const step=document.createElement('li');
+      step.className='episode-progress-step';
+      step.dataset.state=marker.state;
+      step.textContent=String(marker.number).padStart(2,'0');
+      step.title=marker.name+' · '+marker.state;
+      step.setAttribute('aria-label','Stage '+marker.number+': '+marker.name+', '+marker.state);
+      if(marker.state==='current')step.setAttribute('aria-current','step');
+      route.append(step);
+    }
+    const next=document.createElement('p');
+    next.className='episode-progress-next';
+    next.textContent=progress.next;
+    card.append(position,route,next);
     function button(label,action){
       const element=document.createElement('button');
       element.className='secondary-button';
@@ -159,7 +186,7 @@ function showEpisodes(){
       element.addEventListener('click',action);
       card.append(element);
     }
-    if(episodeSaves.get(episode.id))button('CONTINUE',()=>{
+    if(progress.valid)button('CONTINUE',()=>{
       try{game.restore(episodeSaves.get(episode.id),{campaign:'episode',episodeId:episode.id});}
       catch(e){episodeSaves.set(episode.id,null);showEpisodes();showToast(e.message);return;}
       communications.reset();mapOpen=false;

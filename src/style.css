@@ -230,3 +230,15 @@ body[data-input=controller] #game,body[data-input=vr] #game{cursor:none}.reduced
 .episode-card h3,.episode-card p{margin:0}
 .episode-card :is(.secondary-button,.primary-button){margin:0}
 #episodes-back{margin-top:12px}
+
+/* Episode progress atlas: compact, read-only route markers in HTML/XR menus. */
+#episodes-screen{width:min(640px,100%)}
+.episode-progress-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px}
+.episode-progress-status{font-size:10px;letter-spacing:.75px;color:var(--cyan)}
+.episode-progress-count{font-size:10px;letter-spacing:.55px;color:var(--gold)}
+.episode-progress-route{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:5px;list-style:none;padding:0;margin:4px 0;min-width:0}
+.episode-progress-step{display:grid;place-items:center;min-height:28px;padding:4px 0;border:1px solid #3d4b69;background:#10172b;color:#8190ad;font:600 11px var(--mono)}
+.episode-progress-step[data-state=complete]{background:#173a49;border-color:#388a9c;color:#b7f4e8}
+.episode-progress-step[data-state=current]{background:#55305c;border-color:var(--pink);color:white;box-shadow:inset 0 -2px var(--pink)}
+.episode-progress-next{font-size:11px!important;color:#cbd9f0!important;line-height:1.5}
+@media(max-width:480px){#episodes-screen{padding:22px 20px}.episode-progress-route{gap:3px}.episode-progress-step{font-size:10px;min-height:27px}}
