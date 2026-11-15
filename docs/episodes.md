@@ -90,3 +90,10 @@ Nine distinct authored layouts take the player from the destroyed relay graveyar
 | 9 | The Last Relay | Three final feeds and the Final Warden |
 
 No paid dependencies, copyrighted shooter assets or new external services. CI requires input-driven 9-stage Classic and simulated tracked-VR completion, full secret and optional deck collection, independent checkpoint restoration, world geometry and material validation, both-eye WebGL production browser captures, and offline restart/end-game checks. **Physical Quest 3 testing remains necessary for comfort and sustained rendering performance.**
+
+
+## Episode progress atlas
+
+The **Episodes** picker displays a numbered nine-stage route for each standalone episode. Completed markers reflect the current valid checkpoint, the bright current marker identifies the running stage or the next stage after a cleared checkpoint, and the text names the relevant level. Final completion displays **EPISODE CLEARED**. New episodes show all nine stages with the first marker highlighted. Existing Save / Continue / New Run button names remain unchanged for Quest and Classic controller navigation.
+
+The display is **read-only** and derives entirely from each episode's existing `mwave-ori-episode-<id>-checkpoint-v1` save. It uses the same strict checkpoint validator as game restoration, does not invent a leaderboard or write extra progress data, and refuses to offer Continue for an invalid checkpoint. An invalid save is left untouched, with **CHECKPOINT UNAVAILABLE** and a fresh New Run option. Completion progress is per episode, never combined with original, Pit or BBS progression. Tests cover four episodes, new/active/cleared/finale and rejected corrupt/mismatched snapshots, and the production Chromium picker before and after real saved movement.
