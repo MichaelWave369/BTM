@@ -71,6 +71,41 @@ try {
     await home();
   }
   const choose = label => page.getByRole('button', {name: label + ' / ' + episodeTitle, exact: true}).click();
+
+  // A fixed five-second W press can hit a wall or receive few frames under
+  // software WebGL on a busy CI runner. Verify *saved actual player movement*
+  // with bounded attempts along multiple valid, player-controlled directions.
+  // This does not inject player coordinates, bypass collision, or weaken >1m.
+  async function proveOfflineNewRunMovement(spawn) {
+    const attempts = ['KeyD', 'KeyW', 'KeyS'];
+    let finalDistance = 0;
+    for (const [index, direction] of attempts.entries()) {
+      if (index) {
+        await page.locator('#episodes-btn').click();
+        await choose('CONTINUE');
+        await page.locator('#app[data-screen="playing"]').waitFor();
+      }
+      await page.bringToFront();
+      await page.locator('#app[data-screen="playing"]').waitFor();
+      await page.locator('#game').focus();
+      await page.keyboard.down(direction);
+      try {
+        // The game caps delta time at 50ms. Give slow software-rendered frames
+        // time to integrate, then inspect the genuine persisted checkpoint.
+        await page.waitForTimeout(6000);
+      } finally {
+        await page.keyboard.up(direction);
+      }
+      await home();
+      const saved = JSON.parse(await read(slot));
+      assert.equal(saved.stageId, firstStage, 'Offline replay must stay on the first authored stage');
+      finalDistance = Math.hypot(saved.player.x - spawn.player.x, saved.player.y - spawn.player.y);
+      console.log(`Offline input proof: ${episodeId}, attempt ${index+1}, ${direction}, displacement ${finalDistance.toFixed(3)}m`);
+      if (finalDistance > 1) return saved;
+    }
+    assert.fail(`Offline ${episodeId} keyboard movement was not saved after ${attempts.length} real input attempts (last displacement ${finalDistance.toFixed(3)}m)`);
+  }
+
   await enter('#start-btn', 'SECTOR 01');
   await home();
   await enter('#pit-btn', 'TRIAL 1');
@@ -249,8 +284,7 @@ try {
   await page.locator('#result-btn').click();
   await choose('NEW RUN');
   await page.waitForFunction(() => document.querySelector('#header-sector').textContent.includes('STAGE 1 OF 9'));
-  await walkOutOfIntake();
-  assert(Math.hypot(JSON.parse(await read(slot)).player.x - initial.player.x, JSON.parse(await read(slot)).player.y - initial.player.y) > 1, 'New episode run moves offline');
+  await proveOfflineNewRunMovement(initial);
   assert.deepEqual(await Promise.all(oldSlots.map(read)), before);
   assert.deepEqual(errors, []);
 
