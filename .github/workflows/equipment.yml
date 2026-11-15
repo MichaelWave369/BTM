@@ -32,6 +32,12 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/btm-browser" --ignore-scripts --no-audit --no-fund playwright@1.64.1
           node "$RUNNER_TEMP/btm-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Buried Network nine-stage Classic, tracked, stereo and offline proof
+        env:
+          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
+          BTM_SOFTWARE_WEBGL: '1'
+          BTM_EPISODE_OUTPUT: docs/equipment/ci/episodes
+        run: node scripts/verify-episodes-browser.mjs
       - name: Production stereo equipment checks and comparisons
         env:
           BTM_EQUIPMENT_BASELINE: 2ca035e7c5e1dd02d70628b6fafa088f0db84681
@@ -74,12 +80,6 @@ jobs:
           BTM_SOFTWARE_WEBGL: '1'
           BTM_PIT_OUTPUT: docs/equipment/ci/pit
         run: node scripts/verify-pit-browser.mjs
-      - name: Buried Network nine-stage Classic, tracked, stereo and offline proof
-        env:
-          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
-          BTM_SOFTWARE_WEBGL: '1'
-          BTM_EPISODE_OUTPUT: docs/equipment/ci/episodes
-        run: node scripts/verify-episodes-browser.mjs
       - name: Preserve reports and full-resolution captures
         if: always()
         uses: actions/upload-artifact@v4

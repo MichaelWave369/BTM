@@ -47,6 +47,21 @@ try {
     await page.keyboard.press('Escape');
     await page.locator('#quit-btn').click();
   }
+  async function walkOutOfIntake() {
+    await page.bringToFront();
+    await page.locator('#app[data-screen="playing"]').waitFor();
+    await page.locator('#game').focus();
+    await page.keyboard.down('KeyW');
+    try {
+      // The simulation caps its time step. Wait for an actual room transition
+      // so a slow software-rendered runner has time to cross the intake.
+      await page.waitForFunction(() => document.querySelector('#room-label').textContent === 'ACCESS CORRIDOR',
+        undefined, {polling: 100, timeout: 60000});
+    } finally {
+      await page.keyboard.up('KeyW');
+    }
+    await home();
+  }
   const choose = label => page.getByRole('button', {name: label + ' / The Buried Network', exact: true}).click();
   await enter('#start-btn', 'SECTOR 01');
   await home();
@@ -60,13 +75,11 @@ try {
   await page.waitForFunction(() => document.querySelector('#header-sector').textContent.includes('STAGE 1 OF 9'));
   const initial = JSON.parse(await read(slot));
   assert.equal(initial.stageId, 'cable-mouth');
-  await page.keyboard.down('KeyW');
-  await page.waitForTimeout(750);
-  await page.keyboard.up('KeyW');
-  await home();
+  await walkOutOfIntake();
   const walked = JSON.parse(await read(slot));
   assert(walked.player.x > initial.player.x + 1, 'Production keyboard input must move a new episode player');
   assert.deepEqual(await Promise.all(oldSlots.map(read)), before);
+  console.log('Production keyboard movement and independent save slots verified.');
 
   // Run the production engine and both renderers on the delivered build.
   // A separate page keeps the verification driver off the normal game UI.
@@ -195,6 +208,7 @@ try {
   assert.equal(captures.filter(c => c.kind === 'deck' && c.surface === 'upper').length, 3);
   assert(captures.some(c => c.kind === 'finale' && c.bossPhase >= 2));
   await qa.close();
+  console.log('Classic, tracked, and stereo browser proof complete for all nine stages.');
 
   await page.waitForFunction(() => !!navigator.serviceWorker?.controller);
   await context.setOffline(true);
@@ -227,10 +241,7 @@ try {
   await page.locator('#result-btn').click();
   await choose('NEW RUN');
   await page.waitForFunction(() => document.querySelector('#header-sector').textContent.includes('STAGE 1 OF 9'));
-  await page.keyboard.down('KeyW');
-  await page.waitForTimeout(750);
-  await page.keyboard.up('KeyW');
-  await home();
+  await walkOutOfIntake();
   assert(JSON.parse(await read(slot)).player.x > initial.player.x + 1, 'New episode run moves offline');
   assert.deepEqual(await Promise.all(oldSlots.map(read)), before);
   assert.deepEqual(errors, []);
