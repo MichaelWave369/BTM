@@ -107,7 +107,9 @@ try {
       await page.keyboard.press('Escape');
       await page.locator('#app[data-screen="playing"]').waitFor();
     }
-    // Return through the real game menu even if the acceptance check fails.
+    // If the acceptance check fails, pause the same run before leaving.
+    await page.keyboard.press('Escape');
+    await page.locator('#pause-screen:not([hidden])').waitFor();
     await page.locator('#quit-btn').click();
     assert.fail(`Offline ${episodeId} movement remained ${lastDistance.toFixed(3)}m after ${maxAttempts} cumulative real W-key bursts`);
   }
