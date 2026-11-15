@@ -48,3 +48,24 @@ The map topology is authored as fixed city-district rectangles connected into wa
 | 9 | Crown Broadcast | Three signal feeds and the Crown Warden finale |
 
 The new episode uses existing owned industrial, cyberpunk, horror, corporate and Matrix Facility styles with procedural offline fallback. It adds no commercial dependencies. Tests load and render every stage, check the independent save slot, run the original/Pit regressions and attempt complete input-driven Classic and synthetic tracked playthroughs. **Real Quest 3 comfort, frame pacing and physical Touch control validation remain pending**.
+
+
+## Episode III: The Black Frequency (9 stages)
+
+Choose **Episodes → NEW RUN / The Black Frequency** or **CONTINUE / The Black Frequency** on Classic, VR Arcade or Immersive Quest. This is a self-contained nine-stage signal-complex episode, not an extension of the original 12 sectors, Pit, co-op or either previous standalone episode. Its versioned checkpoint remains in `mwave-ori-episode-black-frequency-checkpoint-v1`.
+
+The nine designed topologies progress from deserted intake crypts through archive wings, a copper harmonic array, an empty signal theatre, decommissioned tunnels and a fractured observatory to the Black Frequency source. Stages 3, 6 and 8 include **optional** short ramps to upstairs artifact/supply galleries; normal objective and exit paths remain below. Each stage has a gold-key exit chamber, a single hidden violet service seal and at least one control relay. The Unheard has a blue-badge side route; Fracture Array has a red-badge bypass. Ground geometry, enemy rosters and room labels are authored; deterministic compilation connects any separated architectural wings.
+
+| Stage | Map | Encounter and exploration |
+| --- | --- | --- |
+| 1 | Static Pilgrimage | Silent entry crypt and multiple signal feeders |
+| 2 | Resonance Crypt | Twin archive wings and memory choir |
+| 3 | Choir of Copper | Oscillator rooms and optional upper gallery |
+| 4 | The Unheard | Empty broadcast theatre and blue access |
+| 5 | Null Procession | Parallel service tunnels and hidden records |
+| 6 | Cathedral of Noise | Overtone complex and elevated countertone supplies |
+| 7 | Fracture Array | Fragmented observatories and red bypass |
+| 8 | Oracle Engine | Prediction chambers and optional high walkway |
+| 9 | Zero Transmission | Three source relays and the Black Warden finale |
+
+The episode reuses BTM-owned retro, Industrial, Cyberpunk, Horror, Corporate and Matrix Facility material systems with original procedural fallback. No paid dependencies, new network protocols, or existing campaign/save mutations. Test requirements: nine distinct worlds, all secrets and upper artifacts, Classic and simulated tracked completion and boss phases, production stereo browser capture, offline restart/finale, and existing BBS/Pit regressions. **Actual Quest 3 movement feel, aiming and sustained frame rate remain field acceptance tasks**.
