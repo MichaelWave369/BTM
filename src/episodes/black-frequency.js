@@ -833,7 +833,22 @@ function pocket(g,glyph,goal,walkers,optional=false){
   // Some narrow crypts have no solid three-cell wall pocket. Place a
   // deliberately isolated service annex along the sealed southern edge.
   // All access runs on normal walkable tiles; a door remains the only entry.
-  const slots={'
+  const slots={"$":7,"?":17,"+":27,r:23,b:23,g:23};
+  const x=slots[glyph];
+  if(!x)throw Error("No annex slot for "+glyph);
+  const source=walkers.reduce((best,p)=>!best||
+    Math.abs(p[0]-x)+Math.abs(p[1]-25)<Math.abs(best[0]-x)+Math.abs(best[1]-25)?p:best,null);
+  if(!source)throw Error("No reachable approach for "+glyph);
+  let [cx,cy]=source;
+  while(cy<26){cy++;if(g[cy][cx]==="#")g[cy][cx]=".";}
+  while(cx!==x){cx+=Math.sign(x-cx);if(g[26][cx]==="#")g[26][cx]=".";}
+  if(g[27][x]!=="#"||g[28][x]!=="#"||
+      g[27][x-1]!=="#"||g[27][x+1]!=="#")
+    throw Error("Reserved annex lacks safe clearance for "+glyph);
+  g[27][x]=glyph;
+  g[28][x]=".";
+  return [x+.5,28.5];
+ }
  choices.sort((a,b)=>Math.abs(a[0]-goal[0])+Math.abs(a[1]-goal[1])-(Math.abs(b[0]-goal[0])+Math.abs(b[1]-goal[1])));
  const [x,y]=choices[0];g[y][x]=glyph;g[y][x+1]=".";g[y][x+2]=".";return [x+2.5,y+.5];
 }
