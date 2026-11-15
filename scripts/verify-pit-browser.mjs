@@ -24,6 +24,20 @@ try{
  await page.goto('http://127.0.0.1:5184/');await page.locator('#continue-pit-btn').click();await page.waitForFunction(()=>document.querySelector('#result-copy').textContent.startsWith('Twelve trials.'));assert.equal(await page.locator('#result-btn').textContent(),'START ANOTHER PIT RUN');await page.locator('#app').screenshot({path:out+'/screenshots/ending.png'});
  await page.locator('#result-home').click();await page.locator('#continue-btn').click();await page.waitForFunction(()=>document.querySelector('#header-sector').textContent.includes('SECTOR 01'));
  const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('mwave-ori-pit-checkpoint-v1')));assert.equal(stored.pitRecord.length,12);assert(stored.pitCleared);
- await page.evaluate(async()=>await navigator.serviceWorker.ready);await page.reload();await context.setOffline(true);await page.reload();await page.locator('#continue-pit-btn').click();await page.waitForFunction(()=>document.querySelector('#result-copy').textContent.startsWith('Twelve trials.'));await page.locator('#result-btn').click();await page.waitForFunction(()=>document.querySelector('#header-sector').textContent.startsWith('PIT /'));assert.equal(errors.length,0,errors.join('\n'));
+ // An active registration is not necessarily controlling this tab yet. The
+ // offline Pit reload must run under a controlling worker with a cached shell.
+ await page.evaluate(async()=>await navigator.serviceWorker.ready);
+ await page.reload();
+ await page.waitForFunction(()=>navigator.serviceWorker?.controller?.state==='activated');
+ await page.waitForFunction(async()=>{
+   const shell=await caches.match(new URL('./',location.href).href);
+   const html=await caches.match(new URL('./index.html',location.href).href);
+   return !!shell?.ok&&!!html?.ok;
+ });
+ await context.setOffline(true);
+ const offlineResponse=await page.reload({waitUntil:'domcontentloaded'});
+ assert(offlineResponse?.ok(), 'Pit offline navigation must return the cached game shell');
+ assert.equal(await page.locator('#continue-pit-btn').count(),1,'Pit continue button must exist after offline reload');
+ await page.locator('#continue-pit-btn').click();await page.waitForFunction(()=>document.querySelector('#result-copy').textContent.startsWith('Twelve trials.'));await page.locator('#result-btn').click();await page.waitForFunction(()=>document.querySelector('#header-sector').textContent.startsWith('PIT /'));assert.equal(errors.length,0,errors.join('\n'));
  const report={passed:true,browser:browser.version(),method:'Production dist in real Chromium. Actual Game driver movement/combat/loot/bosses/progression in Classic and tracked adapter, native Canvas/WebGL captures with synthetic stereo, real DOM mode/save/continue/ending/original-continue checks and disconnected Pit restart. Exact aim/map knowledge; no physical Quest/human balance validation.',classic,immersive,captures,originalSlotPreserved:true,endingResumed:true,offlinePitPlayable:true,pageErrors:errors};await writeFile(out+'/browser.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({passed:true,classic:classic.passed,immersive:immersive.passed,captures:captures.length,originalSlotPreserved:true,offlinePitPlayable:true,pageErrors:errors},null,2));
 }finally{await browser?.close();server.kill();}
