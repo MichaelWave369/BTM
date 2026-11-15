@@ -82,6 +82,10 @@ npm run dev
 
 Open **http://localhost:5173/**. The ZIP contains a prebuilt `dist/`, so `npm run dev` works immediately after extraction. Any static HTTP server can serve `dist/`. File double-click through `file://` does not provide the browser module/XR environment. Quest headset entry needs a secure HTTPS origin; ordinary HTTP on another machine's LAN address is not sufficient. Local desktop `localhost` is suitable for regular play.
 
+## Additional standalone episodes
+
+Choose **Episodes** to play the nine-stage **The Buried Network** or the nine-stage **Synthetic City**. Each episode has its own checkpoint, secrets and finale, with the original twelve sectors, Pit trials, and BBS LAN CLAN saves isolated. See [episode routes, authoring, and Quest field checks](docs/episodes.md).
+
 ## Twelve-sector campaign
 
 | Act | Sector | Level | Encounters |
