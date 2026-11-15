@@ -10,7 +10,7 @@ concurrency:
 jobs:
   equipment:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
@@ -44,6 +44,13 @@ jobs:
           BTM_SOFTWARE_WEBGL: '1'
           BTM_EPISODE_ID: synthetic-city
           BTM_EPISODE_OUTPUT: docs/equipment/ci/synthetic-city
+        run: node scripts/verify-episodes-browser.mjs
+      - name: Black Frequency nine-stage Classic, tracked, stereo and offline proof
+        env:
+          BTM_PLAYWRIGHT_MODULE: ${{ runner.temp }}/btm-browser/node_modules/playwright
+          BTM_SOFTWARE_WEBGL: '1'
+          BTM_EPISODE_ID: black-frequency
+          BTM_EPISODE_OUTPUT: docs/equipment/ci/black-frequency
         run: node scripts/verify-episodes-browser.mjs
       - name: Production stereo equipment checks and comparisons
         env:

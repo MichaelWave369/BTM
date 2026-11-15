@@ -11,7 +11,8 @@ const CITY = 'synthetic-city';
 test('Synthetic City contains nine distinct authored districts and nine genuine hidden routes', () => {
   const episode = EPISODES.get(CITY);
   assert(episode);
-  assert.equal(EPISODES.list.length, 2);
+  assert(EPISODES.get('buried-network'), 'Buried Network must remain installed');
+  assert(EPISODES.list.length >= 2, 'Existing standalone episodes must remain installed');
   assert.equal(episode.stages.length, 9);
   assert.equal(episode.secretCount, 9);
   assert.equal(new Set(episode.stages.map(stage => stage.map.join('\n'))).size, 9);
