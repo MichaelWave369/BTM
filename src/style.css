@@ -225,3 +225,8 @@ body[data-input=controller] #game,body[data-input=vr] #game{cursor:none}.reduced
  .title-screen.album-cover-ready .title-album{order:1}
  .title-screen.album-cover-ready .title-lower{order:2}
 }
+
+.episode-card{display:grid;gap:8px;padding:14px 0;border-top:1px solid #435070}
+.episode-card h3,.episode-card p{margin:0}
+.episode-card :is(.secondary-button,.primary-button){margin:0}
+#episodes-back{margin-top:12px}

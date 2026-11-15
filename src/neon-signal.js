@@ -8,12 +8,15 @@ const PALETTES = [
   ['Dead letters', '#ffb66c', '#51e6ff'], ['Meatspace firewall', '#ff6d93', '#6b98ff'],
   ['Redundancy pit', '#ff7665', '#ef66ff'], ['Panopticon', '#64ceff', '#f46cff'],
   ['God process', '#f6c975', '#b48bff'], ['Impossible frequency', '#76fff1', '#ff76db']
-].map(([name, primary, accent]) => Object.freeze({name, primary, accent,
-  glow: Object.freeze(rgb(primary)), secondary: Object.freeze(rgb(accent)),
-  fog: Object.freeze(rgb(primary).slice(0, 3).map(v => v * .025))}));
+].map(colors => makeSignalPalette(...colors));
+
+export function makeSignalPalette(name, primary, accent) {
+ return Object.freeze({name, primary, accent, glow: Object.freeze(rgb(primary)),
+   secondary: Object.freeze(rgb(accent)), fog: Object.freeze(rgb(primary).slice(0, 3).map(v => v * .025))});
+}
 
 export function signalPalette(index = 0) {
-  if(index&&typeof index==='object'){if(['pit','arena','raid'].includes(index.campaign)&&index.palette)return index.palette;index=index.index||0;}
+  if(index&&typeof index==='object'){if(['pit','arena','raid','episode'].includes(index.campaign)&&index.palette)return index.palette;index=index.index||0;}
   return PALETTES[((index % 12) + 12) % 12] || PALETTES[0];
 }
 

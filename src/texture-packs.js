@@ -27,6 +27,7 @@ export const AUTO_MATERIAL_ASSIGNMENTS=Object.freeze({
 export function textureStyleFor(level,settings={}){
  const {textureStyle}=textureSettings(settings);
  if(textureStyle!=='auto')return textureStyle;
+ if(level?.campaign==='episode'&&Object.hasOwn(TEXTURE_PACKS,level.material))return level.material;
  if(level?.campaign==='raid')return 'matrix-facility';
  if(level?.campaign==='arena')return AUTO_MATERIAL_ASSIGNMENTS.arena[level?.palette?.name]||'cyberpunk';
  const index=Number.isInteger(level?.index)?level.index:0;

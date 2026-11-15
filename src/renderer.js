@@ -78,7 +78,7 @@ export class Renderer {
     const bob=!settings.reducedMotion&&game.moving&&game.mode==='playing'?Math.sin(game.time*(game.sprinting?15:10))*h*.008:0,horizon=Math.floor(h*.46+bob),theme=game.definition.color;
     g.fillStyle=game.shift?'#0e1126':'#090f10';g.fillRect(0,0,w,horizon);g.fillStyle=game.shift?'#171323':'#19201e';g.fillRect(0,horizon,w,h-horizon);
     // Perspective floor grid, rendered as horizontal scan bands and converging seams.
-    const grad=g.createLinearGradient(0,horizon,0,h);grad.addColorStop(0,'#090e0e');grad.addColorStop(1,textureStyleFor(l,settings)==='retro'?(game.levelIndex===1?'#29232e':'#29312a'):TEXTURE_PACKS[textureStyleFor(l,settings)].floor);g.fillStyle=grad;g.fillRect(0,horizon,w,h-horizon);
+    const grad=g.createLinearGradient(0,horizon,0,h);grad.addColorStop(0,'#090e0e');grad.addColorStop(1,textureStyleFor(l,settings)==='retro'?(l.campaign==='episode'?l.palette.primary+'30':game.levelIndex===1?'#29232e':'#29312a'):TEXTURE_PACKS[textureStyleFor(l,settings)].floor);g.fillStyle=grad;g.fillRect(0,horizon,w,h-horizon);
     const dirX=Math.cos(p.a),dirY=Math.sin(p.a),planeX=-dirY*.70,planeY=dirX*.70;
     g.strokeStyle=game.shift?'#3c2b50':'#354139';g.lineWidth=1;
     for(let j=1;j<11;j++){const yy=horizon+(h-horizon)/(j*.62+1);g.globalAlpha=.22;g.beginPath();g.moveTo(0,Math.floor(yy));g.lineTo(w,Math.floor(yy));g.stroke();}g.globalAlpha=1;
@@ -92,11 +92,11 @@ export class Renderer {
       const opening=door?.open||0,visibleH=wallH*(1-opening);
       if(opening>.01){const behind=castRay(l,p.x,p.y,dx,dy,32,hit),bh=h/Math.max(.08,behind.distance),bt=textures[behind.type]||textures[1];g.drawImage(bt,Math.floor(behind.u*63),0,1,64,x,horizon-bh*.5,stripe,bh);g.fillStyle=`rgba(3,9,10,${clamp(behind.distance/19,0,.9)})`;g.fillRect(x,horizon-bh*.5,stripe,bh);g.drawImage(tex,tx,opening*64,1,64*(1-opening),x,y,stripe,visibleH);}else g.drawImage(tex,tx,0,1,64,x,y,stripe,Math.ceil(wallH));
       const shade=clamp(d/(game.levelIndex===4?15:19)+(hit.side?.12:0),0,.92);g.fillStyle=`rgba(3,9,10,${shade})`;g.fillRect(x,y,stripe,visibleH+1);
-      if(game.levelIndex>=3){g.fillStyle=game.levelIndex===3?'rgba(90,35,4,.065)':game.levelIndex===5?'rgba(80,6,37,.075)':'rgba(13,24,75,.09)';g.fillRect(x,y,stripe,wallH);}
+      if(l.campaign!=='episode'&&game.levelIndex>=3){g.fillStyle=game.levelIndex===3?'rgba(90,35,4,.065)':game.levelIndex===5?'rgba(80,6,37,.075)':'rgba(13,24,75,.09)';g.fillRect(x,y,stripe,wallH);}
       if(hit.type===6&&game.shift){g.fillStyle=`rgba(187,127,255,${.28+Math.sin(this.lastTime*5)*.12})`;g.fillRect(x,y,stripe,wallH);}
       if(game.shift&&hit.type!==6){g.fillStyle='rgba(71,24,114,.12)';g.fillRect(x,y,stripe,wallH);}
       // Ceiling trim reinforces the industrial corridor silhouette.
-      if(d<14){g.fillStyle=game.levelIndex===1?'#786181':theme;g.globalAlpha=Math.max(0,.42-d*.025);g.fillRect(x,y+wallH*.035,stripe,Math.max(1,wallH*.008));g.globalAlpha=1;}
+      if(d<14){g.fillStyle=l.campaign!=='episode'&&game.levelIndex===1?'#786181':theme;g.globalAlpha=Math.max(0,.42-d*.025);g.fillRect(x,y+wallH*.035,stripe,Math.max(1,wallH*.008));g.globalAlpha=1;}
     }
     if(l.vertical)this.paintVerticalDeck(game,horizon);
     const things=[];
@@ -112,11 +112,11 @@ export class Renderer {
     for(const node of soloSweepMarkers(l,game.time))
       if(verticalSight(l,p,{x:node.x,y:node.y,height:node.floorHeight}))
        things.push({...node,type:'soloSweep',height:.17});
-    for(const e of l.enemies)if(!e.dead&&(!l.vertical?.soloPreview||verticalSight(l,p,e)))things.push({x:e.x,y:e.y,type:e.type,height:e.type==='warden'?1.65:1,floorHeight:e.floorHeight||0,frame:Math.floor(e.walk)%4,e});
-    for(const item of l.items)if(!item.taken&&(!l.vertical?.soloPreview||verticalSight(l,p,{x:item.x,y:item.y,height:item.floorHeight||0})))things.push({...item,height:.5,bob:true});
+    for(const e of l.enemies)if(!e.dead&&(!game.verticalPlay||verticalSight(l,p,e)))things.push({x:e.x,y:e.y,type:e.type,height:e.type==='warden'?1.65:1,floorHeight:e.floorHeight||0,frame:Math.floor(e.walk)%4,e});
+    for(const item of l.items)if(!item.taken&&(!game.verticalPlay||verticalSight(l,p,{x:item.x,y:item.y,height:item.floorHeight||0})))things.push({...item,height:.5,bob:true});
     for(const captive of l.captives)if(!captive.freed)things.push({...captive,type:'captive',height:1});
     for(const relay of l.relays)things.push({...relay,type:relay.active?'relayOn':'relay',height:1});
-     if(l.upperUplink&&(!l.vertical?.soloPreview||verticalSight(l,p,{...l.upperUplink,height:l.upperUplink.floorHeight})))things.push({...l.upperUplink,type:l.upperUplink.active?'relayOn':'relay',height:1.1});
+     if(l.upperUplink&&(!game.verticalPlay||verticalSight(l,p,{...l.upperUplink,height:l.upperUplink.floorHeight})))things.push({...l.upperUplink,type:l.upperUplink.active?'relayOn':'relay',height:1.1});
     if(!l.key.taken)things.push({...l.key,type:'key',height:.48,bob:true});
     if(!game.networkCompetitive&&!game.gallery)things.push({...l.exit,type:'portal',height:1.6});
     for(const a of game.remotePlayers||[])if(['alive','downed'].includes(a.status))things.push({x:a.renderX??a.x,y:a.renderY??a.y,type:'remote',remote:a,height:a.status==='downed'?.4:a.role==='beast'&&a.archetype==='repeater'?1.45:a.role==='beast'&&a.archetype==='warden'?1.8:a.role==='beast'&&a.archetype==='plugged'?1.23:a.role==='beast'?1.08:1.03});
