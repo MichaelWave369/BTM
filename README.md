@@ -17,6 +17,10 @@ Choose **BBS LAN CLAN** on the main menu. Multiplayer needs an optional self-hos
 Read the [browser review and hosting guide](docs/bbs-lan-clan/hosting.md), [implementation and exact evidence](docs/bbs-lan-clan/verification.md), and [physical Quest checklist](docs/bbs-lan-clan/quest3-acceptance.md). Custom multiplayer map import, full-body tracking and physical Quest validation are not part of this candidate. Existing solo ΦWAD import remains available.
 
 
+## Episodes — The Buried Network
+
+Nine new solo stages follow an abandoned freight line into the Carrier Warden’s relay complex. Select **Episodes** from the arcade menu in Classic or inside either VR mode. The episode has its own checkpoint, secrets, and ending. After the offline shell is installed, launch and resume it without a connection. See the [stage guide and verification](docs/episodes.md).
+
 ## PIT OF DESPAIR — v0.9.0-rc.1 candidate
 
 A separate twelve-trial Survival campaign: four authored acts, four original phased guardians, timed environmental hazards and finite ammunition. Choose **PIT OF DESPAIR** to start or **CONTINUE THE DESCENT** to resume its independent checkpoint. Original campaigns, Legacy saves, Nightmare Run, CODE BROWN, ΦWAD and Gen.E.Wrist remain available.
