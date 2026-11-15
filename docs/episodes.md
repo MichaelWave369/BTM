@@ -27,3 +27,24 @@ The checkpoint key is `mwave-ori-episode-<id>-checkpoint-v1`. Use a new revision
 Run `node --test tests/episode-registry.test.mjs tests/buried-network.test.mjs`. The nine-stage drivers use production input and simulation in Classic and synthetic tracked mode, collecting every secret and upper artifact and restoring each cleared stage before entering the next. Browser CI runs `scripts/verify-episodes-browser.mjs` after the production build and stores its reports and paired Canvas/WebGL captures in the VR equipment evidence artifact.
 
 The browser test compares both eyes’ output, checks geometry submission and dropped vertices, and verifies offline launch, resume and finale with the original and Pit slots and BBS preferences intact. The existing LAN workflows cover co-op stage progression and disk saves. The headless run measures software rendering and synthetic pose behavior. Physical Quest 3 testing remains open for headset stereo, ramp comfort, tracked controls and sustained frame pacing.
+
+
+## Episode II: Synthetic City (9 stages)
+
+The city is a new, **separately saved** authored episode. Select **Episodes → NEW RUN / Synthetic City** or **CONTINUE / Synthetic City**, on desktop, VR Arcade, or in the immersive Quest 3 menu. This episode does not add stages to the original 12-sector campaign or Pit. Its checkpoint key is `mwave-ori-episode-synthetic-city-checkpoint-v1`.
+
+The map topology is authored as fixed city-district rectangles connected into walkable streets, then compiled into BTM's native episode ASCII grid. There are nine individual layouts, gold-locked exit chambers, one optional violet secret cache per stage, and normal maintenance doors. Stages 4 and 7 also offer colored-badge side caches; stages 3, 6 and 8 have optional ramp-accessible decks with supplies. Ground objectives are independent of those upper decks.
+
+| Stage | District | Main experience |
+| --- | --- | --- |
+| 1 | Arrival Curfew | Neon customs terminal, arrival queue and exit clearance |
+| 2 | Ring of Adverts | Outer adwalk loop and central dead plaza |
+| 3 | Midnight Concourse | Railway platforms and optional high gallery |
+| 4 | Sundown Offices | Offset boardrooms and blue maintenance shortcut |
+| 5 | The Mall After | Abandoned retail courts and multiple crossings |
+| 6 | Skybridge Cascade | Three tower stacks and elevated supply detour |
+| 7 | Firewall Boulevard | Watched avenues and red-badge bypass |
+| 8 | Identity Arcology | Numbered residential blocks and upper atrium |
+| 9 | Crown Broadcast | Three signal feeds and the Crown Warden finale |
+
+The new episode uses existing owned industrial, cyberpunk, horror, corporate and Matrix Facility styles with procedural offline fallback. It adds no commercial dependencies. Tests load and render every stage, check the independent save slot, run the original/Pit regressions and attempt complete input-driven Classic and synthetic tracked playthroughs. **Real Quest 3 comfort, frame pacing and physical Touch control validation remain pending**.

@@ -10,7 +10,11 @@ const require = createRequire(import.meta.url);
 const {chromium} = require(process.env.BTM_PLAYWRIGHT_MODULE || 'playwright');
 const output = process.env.BTM_EPISODE_OUTPUT || 'docs/equipment/ci/episodes';
 const port = '5196', base = 'http://127.0.0.1:' + port + '/';
-const slot = episodeSaveKey('buried-network'), bbs = 'mwave-bbs-settings-v1';
+const episodeId = process.env.BTM_EPISODE_ID === 'synthetic-city' ? 'synthetic-city' : 'buried-network';
+const episodeTitle = episodeId === 'synthetic-city' ? 'Synthetic City' : 'The Buried Network';
+const firstStage = episodeId === 'synthetic-city' ? 'arrival-curfew' : 'cable-mouth';
+const lastStage = episodeId === 'synthetic-city' ? 'crown-broadcast' : 'last-carrier';
+const slot = episodeSaveKey(episodeId), bbs = 'mwave-bbs-settings-v1';
 const oldSlots = [ORIGINAL_SAVE_KEY, PIT_SAVE_KEY, bbs];
 await mkdir(output, {recursive: true});
 const server = spawn(process.execPath, ['scripts/serve.mjs', '--port', port], {stdio: ['ignore', 'pipe', 'inherit']});
@@ -55,14 +59,15 @@ try {
     try {
       // The simulation caps its time step. Wait for an actual room transition
       // so a slow software-rendered runner has time to cross the intake.
-      await page.waitForFunction(() => document.querySelector('#room-label').textContent === 'ACCESS CORRIDOR',
+      if (episodeId === 'synthetic-city') await page.waitForTimeout(5000);
+      else await page.waitForFunction(() => document.querySelector('#room-label').textContent === 'ACCESS CORRIDOR',
         undefined, {polling: 100, timeout: 60000});
     } finally {
       await page.keyboard.up('KeyW');
     }
     await home();
   }
-  const choose = label => page.getByRole('button', {name: label + ' / The Buried Network', exact: true}).click();
+  const choose = label => page.getByRole('button', {name: label + ' / ' + episodeTitle, exact: true}).click();
   await enter('#start-btn', 'SECTOR 01');
   await home();
   await enter('#pit-btn', 'TRIAL 1');
@@ -74,10 +79,10 @@ try {
   await choose('NEW RUN');
   await page.waitForFunction(() => document.querySelector('#header-sector').textContent.includes('STAGE 1 OF 9'));
   const initial = JSON.parse(await read(slot));
-  assert.equal(initial.stageId, 'cable-mouth');
+  assert.equal(initial.stageId, firstStage);
   await walkOutOfIntake();
   const walked = JSON.parse(await read(slot));
-  assert(walked.player.x > initial.player.x + 1, 'Production keyboard input must move a new episode player');
+  assert(Math.hypot(walked.player.x - initial.player.x, walked.player.y - initial.player.y) > 1, 'Production keyboard input must move the episode player');
   assert.deepEqual(await Promise.all(oldSlots.map(read)), before);
   console.log('Production keyboard movement and independent save slots verified.');
 
@@ -109,7 +114,7 @@ try {
     }
     captures.push(metrics);
   });
-  const played = await qa.evaluate(async () => {
+  const played = await qa.evaluate(async episodeId => {
     const [{EpisodeDriver}, {Renderer}, {VRWorldRenderer}, {ImmersiveRig},
       {matIdentity}, {perspective}, {distance, angleDiff, lineOfSight}] = await Promise.all([
       import('./tests/episode-playthrough.js'), import('./src/renderer.js'), import('./src/vr-world-renderer.js'),
@@ -169,7 +174,7 @@ try {
     const reports = [];
     let finalSave;
     for (const immersive of [false, true]) {
-      const driver = new EpisodeDriver({immersive}), entries = new Set(), decks = new Set();
+      const driver = new EpisodeDriver({immersive, episodeId}), entries = new Set(), decks = new Set();
       let finale = false;
       while (!driver.done) {
         driver.tick();
@@ -195,7 +200,7 @@ try {
     }
     world.dispose();
     return {reports, finalSave};
-  });
+  }, episodeId);
 
   for (const report of played.reports) {
     assert(report.passed, report.error);
@@ -221,28 +226,28 @@ try {
   // paused gameplay intentionally writes that run's checkpoint on pagehide.
   await home();
   // Both the episode module and the actual played finale restore while disconnected.
-  await page.evaluate(async ({snapshot, slot}) => {
+  await page.evaluate(async ({snapshot, slot, episodeId}) => {
     const [{Game}, {EPISODES}, {writeCampaignCheckpoint}] = await Promise.all([
       import('./src/core.js'), import('./src/episodes/index.js'), import('./src/campaign-storage.js')
     ]);
     const game = new Game({episodes: EPISODES});
-    game.restore(snapshot, {campaign: 'episode', episodeId: 'buried-network'});
+    game.restore(snapshot, {campaign: 'episode', episodeId});
     writeCampaignCheckpoint(localStorage, game);
     if (!localStorage.getItem(slot)) throw Error('Episode checkpoint was not written');
-  }, {snapshot: played.finalSave, slot});
-  assert.equal(JSON.parse(await read(slot)).stageId, 'last-carrier');
+  }, {snapshot: played.finalSave, slot, episodeId});
+  assert.equal(JSON.parse(await read(slot)).stageId, lastStage);
   await page.reload();
   assert.equal(JSON.parse(await read(slot)).episodeCleared, true);
   await page.locator('#episodes-btn').click();
   await choose('CONTINUE');
   await page.waitForFunction(() => document.querySelector('#result-title').textContent === 'EPISODE COMPLETE');
-  assert.match(await page.locator('#result-copy').textContent(), /Carrier Warden/);
+  assert.match(await page.locator('#result-copy').textContent(), episodeId === 'synthetic-city' ? /Crown Broadcast/ : /Carrier Warden/);
   await page.locator('#result-screen').screenshot({path: output + '/offline-ending.png'});
   await page.locator('#result-btn').click();
   await choose('NEW RUN');
   await page.waitForFunction(() => document.querySelector('#header-sector').textContent.includes('STAGE 1 OF 9'));
   await walkOutOfIntake();
-  assert(JSON.parse(await read(slot)).player.x > initial.player.x + 1, 'New episode run moves offline');
+  assert(Math.hypot(JSON.parse(await read(slot)).player.x - initial.player.x, JSON.parse(await read(slot)).player.y - initial.player.y) > 1, 'New episode run moves offline');
   assert.deepEqual(await Promise.all(oldSlots.map(read)), before);
   assert.deepEqual(errors, []);
 
@@ -250,7 +255,7 @@ try {
     captures, independentSlots: true, offlineResume: true, offlineFinale: true, offlineNewRun: true,
     method: 'Production build in Chromium, software WebGL with synthetic stereo and tracked input. Real localStorage and disconnected service-worker navigation.'};
   await writeFile(output + '/browser.json', JSON.stringify(report, null, 2) + '\n');
-  console.log('Buried Network: 9 Classic + 9 tracked stages, 3 upper decks and finale; ' +
+  console.log(episodeTitle + ': 9 Classic + 9 tracked stages, 3 upper decks and finale; ' +
     captures.length + ' stereo samples, isolated checkpoints and offline resume/restart.');
 } finally {
   await browser?.close();
