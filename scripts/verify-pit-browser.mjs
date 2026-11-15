@@ -26,18 +26,37 @@ try{
  const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('mwave-ori-pit-checkpoint-v1')));assert.equal(stored.pitRecord.length,12);assert(stored.pitCleared);
  // An active registration is not necessarily controlling this tab yet. The
  // offline Pit reload must run under a controlling worker with a cached shell.
- await page.evaluate(async()=>await navigator.serviceWorker.ready);
- await page.reload();
- await page.waitForFunction(()=>navigator.serviceWorker?.controller?.state==='activated');
- await page.waitForFunction(async()=>{
+ // Preserve the real, fully played checkpoint and all original storage bytes.
+ // A clean browser context prevents retained multi-stage WebGL/Canvas resources
+ // from contaminating the separate cold offline boot check.
+ const storedState=await context.storageState();
+ await context.close();
+ const offlineContext=await browser.newContext({
+   viewport:{width:1440,height:1000},serviceWorkers:'allow',storageState:storedState
+ });
+ const offlinePage=await offlineContext.newPage();
+ offlinePage.setDefaultTimeout(45000);
+ offlinePage.on('pageerror',e=>{errors.push(e.message);console.error(e.message);});
+ const base='http://127.0.0.1:5184/';
+ await offlinePage.goto(base,{waitUntil:'domcontentloaded'});
+ // Unlike navigator.serviceWorker.ready, controller confirms this particular
+ // page is intercepted. Also require real, populated mandatory cached assets.
+ await offlinePage.waitForFunction(()=>navigator.serviceWorker?.controller?.state==='activated');
+ await offlinePage.waitForFunction(async()=>{
    const shell=await caches.match(new URL('./',location.href).href);
    const html=await caches.match(new URL('./index.html',location.href).href);
-   return !!shell?.ok&&!!html?.ok;
+   const main=await caches.match(new URL('./src/main.js',location.href).href);
+   return !!shell?.ok&&!!html?.ok&&!!main?.ok;
  });
- await context.setOffline(true);
- const offlineResponse=await page.reload({waitUntil:'domcontentloaded'});
+ assert.equal(await offlinePage.locator('#continue-pit-btn').count(),1,'Cold online Pit continue control missing');
+ const pitBytes=await offlinePage.evaluate(()=>localStorage.getItem('mwave-ori-pit-checkpoint-v1'));
+ assert.equal(JSON.parse(pitBytes).pitRecord.length,12);
+ assert.equal(await offlinePage.evaluate(()=>localStorage.getItem('mwave-ori-checkpoint-v1')),original);
+ await offlineContext.setOffline(true);
+ const offlineResponse=await offlinePage.reload({waitUntil:'domcontentloaded',timeout:45000});
  assert(offlineResponse?.ok(), 'Pit offline navigation must return the cached game shell');
- assert.equal(await page.locator('#continue-pit-btn').count(),1,'Pit continue button must exist after offline reload');
- await page.locator('#continue-pit-btn').click();await page.waitForFunction(()=>document.querySelector('#result-copy').textContent.startsWith('Twelve trials.'));await page.locator('#result-btn').click();await page.waitForFunction(()=>document.querySelector('#header-sector').textContent.startsWith('PIT /'));assert.equal(errors.length,0,errors.join('\n'));
+ assert.equal(await offlinePage.locator('#continue-pit-btn').count(),1,'Pit continue control missing after disconnected reload');
+ assert.equal(await offlinePage.evaluate(()=>localStorage.getItem('mwave-ori-pit-checkpoint-v1')),pitBytes,'Offline reload changed the earned Pit checkpoint');
+ await offlinePage.locator('#continue-pit-btn').click();await offlinePage.waitForFunction(()=>document.querySelector('#result-copy').textContent.startsWith('Twelve trials.'));await offlinePage.locator('#result-btn').click();await offlinePage.waitForFunction(()=>document.querySelector('#header-sector').textContent.startsWith('PIT /'));assert.equal(await offlinePage.evaluate(()=>localStorage.getItem('mwave-ori-checkpoint-v1')),original,'Original save changed during offline Pit retry');assert.equal(errors.length,0,errors.join('\n'));await offlineContext.close();
  const report={passed:true,browser:browser.version(),method:'Production dist in real Chromium. Actual Game driver movement/combat/loot/bosses/progression in Classic and tracked adapter, native Canvas/WebGL captures with synthetic stereo, real DOM mode/save/continue/ending/original-continue checks and disconnected Pit restart. Exact aim/map knowledge; no physical Quest/human balance validation.',classic,immersive,captures,originalSlotPreserved:true,endingResumed:true,offlinePitPlayable:true,pageErrors:errors};await writeFile(out+'/browser.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({passed:true,classic:classic.passed,immersive:immersive.passed,captures:captures.length,originalSlotPreserved:true,offlinePitPlayable:true,pageErrors:errors},null,2));
 }finally{await browser?.close();server.kill();}
